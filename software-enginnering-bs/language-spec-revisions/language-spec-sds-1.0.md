@@ -176,7 +176,7 @@ the inputs and outputs of the block itself.
 blocks are then referenced in a way that is (incorrectly) shown above, the real way is like:
 ```xml
 
-    <block blockid="0" x="0" y="0" mirrored="false" flipped="false">
+    <block blockid="0" x="0" y="0" flipH="false" flipV="false" rotate="0">
         <io>
             <input name="a" wireid="" />
             <output name="b" wireid="0" />
@@ -188,6 +188,8 @@ blocks are then referenced in a way that is (incorrectly) shown above, the real 
 if a block is hollow, it will also contain a section inside of it called `<innercode name="">`
 which will contain the code that is inside the block, this will be explained in a bit more detail below.
 
+the rotate value will be an integer mod 4 that will be how many 90 degree clockwise rotations the block is rotated by.
+
 # Blocks
 
 this section will cover the specifics of what the block definition looks like for each type of block,
@@ -198,16 +200,58 @@ as well as specific rendering guidelines.
 The basics of how blocks generally looks is defined above, this section will be the *general* rendering guidelines that will be
 expanded on in the more specific sections below.
 
+For rendering blocks, their minimum size is the maximum of (1 x 1) or the total width of their io,
+they don't have to remain square and so this means that a side is scaled by its io and the io on the opposite side.
+
+For the terminals on the block, they are evenly spaced, at .2 apart, with the left/right justified ones starting .1 into the block,
+the centered ones will be centered, obviously, and the left/right/center will be separated from eachother by at least .2 of the block.
+the user may resize a block to be larger, in which case the spacing between left/right/center is what will expand in distance.
+See the diagram below:
+
+![img.png](language-spec-sds-1.0-img/general_spacing.png)
+
+This diagram shows the spacing of the left side of a block with 2 io on the top-left, and 3 on the center. 
+The resulting block would have a width of 1.4 units.
+
+on the sides, the left/right will mean top/bottom respectively.
+
 ## normal blocks
+
+normal blocks generally refers to blocks that are not hollow, and have no inner code.
+these have been practically fully explained already, so no need to go into detail.
 
 ### primitive operations
 
-#### const blocks
+Same with these, they are the most basic blocks, and are just a type of normal block.
+these will generally have 2 inputs on the left and one output on the right.
 
-### suppliers, functions, etc
+## const blocks
+
+const blocks have a `<value>` tag, in addition to those of the normal block.
+at runtime, this is a user-inputtable value that automagically selects it's type based on where it's wired.
+if wired to an enum, this will mean that the enum will be used to select the value from a dropdown,
+wired to an integer will mean that the value will be an integer, etc.
+When not wired anywhere, the user will not be able to change the value, but it will stay as the last type until
+it doesn't make sense, ie, wired to a different type.
 
 ## "hollow" blocks
 
+"hollow" blocks are blocks that contain at least one `<hollow>` block.
+these blocks allow for having inner code that is executed inside of the block, and can be used to make
+"anonymous function" aka "lambda" blocks, they can also be used for states in flow control or loops.
+one condition of wires with these blocks is that they will connect through a "tunnel" that pipes the wire through the
+outer block to the inner block. these tunnels will only allow for the inputs to be run once, and the output to be outputted
+once the outer block declares it is "finished".
+
+These blocks can also directly interact with their inner code using an `innerio` tag,
+this will act similarly to normal io, styling etc, but will be used to connect the inner code to the outer block.
+
 ### flow control
 
-## 
+flow control refers to a special type of hollow block that is used for flow control,
+for example, loops, if statements, switch, etc.
+
+if statements would have 2 hollow blocks, one for the if statement, and one for the else statement.
+the loop block will have a hollow block inside of it, this block will output a boolean value, which will be used to determine
+if the loop should continue or not.
+
