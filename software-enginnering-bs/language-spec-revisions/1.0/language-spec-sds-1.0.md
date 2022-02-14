@@ -170,6 +170,20 @@ specified by `<innercode>` as described below. the padding's correspond to the a
 If there are multiple hollow blocks they will be stacked vertically.
 the minimum inner size of a hollow section is 1x1 units
 
+there is also an option to have the hollow sections on-top of eachother with a selection for switching between them.
+in order to get them to show up like that, is to add a `group="name"` attribute to the hollow block.
+
+with those, there is the option to have a dynamic number of hollow blocks stacked using the 
+`<dynamichollow>` tag, but those arn't allowed to use the `group` attribute.
+
+those are specified like so:
+```xml
+<dynamichollow name="name" paddingTop="0" paddingLeft="0" paddingRight="0" paddingBottom="0" type="string">
+</dynamichollow>
+```
+
+the type can be number, string, enum or boolean. if it is enum, there is an optional `from="inp"` 
+attribute which specifies the input to get the enum to use from.
 
 ### code
 
@@ -280,6 +294,10 @@ by their id attribute. specifying a virtual port is shown in the `<virtual>` tag
 The offsets are relative to the left edge of the face they are on, so this would look something like:
 
 ![virtio_spacing.png](imgs/virtio_spacing.png)
+
+For stacked blocks, the virtual ports can be shared between the blocks as they are on-top of eachother so that makes sense.
+Also, for specifying dynamic hollow blocks, the inner code tags will use the name and then use `id="id"` where the id is specified
+as stated in the block specification, but each must be unique.
 
 #### flow control
 
