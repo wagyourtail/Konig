@@ -253,14 +253,15 @@ to specify the connection, the outer block wll have an id of `-1` in the innerco
  
 they also allow for a "passthrough" or pipe, which is a dynamic way to connect an outer wire into the inner block,
 this will work by creating a "virtual" port where the outer wire is connected to, and the inner wire is then connected via
-a visual "tunnel" to a virtual innerio port. this will be done via contents of a `<virtual>` tag which looks as follows:
+a visual "tunnel" to a virtual innerio port. the "names" of these ports for the wires to connect to will be `$virtual` followed
+by their id attribute. specifying a virtual port is shown in the `<virtual>` tag which looks as follows:
 
 ```xml
 <block ...>
     <io>
     </io>
     <virtual>
-        <port direction="in">
+        <port direction="in" id="0">
             <outer wireid="0" side="top" offset=".3"/>
             <inner wireid="0" side="top" offset=".2"/>
         </port>
