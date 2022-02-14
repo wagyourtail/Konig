@@ -78,13 +78,13 @@ each synchronously, this will be described more later). In order to support that
 block in them which will act as a normal segment block, except it will have contents that end with an end block.
 
 ```xml
-    <wire wireid="0">
-        <end x="0" y="0" block="0" port="out1"/>
-        <branch x=".5" y=".5">
-            <end x="0" y="1" block="3" port="in1"/>
-        </branch>
-        <end x="1" y="1" block="2" port="in2"/>
-    </wire>
+<wire wireid="0">
+    <end x="0" y="0" block="0" port="out1"/>
+    <branch x=".5" y=".5">
+        <end x="0" y="1" block="3" port="in1"/>
+    </branch>
+    <end x="1" y="1" block="2" port="in2"/>
+</wire>
 ```
 
 the `<end>` tags should specify the blockid and port within the block to target. ie `block="2" port="name"`
@@ -96,12 +96,12 @@ there can be artificial grouping by creating a group block around a group of blo
 there are 2 types of groups, named groups and commented out groups
 
 ```xml
-    <commented>
-        <blocka ...>
-    </commented>
-    <group name="test">
-        <blocka ...>
-    </group>
+<commented>
+    <blocka ...>
+</commented>
+<group name="test">
+    <blocka ...>
+</group>
 ```
 
 ### commenting
@@ -194,14 +194,12 @@ the inputs and outputs of the block itself.
 
 blocks are then referenced in a way that is (incorrectly) shown above, the real way is like:
 ```xml
-
-    <block blockid="0" x="0" y="0" flipH="false" flipV="false" rotate="0" scaleX="1" scaleY="1">
-        <io>
-            <input name="a" wireid="" />
-            <output name="b" wireid="0" />
-        </io>
-    </block>
-
+<block blockid="0" x="0" y="0" flipH="false" flipV="false" rotate="0" scaleX="1" scaleY="1">
+    <io>
+        <input name="a" wireid="" />
+        <output name="b" wireid="0" />
+    </io>
+</block>
 ```
 
 if a block is hollow, it will also contain a section inside of it called `<innercode name="">`
