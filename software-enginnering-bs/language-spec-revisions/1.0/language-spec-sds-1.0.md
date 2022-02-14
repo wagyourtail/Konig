@@ -212,7 +212,7 @@ the centered ones will be centered, obviously, and the left/right/center will be
 the user may resize a block to be larger, in which case the spacing between left/right/center is what will expand in distance.
 See the diagram below:
 
-![img.png](imgs/general_spacing.png)
+![general_spacing.png](imgs/general_spacing.png)
 
 This diagram shows the spacing of the left side of a block with 2 io on the top-left, and 3 on the center. 
 The resulting block would have a width of 1.4 units.
@@ -279,7 +279,7 @@ by their id attribute. specifying a virtual port is shown in the `<virtual>` tag
 
 The offsets are relative to the left edge of the face they are on, so this would look something like:
 
-![img.png](imgs/virtio_spacing.png)
+![virtio_spacing.png](imgs/virtio_spacing.png)
 
 #### flow control
 
