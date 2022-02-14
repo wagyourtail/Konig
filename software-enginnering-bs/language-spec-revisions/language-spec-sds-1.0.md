@@ -54,9 +54,9 @@ THIS IS NOT THE FULL SPEC AND SHOULD NOT BE USED AS A REFERENCE FOR SUCH
 <main>
     <wires>
         <wire wireid="0">
-            <start x="0" y="0" block="0" />
+            <end x="0" y="0" block="0" port="out" />
             <segment x=".5" y=".5" />
-            <end x="1" y="1" block="2" />
+            <end x="1" y="1" block="2" port="in" />
         </wire>
     </wires>
     <blocks>
@@ -77,17 +77,18 @@ Wires should be capable of branching in order to connect one output to multiple 
 each synchronously, this will be described more later). In order to support that, wires can specify a branch 
 block in them which will act as a normal segment block, except it will have contents that end with an end block.
 
-example using pseudo-blocks:
-
 ```xml
     <wire wireid="0">
-        <start x="0" y="0" block="0" />
+        <end x="0" y="0" block="0" port="out1"/>
         <branch x=".5" y=".5">
-            <end x="0" y="1" block="3" />
+            <end x="0" y="1" block="3" port="in1"/>
         </branch>
-        <end x="1" y="1" block="2" />
+        <end x="1" y="1" block="2" port="in2"/>
     </wire>
 ```
+
+the `<end>` tags should specify the blockid and port within the block to target. ie `block="2" port="name"`
+
 
 ### grouping without creating a codeblock
 
@@ -153,6 +154,8 @@ where the blockid tag is named by how the block should be called later.
 the inputs and outputs tags are optional, and contain info about where the inputs and outputs are.
 there are 12 sections for the inputs and outputs, each side with left, center and right alignment.
 there is also an optional <skip> tag which will leave a blank space with the same width as an input.
+each input/output name must be unique in order to allow the wires to specify which input it is actually connected to
+without having to rely on the x/y positions to be completely to-standard and accurate.
 
 ### image
 
@@ -161,8 +164,11 @@ do something else for rendering, most likely the name will be displayed.
 
 ### hollow
 
-there is also an optional tag `<hollow name="">` which corresponds to making this block hollow and having code
-specified by `<innercode>` as described below.
+there is also an optional tag `<hollow name="" paddingTop="" paddingLeft...>` which corresponds to making this block hollow and having code
+specified by `<innercode>` as described below. the padding's correspond to the ammount of distance between the outer and inner edge.
+
+If there are multiple hollow blocks they will be stacked vertically.
+the minimum inner size of a hollow section is 1x1 units
 
 
 ### code
@@ -176,7 +182,7 @@ the inputs and outputs of the block itself.
 blocks are then referenced in a way that is (incorrectly) shown above, the real way is like:
 ```xml
 
-    <block blockid="0" x="0" y="0" flipH="false" flipV="false" rotate="0">
+    <block blockid="0" x="0" y="0" flipH="false" flipV="false" rotate="0" scaleX="1" scaleY="1">
         <io>
             <input name="a" wireid="" />
             <output name="b" wireid="0" />
@@ -190,12 +196,10 @@ which will contain the code that is inside the block, this will be explained in 
 
 the rotate value will be an integer mod 4 that will be how many 90 degree clockwise rotations the block is rotated by.
 
-# Blocks
-
-this section will cover the specifics of what the block definition looks like for each type of block,
+the following subsections will cover the specifics of what the block definition looks like for each type of block,
 as well as specific rendering guidelines.
 
-## general
+### general
 
 The basics of how blocks generally looks is defined above, this section will be the *general* rendering guidelines that will be
 expanded on in the more specific sections below.
@@ -215,17 +219,17 @@ The resulting block would have a width of 1.4 units.
 
 on the sides, the left/right will mean top/bottom respectively.
 
-## normal blocks
+### normal blocks
 
 normal blocks generally refers to blocks that are not hollow, and have no inner code.
 these have been practically fully explained already, so no need to go into detail.
 
-### primitive operations
+#### primitive operations
 
 Same with these, they are the most basic blocks, and are just a type of normal block.
 these will generally have 2 inputs on the left and one output on the right.
 
-## const blocks
+### const blocks
 
 const blocks have a `<value>` tag, in addition to those of the normal block.
 at runtime, this is a user-inputtable value that automagically selects it's type based on where it's wired.
@@ -234,7 +238,7 @@ wired to an integer will mean that the value will be an integer, etc.
 When not wired anywhere, the user will not be able to change the value, but it will stay as the last type until
 it doesn't make sense, ie, wired to a different type.
 
-## "hollow" blocks
+### "hollow" blocks
 
 "hollow" blocks are blocks that contain at least one `<hollow>` block.
 these blocks allow for having inner code that is executed inside of the block, and can be used to make
@@ -243,10 +247,40 @@ one condition of wires with these blocks is that they will connect through a "tu
 outer block to the inner block. these tunnels will only allow for the inputs to be run once, and the output to be outputted
 once the outer block declares it is "finished".
 
-These blocks can also directly interact with their inner code using an `innerio` tag,
+These blocks can also directly interact with their inner code using an `<innerio>` tag,
 this will act similarly to normal io, styling etc, but will be used to connect the inner code to the outer block.
+to specify the connection, the outer block wll have an id of `-1` in the innercode
+ 
+they also allow for a "passthrough" or pipe, which is a dynamic way to connect an outer wire into the inner block,
+this will work by creating a "virtual" port where the outer wire is connected to, and the inner wire is then connected via
+a visual "tunnel" to a virtual innerio port. this will be done via contents of a `<virtual>` tag which looks as follows:
 
-### flow control
+```xml
+<block ...>
+    <io>
+    </io>
+    <virtual>
+        <port direction="in">
+            <outer wireid="0" side="top" offset=".3"/>
+            <inner wireid="0" side="top" offset=".2"/>
+        </port>
+    </virtual>
+    <innercode name="example">
+        <wires>
+            <!-- code -->
+        </wires>
+        <blocks>
+            <!-- code -->
+        </blocks>
+    </innercode>
+</block>
+```
+
+The offsets are relative to the left edge of the face they are on, so this would look something like:
+
+![img.png](language-spec-sds-1.0-img/virtio_spacing.png)
+
+#### flow control
 
 flow control refers to a special type of hollow block that is used for flow control,
 for example, loops, if statements, switch, etc.

@@ -16,7 +16,8 @@ The intended user of the language is people who are new to coding, tho it should
 
 ## Scope
 
-a diagram (node) based programming language that can interact with java and minecraft
+a diagram (node) based programming language that can interact with java and minecraft. This is a language similar in style to NI Labview, as depicted below
+![img.png](labview_image_from_internet.png)
 
 ## Definitions and Acronyms
 
