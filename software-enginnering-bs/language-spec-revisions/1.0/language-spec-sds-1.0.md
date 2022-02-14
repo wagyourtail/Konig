@@ -182,8 +182,7 @@ those are specified like so:
 </dynamichollow>
 ```
 
-the type can be number, string, enum or boolean. if it is enum, there is an optional `from="inp"` 
-attribute which specifies the input to get the enum to use from.
+the type can be number, string, or boolean.
 
 ### code
 
