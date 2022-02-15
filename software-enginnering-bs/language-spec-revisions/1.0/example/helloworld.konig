@@ -1,0 +1,26 @@
+<code name="hello world example">
+    <headers>
+
+    </headers>
+    <main>
+        <wires>
+            <wire wireid="0">
+                <end x="1" y="0.5" block="0" port="out" />
+                <end x="2" y="0.5" block="1" port="in" />
+            </wire>
+        </wires>
+        <blocks>
+            <const blockid="0" x="0" y="0" flipH="false" flipV="false" rotate="0" scaleX="1" scaleY="1">
+                <io>
+                    <input name="out" wireid="0"/>
+                </io>
+                <value>Hello World!</value>
+            </const>
+            <print blockid="1" x="2" y="0" flipH="false" flipV="false" rotate="0" scaleX="1" scaleY="1">
+                <io>
+                    <input name="in" wireid="0"/>
+                </io>
+            </print>
+        </blocks>
+    </main>
+</code>

@@ -1,0 +1,212 @@
+<headers>
+    <block name="const" group="generic">
+        <generics>
+            <generic name="T"/>
+        </generics>
+        <io>
+            <output side="right" justify="center" name="out" type="T" />
+        </io>
+    </block>
+    <block name="add" group="math">
+        <generics>
+            <generic name="T"/>
+        </generics>
+        <io>
+            <input side="left" justify="center" name="in1" type="T"/>
+            <input side="left" justify="center" name="in2" type="T"/>
+            <output side="right" justify="center" name="out" type="T"/>
+        </io>
+    </block>
+    <block name="sub" group="math">
+        <generics>
+            <generic name="T"/>
+        </generics>
+        <io>
+            <input side="left" justify="center" name="in1" type="T"/>
+            <input side="left" justify="center" name="in2" type="T"/>
+            <output side="right" justify="center" name="out" type="T"/>
+        </io>
+    </block>
+    <block name="mul" group="math">
+        <generics>
+            <generic name="T"/>
+        </generics>
+        <io>
+            <input side="left" justify="center" name="in1" type="T"/>
+            <input side="left" justify="center" name="in2" type="T"/>
+            <output side="right" justify="center" name="out" type="T"/>
+        </io>
+    </block>
+    <block name="div" group="math">
+        <generics>
+            <generic name="T"/>
+        </generics>
+        <io>
+            <input side="left" justify="center" name="in1" type="T"/>
+            <input side="left" justify="center" name="in2" type="T"/>
+            <output side="right" justify="center" name="out" type="T"/>
+        </io>
+    </block>
+    <block name="mod" group="math">
+        <io>
+            <input side="left" justify="center" name="in1" type="number"/>
+            <input side="left" justify="center" name="in2" type="number"/>
+            <output side="right" justify="center" name="out" type="number"/>
+        </io>
+    </block>
+    <block name="pow" group="math">
+        <io>
+            <input side="left" justify="center" name="in1" type="number"/>
+            <input side="left" justify="center" name="in2" type="number"/>
+            <output side="right" justify="center" name="out" type="number"/>
+        </io>
+    </block>
+    <block name="sqrt" group="math">
+        <io>
+            <input side="left" justify="center" name="in" type="number"/>
+            <output side="right" justify="center" name="out" type="number"/>
+        </io>
+    </block>
+    <block name="abs" group="math">
+        <io>
+            <input side="left" justify="center" name="in" type="number"/>
+            <output side="right" justify="center" name="out" type="number"/>
+        </io>
+    </block>
+    <block name="sin" group="math">
+        <io>
+            <input side="left" justify="center" name="in" type="number"/>
+            <output side="right" justify="center" name="out" type="number"/>
+        </io>
+    </block>
+    <block name="cos" group="math">
+        <io>
+            <input side="left" justify="center" name="in" type="number"/>
+            <output side="right" justify="center" name="out" type="number"/>
+        </io>
+    </block>
+    <block name="tan" group="math">
+        <io>
+            <input side="left" justify="center" name="in" type="number"/>
+            <output side="right" justify="center" name="out" type="number"/>
+        </io>
+    </block>
+    <block name="asin" group="math">
+        <io>
+            <input side="left" justify="center" name="in" type="number"/>
+            <output side="right" justify="center" name="out" type="number"/>
+        </io>
+    </block>
+    <block name="acos" group="math">
+        <io>
+            <input side="left" justify="center" name="in" type="number"/>
+            <output side="right" justify="center" name="out" type="number"/>
+        </io>
+    </block>
+    <block name="atan" group="math">
+        <io>
+            <input side="left" justify="center" name="in" type="number"/>
+            <output side="right" justify="center" name="out" type="number"/>
+        </io>
+    </block>
+    <block name="log" group="math">
+        <io>
+            <input side="left" justify="center" name="in" type="number"/>
+            <output side="right" justify="center" name="out" type="number"/>
+        </io>
+    </block>
+    <block name="ln" group="math">
+        <io>
+            <input side="left" justify="center" name="in" type="number"/>
+            <output side="right" justify="center" name="out" type="number"/>
+        </io>
+    </block>
+    <block name="exp" group="math">
+        <io>
+            <input side="left" justify="center" name="in" type="number"/>
+            <output side="right" justify="center" name="out" type="number"/>
+        </io>
+    </block>
+    <block name="floor" group="math">
+        <io>
+            <input side="left" justify="center" name="in" type="number"/>
+            <output side="right" justify="center" name="out" type="number"/>
+        </io>
+    </block>
+    <block name="ceil" group="math">
+        <io>
+            <input side="left" justify="center" name="in" type="number"/>
+            <output side="right" justify="center" name="out" type="number"/>
+        </io>
+    </block>
+    <block name="round" group="math">
+        <io>
+            <input side="left" justify="center" name="in" type="number"/>
+            <output side="right" justify="center" name="out" type="number"/>
+        </io>
+    </block>
+    <block name="rand" group="math">
+        <io>
+            <input side="left" justify="center" name="in" type="number"/>
+            <output side="right" justify="center" name="out" type="number"/>
+        </io>
+    </block>
+    <block name="randint" group="math">
+        <io>
+            <input side="left" justify="center" name="in1" type="number"/>
+            <input side="left" justify="center" name="in2" type="number"/>
+            <output side="right" justify="center" name="out" type="number"/>
+        </io>
+    </block>
+    <block name="randrange" group="math">
+        <io>
+            <input side="left" justify="center" name="in1" type="number"/>
+            <input side="left" justify="center" name="in2" type="number"/>
+            <output side="right" justify="center" name="out" type="number"/>
+        </io>
+    </block>
+    <block name="print" group="generic">
+        <io>
+            <input side="left" justify="center" name="in" type="any"/>
+        </io>
+    </block>
+    <block name="tostring" group="generic">
+        <io>
+            <input side="left" justify="center" name="in" type="any"/>
+            <output side="right" justify="center" name="out" type="string"/>
+        </io>
+    </block>
+    <block name="tonumber" group="generic">
+        <io>
+            <input side="left" justify="center" name="in" type="string"/>
+            <output side="right" justify="center" name="out" type="number"/>
+        </io>
+    </block>
+    <block name="loop" group="flow">
+        <hollow name="inner" paddingTop=".2" paddingLeft=".2" paddingRight=".2" paddingBottom=".2">
+            <input side="right" justify="center" name="continue" type="boolean"/>
+        </hollow>
+    </block>
+    <block name="if" group="flow">
+        <io>
+            <input side="left" justify="center" name="condition" type="boolean"/>
+        </io>
+        <hollow name="true" paddingTop=".2" paddingLeft=".2" paddingRight=".2" paddingBottom=".2">
+
+        </hollow>
+        <hollow name="false" paddingTop=".2" paddingLeft=".2" paddingRight=".2" paddingBottom=".2">
+
+        </hollow>
+    </block>
+    <block name="stackedif" group="flow">
+        <io>
+            <input side="left" justify="center" name="condition" type="boolean"/>
+        </io>
+        <hollow name="true" paddingTop=".2" paddingLeft=".2" paddingRight=".2" paddingBottom=".2" group="stack">
+
+        </hollow>
+        <hollow name="false" paddingTop=".2" paddingLeft=".2" paddingRight=".2" paddingBottom=".2" group="stack">
+
+        </hollow>
+    </block>
+</headers>

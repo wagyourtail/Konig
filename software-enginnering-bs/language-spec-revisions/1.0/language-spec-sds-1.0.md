@@ -137,7 +137,7 @@ the runtime environment. for these headers the blocks will be defined as such:
 
 ```xml
 <headers>
-    <blockid name="">
+    <block name="">
         <io>
             <input side="top" justify="center" name="name" type="boolean" optional="true" />
             <output side="bottom" justify="center" name="name" type="int"/>
@@ -148,6 +148,31 @@ the runtime environment. for these headers the blocks will be defined as such:
 ```
 
 where the blockid tag is named by how the block should be called later.
+
+### typing
+
+#### primitives
+
+primitive IO types are as follows:
+* boolean
+* number
+* string
+* object
+* list
+* any
+
+#### generics
+
+generic types can also be made to be used, blocks can have a `<generics>` tag, this will contain
+the specification for each generic like so:
+`<generic name="T" extends="number">` extends and super are both valid, they work similarly to java in how
+they limit the generic, they therefore are both optional, and generic will accept "any" if none is selected.
+
+### grouping
+
+in order to allow editors to group the types of blocks, they are allowed to specify a group attribute, in the top tag
+ie: `<block name="add" group="math">`, to specify multiple groups, they will be comma separated. this does mean that a comma
+is not a valid character in a group name.
 
 ### io
 
@@ -176,14 +201,17 @@ in order to get them to show up like that, is to add a `group="name"` attribute 
 with those, there is the option to have a dynamic number of hollow blocks stacked using the 
 `<dynamichollow>` tag, but those arn't allowed to use the `group` attribute.
 
+
 those are specified like so:
 ```xml
-<dynamichollow name="name" paddingTop="0" paddingLeft="0" paddingRight="0" paddingBottom="0" type="string">
+<dynamichollow name="name" paddingTop="0" paddingLeft="0" paddingRight="0" paddingBottom="0">
 </dynamichollow>
 ```
 
 the type can be number, string, or boolean.
 
+inside the "hollow" or "dynamic hollow" tag, there is a `<innercode>` tag, inner io will be specified for interacting with the "parent block".
+    
 ### code
 
 if this block is a custom block, then the code tag is required, it's contents will be the same as an overall file's context,
@@ -248,6 +276,8 @@ if wired to an enum, this will mean that the enum will be used to select the val
 wired to an integer will mean that the value will be an integer, etc.
 When not wired anywhere, the user will not be able to change the value, but it will stay as the last type until
 it doesn't make sense, ie, wired to a different type.
+
+if the wire type is "any" then the value will be a string and allow any input.
 
 ### "hollow" blocks
 
