@@ -170,6 +170,11 @@
             <input side="left" justify="center" name="in" type="any"/>
         </io>
     </block>
+    <block name="input" group="generic">
+        <io>
+            <output side="right" justify="center" name="out" type="string"/>
+        </io>
+    </block>
     <block name="tostring" group="generic">
         <io>
             <input side="left" justify="center" name="in" type="any"/>
@@ -208,5 +213,10 @@
         <hollow name="false" paddingTop=".2" paddingLeft=".2" paddingRight=".2" paddingBottom=".2" group="stack">
 
         </hollow>
+    </block>
+    <block name="stop" group="generic">
+        <io>
+            <input side="left" justify="center" name="in" type="any"/>
+        </io>
     </block>
 </headers>

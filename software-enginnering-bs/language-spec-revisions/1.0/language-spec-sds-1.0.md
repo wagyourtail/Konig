@@ -31,12 +31,12 @@ This will be definitions of the storage medium and builtin functions for the sys
 
 The file will be stored in XML, templating out the actual contents of the file: 
 ```xml
-<code name="">
-    <custom-blocks>
+<code name="" version="1.0">
+    <headers>
         <custom name="blockname">
         <!-- code -->
         </custom>
-    </custom-blocks>
+    </headers>
     <main>
         <!-- code -->
     </main>
@@ -129,14 +129,14 @@ There will be a block that combines two or more nets to specifically run after e
 
 ## block type headers
 
-blocks can be optionally be defined in a `<headers>` tag or file, 
-this is also the spec for how custom blocks are defined, except there is a bit more too them that will be
+blocks can be optionally be defined in a `<headers>` tag or file,
+this is also the spec for how custom blocks are defined, except there is a bit more to them that will be
 explained in a further section. 
 this will allow for editors to not need to know all the block types without actually having access to 
 the runtime environment. for these headers the blocks will be defined as such:
 
 ```xml
-<headers>
+<headers version="1.0">
     <block name="">
         <io>
             <input side="top" justify="center" name="name" type="boolean" optional="true" />
