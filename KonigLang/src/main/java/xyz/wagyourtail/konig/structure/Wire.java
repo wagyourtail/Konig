@@ -1,5 +1,7 @@
 package xyz.wagyourtail.konig.structure;
 
+import org.w3c.dom.Node;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,6 +16,10 @@ public class Wire {
 
     public List<WireSegment> getSegments() {
         return segments;
+    }
+
+    public void parseXML(Node node) {
+
     }
 
     public static class WireSegment {

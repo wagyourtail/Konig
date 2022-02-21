@@ -3,6 +3,7 @@ package xyz.wagyourtail.konig;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
+import xyz.wagyourtail.konig.structure.KonigBlock;
 import xyz.wagyourtail.konig.structure.KonigFile;
 import xyz.wagyourtail.konig.structure.KonigHeaders;
 import xyz.wagyourtail.konig.structure.KonigProgram;
@@ -17,7 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Konig {
-    private static final Map<String, Class<KonigBlock>> blocks = new HashMap<>();
+    public static final Map<String, Map<String, KonigBlock>> blocks = new HashMap<>();
 
     public static KonigFile deserialize(Path file) throws ParserConfigurationException, IOException, SAXException {
         if (!Files.isRegularFile(file)) throw new IllegalArgumentException("File is not a regular file");

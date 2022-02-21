@@ -7,7 +7,7 @@ import java.util.Map;
 
 public interface KonigFile {
     String getVersion();
-    Map<String, KonigBlock> getCustomBlocks();
+    Map<String, Map<String, KonigBlock>> getCustomBlocks();
 
     void parseXML(Node node) throws IOException;
 

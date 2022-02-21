@@ -211,12 +211,17 @@ those are specified like so:
 the type can be number, string, or boolean.
 
 inside the "hollow" or "dynamic hollow" tag, there is a `<innercode>` tag, inner io will be specified for interacting with the "parent block".
-    
+
+These blocks can also directly interact with their inner code using input/outputs defined within the hollow tag.
+this will act similarly to normal io, styling etc, but will be used to connect the inner code to the outer block.
+to specify the connection, the outer block wll have an id of `-1` in the innercode
+
 ### code
 
 if this block is a custom block, then the code tag is required, it's contents will be the same as an overall file's context,
 as in a set of wires, in that case the inner `globalinput` and `globaloutput` tags correspond *only* to 
-the inputs and outputs of the block itself.
+the inputs and outputs of the block itself. in order to facilitate the creation of these global input/outputs there will be
+a `<innerio>` tag similarly to the io tag, except that side/justify will be ignored.
 
 ## block referencing
 
@@ -287,10 +292,6 @@ these blocks allow for having inner code that is executed inside of the block, a
 one condition of wires with these blocks is that they will connect through a "tunnel" that pipes the wire through the
 outer block to the inner block. these tunnels will only allow for the inputs to be run once, and the output to be outputted
 once the outer block declares it is "finished".
-
-These blocks can also directly interact with their inner code using an `<innerio>` tag,
-this will act similarly to normal io, styling etc, but will be used to connect the inner code to the outer block.
-to specify the connection, the outer block wll have an id of `-1` in the innercode
  
 they also allow for a "passthrough" or pipe, which is a dynamic way to connect an outer wire into the inner block,
 this will work by creating a "virtual" port where the outer wire is connected to, and the inner wire is then connected via
@@ -299,15 +300,13 @@ by their id attribute. specifying a virtual port is shown in the `<virtual>` tag
 
 ```xml
 <block ...>
-    <io>
-    </io>
-    <virtual>
-        <port direction="in" id="0">
-            <outer wireid="0" side="top" offset=".3"/>
-            <inner wireid="0" side="top" offset=".2"/>
-        </port>
-    </virtual>
     <innercode name="example">
+        <virtual>
+            <port direction="in" id="0">
+                <outer wireid="0" side="top" offset=".3"/>
+                <inner wireid="0" side="top" offset=".2"/>
+            </port>
+        </virtual>
         <wires>
             <!-- code -->
         </wires>
@@ -322,6 +321,10 @@ The offsets are relative to the left edge of the face they are on, so this would
 
 ![virtio_spacing.png](imgs/virtio_spacing.png)
 
+Also, when this is `direction="in"` this passthrough also allows for a "loopback" so that the inner code can set a value
+for if the block runs the inner code multiple times (like in loop blocks). this will cause the io to offset -.05 and .05 on the inside
+with the right one being the loopback.
+
 For stacked blocks, the virtual ports can be shared between the blocks as they are on-top of eachother so that makes sense.
 Also, for specifying dynamic hollow blocks, the inner code tags will use the name and then use `id="id"` where the id is specified
 as stated in the block specification, but each must be unique.
@@ -334,4 +337,3 @@ for example, loops, if statements, switch, etc.
 if statements would have 2 hollow blocks, one for the if statement, and one for the else statement.
 the loop block will have a hollow block inside of it, this block will output a boolean value, which will be used to determine
 if the loop should continue or not.
-

@@ -19,7 +19,7 @@ public class KonigProgram implements KonigFile {
     }
 
     @Override
-    public Map<String, KonigBlock> getCustomBlocks() {
+    public Map<String, Map<String, KonigBlock>> getCustomBlocks() {
         return headers.getCustomBlocks();
     }
 
