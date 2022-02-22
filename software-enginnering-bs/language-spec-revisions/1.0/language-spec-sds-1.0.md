@@ -300,13 +300,13 @@ by their id attribute. specifying a virtual port is shown in the `<virtual>` tag
 
 ```xml
 <block ...>
+    <virtual forName="example">
+        <port direction="in" id="0">
+            <outer wireid="0" side="top" offset=".3"/>
+            <inner wireid="0" side="top" offset=".2"/>
+        </port>
+    </virtual>
     <innercode name="example">
-        <virtual>
-            <port direction="in" id="0">
-                <outer wireid="0" side="top" offset=".3"/>
-                <inner wireid="0" side="top" offset=".2"/>
-            </port>
-        </virtual>
         <wires>
             <!-- code -->
         </wires>
@@ -316,6 +316,10 @@ by their id attribute. specifying a virtual port is shown in the `<virtual>` tag
     </innercode>
 </block>
 ```
+
+there are 2 possible attributes for the `<virtual>` tag: `forName` and `forGroup`. these specify which innercode these
+ports are for. if `forName` is specified, then the innercode will be searched for by name, and if `forGroup` is specified,
+then the innercode will be searched for by group.
 
 The offsets are relative to the left edge of the face they are on, so this would look something like:
 
