@@ -1,12 +1,13 @@
-package xyz.wagyourtail.konig.structure;
+package xyz.wagyourtail.konig.structure.headers;
 
 import org.w3c.dom.Node;
+import xyz.wagyourtail.konig.structure.code.Code;
 
 import java.io.IOException;
 
 public class KonigCustomBlock extends KonigBlock {
     public final Code code = new Code();
-    public final IO innerio = new IO();
+    public final BlockIO innerio = new BlockIO();
 
     @Override
     protected boolean parseChild(Node child) throws IOException {

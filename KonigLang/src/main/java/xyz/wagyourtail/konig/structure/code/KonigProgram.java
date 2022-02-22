@@ -1,7 +1,10 @@
-package xyz.wagyourtail.konig.structure;
+package xyz.wagyourtail.konig.structure.code;
 
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import xyz.wagyourtail.konig.structure.KonigFile;
+import xyz.wagyourtail.konig.structure.headers.KonigBlock;
+import xyz.wagyourtail.konig.structure.headers.KonigHeaders;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -37,10 +40,14 @@ public class KonigProgram implements KonigFile {
             Node n = nodes.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 if (n.getNodeName().equals("headers")) {
-                    if (!found.add("headers")) throw new IOException("Duplicate headers");
+                    if (!found.add("headers")) {
+                        throw new IOException("Duplicate headers");
+                    }
                     headers.parseXML(n);
                 } else if (n.getNodeName().equals("code")) {
-                    if (!found.add("code")) throw new IOException("Duplicate code");
+                    if (!found.add("code")) {
+                        throw new IOException("Duplicate code");
+                    }
                     code.parseXML(n);
                 } else {
                     throw new IOException("Unknown node: " + n.getNodeName());

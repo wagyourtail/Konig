@@ -12,4 +12,5 @@ public class Main {
         Path hello_world = Path.of("software-enginnering-bs/language-spec-revisions/1.0/example/helloworld.konig");
         Konig.deserialize(hello_world);
     }
+
 }

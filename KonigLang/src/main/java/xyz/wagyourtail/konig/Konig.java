@@ -3,15 +3,17 @@ package xyz.wagyourtail.konig;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
-import xyz.wagyourtail.konig.structure.KonigBlock;
 import xyz.wagyourtail.konig.structure.KonigFile;
-import xyz.wagyourtail.konig.structure.KonigHeaders;
-import xyz.wagyourtail.konig.structure.KonigProgram;
+import xyz.wagyourtail.konig.structure.code.KonigProgram;
+import xyz.wagyourtail.konig.structure.headers.KonigBlock;
+import xyz.wagyourtail.konig.structure.headers.KonigHeaders;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -21,11 +23,19 @@ public class Konig {
     public static final Map<String, Map<String, KonigBlock>> blocks = new HashMap<>();
 
     public static KonigFile deserialize(Path file) throws ParserConfigurationException, IOException, SAXException {
-        if (!Files.isRegularFile(file)) throw new IllegalArgumentException("File is not a regular file");
-        if (!Files.isReadable(file)) throw new IllegalArgumentException("File is not readable");
+        if (!Files.isRegularFile(file)) {
+            throw new IllegalArgumentException("File is not a regular file");
+        }
+        if (!Files.isReadable(file)) {
+            throw new IllegalArgumentException("File is not readable");
+        }
+        return deserialize(Files.newInputStream(file));
+    }
+
+    public static KonigFile deserialize(InputStream stream) throws ParserConfigurationException, IOException, SAXException {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder = factory.newDocumentBuilder();
-        Document doc = builder.parse(file.toFile());
+        Document doc = builder.parse(stream);
         doc.getDocumentElement().normalize();
 
         Node root = doc.getDocumentElement();
@@ -40,4 +50,11 @@ public class Konig {
         }
         throw new IllegalArgumentException("File is not a valid Konig file");
     }
+
+    public static KonigFile deserializeString(String code) throws ParserConfigurationException, IOException, SAXException {
+        // string to input stream
+        InputStream stream = new ByteArrayInputStream(code.getBytes());
+        return deserialize(stream);
+    }
+
 }

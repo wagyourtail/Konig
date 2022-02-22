@@ -1,4 +1,4 @@
-package xyz.wagyourtail.konig.structure;
+package xyz.wagyourtail.konig.structure.code;
 
 import org.w3c.dom.Node;
 
@@ -7,12 +7,11 @@ import java.util.List;
 
 public class Wire {
     private final List<WireEndpoint> endpoints = new ArrayList<>();
+    private final List<WireSegment> segments = new ArrayList<>();
 
     public List<WireEndpoint> getEndpoints() {
         return endpoints;
     }
-
-    private final List<WireSegment> segments = new ArrayList<>();
 
     public List<WireSegment> getSegments() {
         return segments;
@@ -29,6 +28,7 @@ public class Wire {
             this.x = x;
             this.y = y;
         }
+
     }
 
     public static class WireEndpoint extends WireSegment {
@@ -38,6 +38,7 @@ public class Wire {
             super(x, y);
             this.blockid = blockid;
         }
+
     }
 
     public static class WireBranch extends WireSegment {
@@ -46,5 +47,7 @@ public class Wire {
         public WireBranch(int x, int y) {
             super(x, y);
         }
+
     }
+
 }

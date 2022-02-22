@@ -1,11 +1,13 @@
-package xyz.wagyourtail.konig.structure;
+package xyz.wagyourtail.konig.structure.headers;
 
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import xyz.wagyourtail.konig.structure.KonigFile;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class KonigHeaders implements KonigFile {
     private final Map<String, Map<String, KonigBlock>> customBlockMap = new HashMap<>();
@@ -46,4 +48,25 @@ public class KonigHeaders implements KonigFile {
             }
         }
     }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(customBlockMap, version);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof KonigHeaders)) {
+            return false;
+        }
+        KonigHeaders that = (KonigHeaders) o;
+        return Objects.equals(customBlockMap, that.customBlockMap) && Objects.equals(
+            version,
+            that.version
+        );
+    }
+
 }
