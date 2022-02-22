@@ -2,19 +2,33 @@ package xyz.wagyourtail.konig.structure.code;
 
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 import xyz.wagyourtail.konig.structure.KonigFile;
 import xyz.wagyourtail.konig.structure.headers.KonigBlock;
 import xyz.wagyourtail.konig.structure.headers.KonigHeaders;
 
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class KonigProgram implements KonigFile {
-    private final KonigHeaders headers = new KonigHeaders();
-    public final Code code = new Code();
+public class KonigProgram implements KonigFile, Code.CodeParent {
+    private final Path path;
+    private final KonigHeaders headers;
+    public final Code code = new Code(this);
     public String version;
+
+    public KonigProgram(Path path) {
+        this.headers = new KonigHeaders(path);
+        this.path = path;
+    }
+
+    @Override
+    public Path getPath() {
+        return path;
+    }
 
     @Override
     public String getVersion() {
@@ -27,7 +41,7 @@ public class KonigProgram implements KonigFile {
     }
 
     @Override
-    public void parseXML(Node node) throws IOException {
+    public void parseXML(Node node) throws IOException, ParserConfigurationException, SAXException {
         Node version = node.getAttributes().getNamedItem("version");
         if (version != null) {
             this.version = version.getNodeValue();
@@ -54,6 +68,12 @@ public class KonigProgram implements KonigFile {
                 }
             }
         }
+    }
+
+    @Override
+    public KonigBlock getBlockByName(String name) {
+        //TODO: stdlib and stuff gets
+        return headers.getBlockByName(name);
     }
 
 }

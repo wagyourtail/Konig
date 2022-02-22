@@ -149,6 +149,18 @@ the runtime environment. for these headers the blocks will be defined as such:
 
 where the blockid tag is named by how the block should be called later.
 
+### include
+
+block type headers may include an `<include>` tag, this will have attributes of `src` and `intern` which only one of is allowed,
+if src, it loads headers for the file at the src path, if intern, it loads the headers from within the runner.
+
+ie. to include stdlib headers explicitly, tho this will be implicitly done by the runner as the first element:
+```xml
+<headers version="1.0">
+    <include intern="stdlib" />
+</headers>
+```
+
 ### typing
 
 #### primitives

@@ -29,10 +29,10 @@ public class Konig {
         if (!Files.isReadable(file)) {
             throw new IllegalArgumentException("File is not readable");
         }
-        return deserialize(Files.newInputStream(file));
+        return deserialize(Files.newInputStream(file), file);
     }
 
-    public static KonigFile deserialize(InputStream stream) throws ParserConfigurationException, IOException, SAXException {
+    public static KonigFile deserialize(InputStream stream, Path path) throws ParserConfigurationException, IOException, SAXException {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder = factory.newDocumentBuilder();
         Document doc = builder.parse(stream);
@@ -40,21 +40,21 @@ public class Konig {
 
         Node root = doc.getDocumentElement();
         if (root.getNodeName().equals("code")) {
-            KonigProgram program = new KonigProgram();
+            KonigProgram program = new KonigProgram(path);
             program.parseXML(root);
             return program;
         } else if (root.getNodeName().equals("headers")) {
-            KonigHeaders header = new KonigHeaders();
+            KonigHeaders header = new KonigHeaders(path);
             header.parseXML(root);
             return header;
         }
         throw new IllegalArgumentException("File is not a valid Konig file");
     }
 
-    public static KonigFile deserializeString(String code) throws ParserConfigurationException, IOException, SAXException {
+    public static KonigFile deserializeString(String code, Path path) throws ParserConfigurationException, IOException, SAXException {
         // string to input stream
         InputStream stream = new ByteArrayInputStream(code.getBytes());
-        return deserialize(stream);
+        return deserialize(stream, path);
     }
 
 }

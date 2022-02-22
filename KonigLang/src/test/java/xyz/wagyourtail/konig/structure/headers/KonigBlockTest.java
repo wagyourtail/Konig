@@ -1,4 +1,4 @@
-package xyz.wagyourtail.konig.structure;
+package xyz.wagyourtail.konig.structure.headers;
 
 import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
@@ -55,9 +55,8 @@ class KonigBlockTest {
         io.elements.computeIfAbsent(KonigBlock.Side.RIGHT, k -> new HashMap<>()).computeIfAbsent(KonigBlock.Justify.CENTER, k -> new ArrayList<>()).add(out);
         io.outputs.add(out);
         io.byName.put("out", out);
-        if (!block2.equals(block)) {
-            fail("blocks are not equal");
-        }
+
+        assertEquals(block2, block);
     }
 
     @Test
@@ -117,9 +116,7 @@ class KonigBlockTest {
         block2.hollowsByName.put("false", hollow);
         block2.hollowsByGroupName.computeIfAbsent("stack", k -> new HashMap<>()).put("false", hollow);
 
-        if (!block2.equals(block)) {
-            fail("blocks are not equal");
-        }
+        assertEquals(block2, block);
     }
 
 }
