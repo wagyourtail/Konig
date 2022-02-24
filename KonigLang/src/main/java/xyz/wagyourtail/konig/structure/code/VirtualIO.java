@@ -35,12 +35,34 @@ public class VirtualIO {
                 if (child.getNodeName().equals("port")) {
                     String direction = child.getAttributes().getNamedItem("direction").getNodeValue();
                     int id = Integer.parseInt(child.getAttributes().getNamedItem("id").getNodeValue());
-                    portMap.put(id, new Port(direction, id));
+                    Port port = new Port(direction, id);
+                    port.parseXML(child);
+                    portMap.put(id, port);
                 } else {
                     throw new IOException("Unknown VirtualIO child node: " + child.getNodeName());
                 }
             }
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof VirtualIO)) {
+            return false;
+        }
+        VirtualIO virtualIO = (VirtualIO) o;
+        return Objects.equals(forGroup, virtualIO.forGroup) && Objects.equals(
+            forName,
+            virtualIO.forName
+        ) && portMap.equals(virtualIO.portMap);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(forGroup, forName, portMap);
     }
 
     public static class Port {
@@ -90,6 +112,27 @@ public class VirtualIO {
                 }
             }
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof Port)) {
+                return false;
+            }
+            Port port = (Port) o;
+            return id == port.id && Objects.equals(direction, port.direction) && Objects.equals(
+                outer,
+                port.outer
+            ) && Objects.equals(inner, port.inner) && Objects.equals(loopback, port.loopback);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(direction, id, outer, inner, loopback);
+        }
+
     }
 
     public static class PortElement {

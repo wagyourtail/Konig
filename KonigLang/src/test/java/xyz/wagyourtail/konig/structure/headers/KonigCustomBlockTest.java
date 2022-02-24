@@ -4,8 +4,6 @@ import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
-import xyz.wagyourtail.konig.structure.headers.BlockIO;
-import xyz.wagyourtail.konig.structure.headers.KonigBlock;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -17,13 +15,13 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class KonigBlockTest {
+class KonigCustomBlockTest {
 
     @Test
     void parseXML1() throws ParserConfigurationException, IOException, SAXException {
-        KonigBlock block = new KonigBlock();
+        KonigBlock block = new KonigCustomBlock(null);
         String xml = """
             <block name="tonumber" group="generic">
                 <io>
@@ -41,18 +39,18 @@ class KonigBlockTest {
         Node root = doc.getDocumentElement();
         block.parseXML(root);
 
-        KonigBlock block2 = new KonigBlock();
+        KonigBlock block2 = new KonigCustomBlock(null);
         block2.name = "tonumber";
         block2.group = "generic";
         BlockIO io = block2.io;
 
-        BlockIO.Input in = new BlockIO.Input(KonigBlock.Side.LEFT, KonigBlock.Justify.CENTER, "in", "string", false);
-        io.elements.computeIfAbsent(KonigBlock.Side.LEFT, k -> new HashMap<>()).computeIfAbsent(KonigBlock.Justify.CENTER, k -> new ArrayList<>()).add(in);
+        BlockIO.Input in = new BlockIO.Input(BlockIO.Side.LEFT, BlockIO.Justify.CENTER, "in", "string", false);
+        io.elements.computeIfAbsent(BlockIO.Side.LEFT, k -> new HashMap<>()).computeIfAbsent(BlockIO.Justify.CENTER, k -> new ArrayList<>()).add(in);
         io.inputs.add(in);
         io.byName.put("in", in);
 
-        BlockIO.Output out = new BlockIO.Output(KonigBlock.Side.RIGHT, KonigBlock.Justify.CENTER, "out", "number");
-        io.elements.computeIfAbsent(KonigBlock.Side.RIGHT, k -> new HashMap<>()).computeIfAbsent(KonigBlock.Justify.CENTER, k -> new ArrayList<>()).add(out);
+        BlockIO.Output out = new BlockIO.Output(BlockIO.Side.RIGHT, BlockIO.Justify.CENTER, "out", "number");
+        io.elements.computeIfAbsent(BlockIO.Side.RIGHT, k -> new HashMap<>()).computeIfAbsent(BlockIO.Justify.CENTER, k -> new ArrayList<>()).add(out);
         io.outputs.add(out);
         io.byName.put("out", out);
 
@@ -61,7 +59,7 @@ class KonigBlockTest {
 
     @Test
     void parseXML2() throws ParserConfigurationException, IOException, SAXException {
-        KonigBlock block = new KonigBlock();
+        KonigBlock block = new KonigCustomBlock(null);
         String xml = """
                 <block name="stackedif" group="flow">
                     <io>
@@ -84,17 +82,17 @@ class KonigBlockTest {
         Node root = doc.getDocumentElement();
         block.parseXML(root);
 
-        KonigBlock block2 = new KonigBlock();
+        KonigBlock block2 = new KonigCustomBlock(null);
         block2.name = "stackedif";
         block2.group = "flow";
         BlockIO io = block2.io;
 
-        BlockIO.Input in = new BlockIO.Input(KonigBlock.Side.LEFT, KonigBlock.Justify.CENTER, "condition", "boolean", false);
-        io.elements.computeIfAbsent(KonigBlock.Side.LEFT, k -> new HashMap<>()).computeIfAbsent(KonigBlock.Justify.CENTER, k -> new ArrayList<>()).add(in);
+        BlockIO.Input in = new BlockIO.Input(BlockIO.Side.LEFT, BlockIO.Justify.CENTER, "condition", "boolean", false);
+        io.elements.computeIfAbsent(BlockIO.Side.LEFT, k -> new HashMap<>()).computeIfAbsent(BlockIO.Justify.CENTER, k -> new ArrayList<>()).add(in);
         io.inputs.add(in);
         io.byName.put("condition", in);
 
-        KonigBlock.Hollow hollow = new KonigBlock.Hollow();
+        Hollow hollow = new Hollow();
         hollow.name = "true";
         hollow.group = "stack";
         hollow.paddingTop = .2;
@@ -105,7 +103,7 @@ class KonigBlockTest {
         block2.hollowsByName.put("true", hollow);
         block2.hollowsByGroupName.computeIfAbsent("stack", k -> new HashMap<>()).put("true", hollow);
 
-        hollow = new KonigBlock.Hollow();
+        hollow = new Hollow();
         hollow.name = "false";
         hollow.group = "stack";
         hollow.paddingTop = .2;

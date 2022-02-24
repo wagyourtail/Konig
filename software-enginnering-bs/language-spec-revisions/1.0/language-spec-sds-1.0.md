@@ -232,9 +232,7 @@ to specify the connection, the outer block wll have an id of `-1` in the innerco
 
 if this block is a custom block, then the code tag is required, it's contents will be the same as an overall file's context,
 as in a set of wires, in that case the inner `globalinput` and `globaloutput` tags correspond *only* to 
-the inputs and outputs of the block itself. in order to facilitate the creation of these global input/outputs there will be
-a `<innerio>` tag similarly to the io tag, except that side/justify will be ignored.
-
+the inputs and outputs of the block itself.
 ## block referencing
 
 blocks are then referenced in a way that is (incorrectly) shown above, the real way is like:
@@ -307,8 +305,8 @@ once the outer block declares it is "finished".
  
 they also allow for a "passthrough" or pipe, which is a dynamic way to connect an outer wire into the inner block,
 this will work by creating a "virtual" port where the outer wire is connected to, and the inner wire is then connected via
-a visual "tunnel" to a virtual innerio port. the "names" of these ports for the wires to connect to will be `$virtual` followed
-by their id attribute. specifying a virtual port is shown in the `<virtual>` tag which looks as follows:
+a visual "tunnel" to a virtual innerio port. the "names" of these ports for the wires to connect to will be `virtual$` followed
+`forName$` or `forGroup$` then the group a $ then id attribute, ie `virtual$forName$name$0`. specifying a virtual port is shown in the `<virtual>` tag which looks as follows:
 
 ```xml
 <block ...>

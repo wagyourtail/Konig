@@ -1,18 +1,24 @@
 package xyz.wagyourtail.konig.structure.headers;
 
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import xyz.wagyourtail.konig.structure.code.KonigBlockReference;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 
-public class KonigBlock {
+public abstract class KonigBlock {
     public final BlockIO io = new BlockIO();
     public final Map<String, Map<String, Hollow>> hollowsByGroupName = new HashMap<>();
     public final Map<String, Hollow> hollowsByName = new HashMap<>();
+    public final Map<String, BlockIO.Generic> generics = new HashMap<>();
     public String name;
     public String group;
     public Path image;
@@ -49,7 +55,30 @@ public class KonigBlock {
             hollowsByName.put(io.name, io);
             return true;
         }
+        if (child.getNodeName().equals("generics")) {
+            parseGenerics(child);
+            return true;
+        }
         return false;
+    }
+
+    protected void parseGenerics(Node node) throws IOException {
+        NodeList children = node.getChildNodes();
+        for (int i = 0; i < children.getLength(); i++) {
+            Node child = children.item(i);
+            if (child.getNodeType() == Node.ELEMENT_NODE) {
+                if (child.getNodeName().equals("generic")) {
+                    NamedNodeMap attrs = child.getAttributes();
+                    String name = attrs.getNamedItem("name").getNodeValue();
+                    String extend = Optional.ofNullable(attrs.getNamedItem("extend")).map(Node::getNodeValue).orElse(null);
+                    String supers = Optional.ofNullable(attrs.getNamedItem("supers")).map(Node::getNodeValue).orElse(null);
+                    BlockIO.Generic generic = new BlockIO.Generic(name, extend, supers);
+                    generics.put(name, generic);
+                } else {
+                    throw new IOException("Unknown child node: " + child.getNodeName());
+                }
+            }
+        }
     }
 
     @Override
@@ -74,66 +103,7 @@ public class KonigBlock {
         );
     }
 
-    public enum Side {
-        TOP,
-        BOTTOM,
-        LEFT,
-        RIGHT
-    }
+    public abstract Function<Map<String, CompletableFuture<Object>>, Map<String, CompletableFuture<Object>>> compile(KonigBlockReference self);
 
-    public enum Justify {
-        LEFT,
-        CENTER,
-        RIGHT
-    }
-
-    public static class Hollow extends BlockIO {
-        public double paddingTop, paddingLeft, paddingBottom, paddingRight;
-        public String name;
-        public String group;
-
-        @Override
-        public void parseXML(Node child) throws IOException {
-            paddingBottom = Double.parseDouble(child.getAttributes().getNamedItem("paddingBottom").getNodeValue());
-            paddingLeft = Double.parseDouble(child.getAttributes().getNamedItem("paddingLeft").getNodeValue());
-            paddingRight = Double.parseDouble(child.getAttributes().getNamedItem("paddingRight").getNodeValue());
-            paddingTop = Double.parseDouble(child.getAttributes().getNamedItem("paddingTop").getNodeValue());
-            name = child.getAttributes().getNamedItem("name").getNodeValue();
-            if (child.getAttributes().getNamedItem("group") != null) {
-                group = child.getAttributes().getNamedItem("group").getNodeValue();
-            } else {
-                group = "$ungrouped$" + name;
-            }
-            super.parseXML(child);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(super.hashCode(), paddingTop, paddingLeft, paddingBottom, paddingRight, name, group);
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (!(o instanceof Hollow)) {
-                return false;
-            }
-            if (!super.equals(o)) {
-                return false;
-            }
-            Hollow hollow = (Hollow) o;
-            return Double.compare(hollow.paddingTop, paddingTop) == 0 && Double.compare(
-                hollow.paddingLeft,
-                paddingLeft
-            ) == 0 && Double.compare(hollow.paddingBottom, paddingBottom) == 0 &&
-                Double.compare(hollow.paddingRight, paddingRight) == 0 && Objects.equals(
-                name,
-                hollow.name
-            ) && Objects.equals(group, hollow.group);
-        }
-
-    }
 
 }

@@ -5,7 +5,6 @@ import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 import xyz.wagyourtail.konig.structure.KonigFile;
 import xyz.wagyourtail.konig.structure.code.KonigProgram;
-import xyz.wagyourtail.konig.structure.headers.KonigBlock;
 import xyz.wagyourtail.konig.structure.headers.KonigHeaders;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -20,7 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Konig {
-    public static final Map<String, Map<String, KonigBlock>> blocks = new HashMap<>();
+    public static final Map<String, KonigHeaders> intern = new HashMap<>();
 
     public static KonigFile deserialize(Path file) throws ParserConfigurationException, IOException, SAXException {
         if (!Files.isRegularFile(file)) {
@@ -55,6 +54,10 @@ public class Konig {
         // string to input stream
         InputStream stream = new ByteArrayInputStream(code.getBytes());
         return deserialize(stream, path);
+    }
+
+    public static KonigHeaders getInternHeaders(String name) {
+        return intern.get(name);
     }
 
 }

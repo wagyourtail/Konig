@@ -1,14 +1,20 @@
 package xyz.wagyourtail.konig.structure.headers;
 
 import org.w3c.dom.Node;
+import xyz.wagyourtail.OnceSupplier;
 import xyz.wagyourtail.konig.structure.code.Code;
+import xyz.wagyourtail.konig.structure.code.KonigBlockReference;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class KonigCustomBlock extends KonigBlock {
     public final KonigHeaders parent;
     public final Code code;
-    public final BlockIO innerio = new BlockIO();
 
     public KonigCustomBlock(KonigHeaders parent) {
         this.parent = parent;
@@ -21,10 +27,28 @@ public class KonigCustomBlock extends KonigBlock {
             code.parseXML(child);
             return true;
         }
-        if (child.getNodeName().equals("innerio")) {
-            innerio.parseXML(child);
-        }
         return super.parseChild(child);
+    }
+
+    @Override
+    public Function<Map<String, CompletableFuture<Object>>, Map<String, CompletableFuture<Object>>> compile(KonigBlockReference self) {
+        Function<Map<String, Object>, CompletableFuture<Map<String, Object>>> compiledInner = code.compile();
+        return (inputs) -> {
+
+            CompletableFuture<Map<String, Object>> cf = CompletableFuture.supplyAsync(() -> {
+                Map<String, Object> inputsMap = new HashMap<>();
+                for (Map.Entry<String, CompletableFuture<Object>> input : inputs.entrySet()) {
+                    inputsMap.put(input.getKey(), input.getValue().join());
+                }
+                return inputsMap;
+            }).thenCompose(compiledInner);
+
+            Map<String, CompletableFuture<Object>> outputs = new HashMap<>();
+            for (BlockIO.IOElement output : io.outputs) {
+                outputs.put(output.name, cf.thenApply(e -> e.get(output.name)));
+            }
+            return outputs;
+        };
     }
 
 }

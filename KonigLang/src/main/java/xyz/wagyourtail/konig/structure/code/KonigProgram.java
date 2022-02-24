@@ -13,6 +13,8 @@ import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 
 public class KonigProgram implements KonigFile, Code.CodeParent {
     private final Path path;
@@ -36,8 +38,8 @@ public class KonigProgram implements KonigFile, Code.CodeParent {
     }
 
     @Override
-    public Map<String, Map<String, KonigBlock>> getCustomBlocks() {
-        return headers.getCustomBlocks();
+    public Map<String, Map<String, KonigBlock>> getBlocks() {
+        return headers.getBlocks();
     }
 
     @Override
@@ -74,6 +76,10 @@ public class KonigProgram implements KonigFile, Code.CodeParent {
     public KonigBlock getBlockByName(String name) {
         //TODO: stdlib and stuff gets
         return headers.getBlockByName(name);
+    }
+
+    public Function<Map<String, Object>, CompletableFuture<Map<String, Object>>> compile() {
+        return code.compile();
     }
 
 }

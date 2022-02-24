@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.util.*;
 
 public class BlockIO {
-    public final Map<KonigBlock.Side, Map<KonigBlock.Justify, List<IOElement>>> elements = new HashMap<>();
+    public final Map<Side, Map<Justify, List<IOElement>>> elements = new HashMap<>();
     public final List<Input> inputs = new ArrayList<>();
     public final List<Output> outputs = new ArrayList<>();
     public final Map<String, IOElement> byName = new HashMap<>();
@@ -19,10 +19,10 @@ public class BlockIO {
             Node child2 = children.item(i);
             if (child2.getNodeType() == Node.ELEMENT_NODE) {
                 NamedNodeMap attrs = child2.getAttributes();
-                KonigBlock.Side side = KonigBlock.Side.valueOf(attrs.getNamedItem("side")
+                Side side = Side.valueOf(attrs.getNamedItem("side")
                     .getNodeValue()
                     .toUpperCase(Locale.ROOT));
-                KonigBlock.Justify justify = KonigBlock.Justify.valueOf(attrs.getNamedItem("justify")
+                Justify justify = Justify.valueOf(attrs.getNamedItem("justify")
                     .getNodeValue()
                     .toUpperCase(Locale.ROOT));
                 String name = attrs.getNamedItem("name").getNodeValue();
@@ -71,13 +71,26 @@ public class BlockIO {
         ) && Objects.equals(byName, io.byName);
     }
 
+    public enum Side {
+        TOP,
+        BOTTOM,
+        LEFT,
+        RIGHT
+    }
+
+    public enum Justify {
+        LEFT,
+        CENTER,
+        RIGHT
+    }
+
     public static class IOElement {
-        public final KonigBlock.Side side;
-        public final KonigBlock.Justify justify;
+        public final Side side;
+        public final Justify justify;
         public final String name;
         public final String type;
 
-        public IOElement(KonigBlock.Side side, KonigBlock.Justify justify, String name, String type) {
+        public IOElement(Side side, Justify justify, String name, String type) {
             this.side = side;
             this.justify = justify;
             this.name = name;
@@ -107,7 +120,7 @@ public class BlockIO {
     public static class Input extends IOElement {
         public final boolean optional;
 
-        public Input(KonigBlock.Side side, KonigBlock.Justify justify, String name, String type, boolean optional) {
+        public Input(Side side, Justify justify, String name, String type, boolean optional) {
             super(side, justify, name, type);
             this.optional = optional;
         }
@@ -136,10 +149,22 @@ public class BlockIO {
 
     public static class Output extends IOElement {
 
-        public Output(KonigBlock.Side side, KonigBlock.Justify justify, String name, String type) {
+        public Output(Side side, Justify justify, String name, String type) {
             super(side, justify, name, type);
         }
 
+    }
+
+    public static class Generic {
+        public final String name;
+        public final String extend;
+        public final String supers;
+
+        public Generic(String name, String extend, String supers) {
+            this.name = name;
+            this.extend = extend;
+            this.supers = supers;
+        }
     }
 
 }

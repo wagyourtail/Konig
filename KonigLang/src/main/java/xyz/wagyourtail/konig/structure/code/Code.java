@@ -2,12 +2,13 @@ package xyz.wagyourtail.konig.structure.code;
 
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import xyz.wagyourtail.konig.structure.headers.BlockIO;
 import xyz.wagyourtail.konig.structure.headers.KonigBlock;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 
 public class Code {
     public final CodeParent parent;
@@ -86,5 +87,121 @@ public class Code {
 
     public interface CodeParent {
         KonigBlock getBlockByName(String name);
+    }
+
+    public Function<Map<String, Object>, CompletableFuture<Map<String, Object>>> compile() {
+        // map all the blocks
+        Map<KonigBlockReference, BlockWires> blockMap = new HashMap<>();
+        for (Wire wire : wireMap.values()) {
+            CompiledWire cw = compileWire(wire);
+            blockMap.computeIfAbsent(cw.input.reference, BlockWires::new).outputs.add(cw);
+            for (BlockPort output : cw.outputs) {
+                blockMap.computeIfAbsent(output.reference, BlockWires::new).inputs.add(cw);
+            }
+        }
+        return (inputs) -> {
+            Map<String, Object> outputs = new HashMap<>();
+            return CompletableFuture.supplyAsync(() -> {
+                //TODO: finish impl
+
+                return outputs;
+            });
+        };
+    }
+
+    public CompiledWire compileWire(Wire wire) {
+        BlockPort input = null;
+        List<BlockPort> output = new ArrayList<>();
+        String type = null;
+        for (Wire.WireEndpoint endpoint : wire.getEndpoints()) {
+            KonigBlockReference br = blockMap.get(endpoint.blockid);
+            ReferenceIO.IOElement ioe = br.io.elementMap.get(endpoint.port);
+            if (ioe.wireid != wire.id) {
+                throw new IllegalStateException("Wire " + wire.id + " has endpoint " + endpoint.blockid + ":" + endpoint.port + " which the block does not back-reference to the wire");
+            }
+            KonigBlock block = parent.getBlockByName(br.name);
+            BlockIO.IOElement port = block.io.byName.get(endpoint.port);
+            if (port == null) {
+                if (endpoint.port.startsWith("virtual")) {
+                    String[] parts = endpoint.port.split("\\$");
+                    if (parts.length != 4) {
+                        throw new IllegalStateException("Invalid virtual port name: " + endpoint.port);
+                    }
+                    VirtualIO.Port p;
+                    if (parts[1].equals("forName")) {
+                        p = br.virtualIONameMap.get(parts[2]).portMap.get(Integer.parseInt(parts[3]));
+                    } else if (parts[1].equals("forGroup")) {
+                        p = br.virtualIOGroupsMap.get(parts[2]).portMap.get(Integer.parseInt(parts[3]));
+                    } else {
+                        throw new IllegalStateException("Invalid virtual port name: " + endpoint.port);
+                    }
+                    if (p == null) {
+                        throw new IllegalStateException("Invalid virtual port name: " + endpoint.port);
+                    }
+                    if (Objects.equals(p.direction, "out")) {
+                        if (input != null) {
+                            throw new IllegalStateException("Multiple inputs for wire " + wire.id);
+                        }
+                        input = new BlockPort(br, endpoint.port);
+                    } else {
+                        output.add(new BlockPort(br, endpoint.port));
+                    }
+                } else {
+                    throw new IllegalStateException("Unknown port: " + endpoint.port);
+                }
+            } else {
+                if (port instanceof BlockIO.Output) {
+                    if (input != null) {
+                        throw new IllegalStateException("Wire " + wire.id + " has multiple inputs");
+                    }
+                    input = new BlockPort(br, endpoint.port);
+                    if (block.generics.get(port.type) == null) {
+                        type = port.type;
+                    }
+                } else if (port instanceof BlockIO.Input) {
+                    output.add(new BlockPort(br, endpoint.port));
+                    if (block.generics.get(port.type) == null) {
+                        type = port.type;
+                    }
+                } else {
+                    throw new IllegalStateException("Unknown port type: " + port.getClass());
+                }
+            }
+
+        }
+
+        return new CompiledWire(type, input, output);
+    }
+
+    public static class CompiledWire {
+        public String type;
+        public final BlockPort input;
+        public final List<BlockPort> outputs = new ArrayList<>();
+
+        public CompiledWire(String type, BlockPort input, List<BlockPort> outputs) {
+            this.type = type;
+            this.input = input;
+            this.outputs.addAll(outputs);
+        }
+    }
+
+    public static class BlockPort {
+        public final KonigBlockReference reference;
+        public final String portName;
+
+        public BlockPort(KonigBlockReference reference, String portName) {
+            this.reference = reference;
+            this.portName = portName;
+        }
+    }
+
+    public static class BlockWires {
+        public final KonigBlockReference reference;
+        public final List<CompiledWire> inputs = new ArrayList<>();
+        public final List<CompiledWire> outputs = new ArrayList<>();
+
+        public BlockWires(KonigBlockReference reference) {
+            this.reference = reference;
+        }
     }
 }

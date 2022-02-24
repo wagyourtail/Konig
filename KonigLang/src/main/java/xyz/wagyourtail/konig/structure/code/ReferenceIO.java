@@ -6,6 +6,7 @@ import org.w3c.dom.NodeList;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class ReferenceIO {
     public final Map<String, IOElement> elementMap = new HashMap<>();
@@ -35,6 +36,24 @@ public class ReferenceIO {
         }
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof ReferenceIO)) {
+            return false;
+        }
+        ReferenceIO that = (ReferenceIO) o;
+        return Objects.equals(elementMap, that.elementMap) && Objects.equals(inputMap, that.inputMap) &&
+            Objects.equals(outputMap, that.outputMap);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(elementMap, inputMap, outputMap);
+    }
+
     public static class IOElement {
         public final String name;
         public final int wireid;
@@ -43,6 +62,24 @@ public class ReferenceIO {
             this.name = name;
             this.wireid = wireid;
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof IOElement)) {
+                return false;
+            }
+            IOElement ioElement = (IOElement) o;
+            return wireid == ioElement.wireid && Objects.equals(name, ioElement.name);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(name, wireid);
+        }
+
     }
 
     public static class Input extends IOElement {
