@@ -77,6 +77,36 @@ public class InternBlock extends KonigBlock {
             compiledInnerCode.put(name, compiled);
         }
 
+        // pre-check for illegal stuff in these indexes, also pre-compile the absolute index map
+        Map<Object, Integer> paramIndexes = new HashMap<>();
+        {
+            int i = -1;
+            int p = method.getParameterCount();
+            for (Block.Input input : block.inputs()) {
+                if (input.index() == -1) ++i;
+                else i = input.index();
+                if (i >= p) {
+                    throw new IllegalArgumentException("input "  + input.name() + " index out of bounds.");
+                }
+                paramIndexes.put(input, i);
+            }
+            for (Block.Hollow hollow : block.hollows()) {
+                if (hollow.index() == -1)
+                    while (paramIndexes.values().contains(++i)) ;
+                else {
+                    i = hollow.index();
+                    if (paramIndexes.values().contains(i)) {
+                        throw new IllegalArgumentException("Hollow index " + i + " already used");
+                    }
+                }
+                if (i >= p) {
+                    throw new IllegalArgumentException("hollow "  + hollow.name() + " index out of bounds.");
+                }
+                paramIndexes.put(hollow, i);
+            }
+
+        }
+
         return (inputs) -> {
             CompletableFuture<Object> cf = CompletableFuture.supplyAsync(() -> {
                 Object[] args = new Object[method.getParameterCount()];
@@ -84,23 +114,13 @@ public class InternBlock extends KonigBlock {
                 for (Map.Entry<String, CompletableFuture<Object>> input : inputs.entrySet()) {
                     inputsMap.put(input.getKey(), input.getValue().join());
                 }
-                int i = -1;
-                Set<Integer> used = new HashSet<>();
                 for (Block.Input input : block.inputs()) {
-                    if (input.index() == -1) ++i;
-                    else i = input.index();
-                    used.add(i);
-                    args[i] = inputsMap.get(input.name());
+                    args[paramIndexes.get(input)] = inputsMap.get(input.name());
                 }
-                i = -1;
                 for (Block.Hollow hollow : block.hollows()) {
-                    if (hollow.index() == -1) while (used.contains(++i));
-                    else {
-                        i = hollow.index();
-                        if (used.contains(i)) throw new IllegalArgumentException("Hollow index " + i + " already used");
-                    }
-                    used.add(i);
+                    // technically we're leaking some inputs that don't need to be there (the non-virtual ones)
                     Map<String, Object> innerInputs = new HashMap<>(inputsMap);
+
                     Function<Object[], Map<String, Object>> wrappedInner = (obj) -> {
                         int j = -1;
                         for (Block.Input input : hollow.inputs()) {
@@ -110,6 +130,7 @@ public class InternBlock extends KonigBlock {
                         }
 
                         Map<String, Object> result = compiledInnerCode.get(hollow.name()).apply(innerInputs).join();
+
                         // loopback virtual inputs
                         for (Map.Entry<String, Object> entry : result.entrySet()) {
                             if (entry.getKey().startsWith("virtual")) {
@@ -118,7 +139,8 @@ public class InternBlock extends KonigBlock {
                         }
                         return result;
                     };
-                    args[i] = wrappedInner;
+
+                    args[paramIndexes.get(hollow)] = wrappedInner;
                 }
                 return args;
             }).thenApply(args -> {
