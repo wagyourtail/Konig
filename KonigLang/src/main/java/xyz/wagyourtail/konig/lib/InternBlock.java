@@ -1,18 +1,18 @@
 package xyz.wagyourtail.konig.lib;
 
+import xyz.wagyourtail.konig.structure.code.InnerCode;
 import xyz.wagyourtail.konig.structure.code.KonigBlockReference;
 import xyz.wagyourtail.konig.structure.headers.BlockIO;
 import xyz.wagyourtail.konig.structure.headers.Hollow;
 import xyz.wagyourtail.konig.structure.headers.KonigBlock;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 public class InternBlock extends KonigBlock {
     Method method;
@@ -64,7 +64,82 @@ public class InternBlock extends KonigBlock {
     }
 
     @Override
-    public Function<Map<String, CompletableFuture<Object>>, Map<String, CompletableFuture<Object>>> compile(KonigBlockReference self) {
-        return null;
+    public Function<Map<String, CompletableFuture<Object>>, Map<String, CompletableFuture<Object>>> compile(KonigBlockReference self) throws IllegalAccessException {
+        MethodHandles.Lookup lookup = MethodHandles.lookup();
+        MethodHandle handle = lookup.unreflect(method);
+
+        Map<String, Function<Map<String, Object>, CompletableFuture<Map<String, Object>>>> compiledInnerCode = new HashMap<>();
+
+        for (Map.Entry<String, InnerCode> stringInnerCodeEntry : self.innerCodeMap.entrySet()) {
+            String name = stringInnerCodeEntry.getKey();
+            InnerCode innerCode = stringInnerCodeEntry.getValue();
+            Function<Map<String, Object>, CompletableFuture<Map<String, Object>>> compiled = innerCode.compile();
+            compiledInnerCode.put(name, compiled);
+        }
+
+        return (inputs) -> {
+            CompletableFuture<Object> cf = CompletableFuture.supplyAsync(() -> {
+                Object[] args = new Object[method.getParameterCount()];
+                Map<String, Object> inputsMap = new HashMap<>();
+                for (Map.Entry<String, CompletableFuture<Object>> input : inputs.entrySet()) {
+                    inputsMap.put(input.getKey(), input.getValue().join());
+                }
+                int i = -1;
+                Set<Integer> used = new HashSet<>();
+                for (Block.Input input : block.inputs()) {
+                    if (input.index() == -1) ++i;
+                    else i = input.index();
+                    used.add(i);
+                    args[i] = inputsMap.get(input.name());
+                }
+                i = -1;
+                for (Block.Hollow hollow : block.hollows()) {
+                    if (hollow.index() == -1) while (used.contains(++i));
+                    else {
+                        i = hollow.index();
+                        if (used.contains(i)) throw new IllegalArgumentException("Hollow index " + i + " already used");
+                    }
+                    used.add(i);
+                    Map<String, Object> innerInputs = new HashMap<>(inputsMap);
+                    Function<Object[], Map<String, Object>> wrappedInner = (obj) -> {
+                        int j = -1;
+                        for (Block.Input input : hollow.inputs()) {
+                            if (input.index() == -1) ++j;
+                            else j = input.index();
+                            innerInputs.put(input.name(), obj[j]);
+                        }
+
+                        Map<String, Object> result = compiledInnerCode.get(hollow.name()).apply(innerInputs).join();
+                        // loopback virtual inputs
+                        for (Map.Entry<String, Object> entry : result.entrySet()) {
+                            if (entry.getKey().startsWith("virtual")) {
+                                innerInputs.put(entry.getKey(), entry.getValue());
+                            }
+                        }
+                        return result;
+                    };
+                    args[i] = wrappedInner;
+                }
+                return args;
+            }).thenApply(args -> {
+                try {
+                    return handle.invokeWithArguments(args);
+                } catch (Throwable e) {
+                    throw new RuntimeException(e);
+                }
+            });
+
+            if (block.outputs().length == 1) return Collections.singletonMap(block.outputs()[0].name(), cf);
+            else {
+                Map<String, CompletableFuture<Object>> map = new HashMap<>();
+                for (Block.Output output : block.outputs()) {
+                    map.put(output.name(), cf.thenApply(o -> {
+                        if (o instanceof Map) return ((Map) o).get(output.name());
+                        else return o; //TODO: split this somehow
+                    }));
+                }
+                return map;
+            }
+        };
     }
 }

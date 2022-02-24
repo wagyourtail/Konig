@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class Code {
     public final CodeParent parent;
@@ -156,11 +157,21 @@ public class Code {
                     }
                     input = new BlockPort(br, endpoint.port);
                     if (block.generics.get(port.type) == null) {
+                        if (type != null) {
+                            if (!type.equals(port.type) && !port.type.equals("any")) {
+                                throw new IllegalStateException("Wire " + wire.id + " has multiple types");
+                            }
+                        }
                         type = port.type;
                     }
                 } else if (port instanceof BlockIO.Input) {
                     output.add(new BlockPort(br, endpoint.port));
                     if (block.generics.get(port.type) == null) {
+                        if (type != null) {
+                            if (!type.equals(port.type) && !port.type.equals("any")) {
+                                throw new IllegalStateException("Wire " + wire.id + " has multiple types");
+                            }
+                        }
                         type = port.type;
                     }
                 } else {
