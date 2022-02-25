@@ -28,23 +28,17 @@
         </io>
     </block>
     <block name="mul" group="math">
-        <generics>
-            <generic name="T"/>
-        </generics>
         <io>
-            <input side="left" justify="center" name="in1" type="T"/>
-            <input side="left" justify="center" name="in2" type="T"/>
-            <output side="right" justify="center" name="out" type="T"/>
+            <input side="left" justify="center" name="in1" type="number"/>
+            <input side="left" justify="center" name="in2" type="number"/>
+            <output side="right" justify="center" name="out" type="number"/>
         </io>
     </block>
     <block name="div" group="math">
-        <generics>
-            <generic name="T"/>
-        </generics>
         <io>
-            <input side="left" justify="center" name="in1" type="T"/>
-            <input side="left" justify="center" name="in2" type="T"/>
-            <output side="right" justify="center" name="out" type="T"/>
+            <input side="left" justify="center" name="in1" type="number"/>
+            <input side="left" justify="center" name="in2" type="number"/>
+            <output side="right" justify="center" name="out" type="number"/>
         </io>
     </block>
     <block name="mod" group="math">
@@ -97,7 +91,7 @@
             <output side="right" justify="center" name="out" type="number"/>
         </io>
     </block>
-    <block name="achttps://www.youtube.com/watch?v=GrBHEzNXC7Mos" group="math">
+    <block name="acos" group="math">
         <io>
             <input side="left" justify="center" name="in" type="number"/>
             <output side="right" justify="center" name="out" type="number"/>
@@ -106,6 +100,13 @@
     <block name="atan" group="math">
         <io>
             <input side="left" justify="center" name="in" type="number"/>
+            <output side="right" justify="center" name="out" type="number"/>
+        </io>
+    </block>
+    <block name="atan2" group="math">
+        <io>
+            <input side="left" justify="center" name="in1" type="number"/>
+            <input side="left" justify="center" name="in2" type="number"/>
             <output side="right" justify="center" name="out" type="number"/>
         </io>
     </block>
@@ -147,7 +148,6 @@
     </block>
     <block name="rand" group="math">
         <io>
-            <input side="left" justify="center" name="in" type="number"/>
             <output side="right" justify="center" name="out" type="number"/>
         </io>
     </block>
@@ -187,6 +187,12 @@
             <output side="right" justify="center" name="out" type="number"/>
         </io>
     </block>
+    <block name="toboolean" group="generic">
+        <io>
+            <input side="left" justify="center" name="in" type="any"/>
+            <output side="right" justify="center" name="out" type="boolean"/>
+        </io>
+    </block>
     <block name="loop" group="flow">
         <hollow name="inner" paddingTop=".2" paddingLeft=".2" paddingRight=".2" paddingBottom=".2">
             <output side="right" justify="center" name="continue" type="boolean"/>
@@ -213,10 +219,5 @@
         <hollow name="false" paddingTop=".2" paddingLeft=".2" paddingRight=".2" paddingBottom=".2" group="stack">
 
         </hollow>
-    </block>
-    <block name="stop" group="generic">
-        <io>
-            <input side="left" justify="center" name="in" type="any"/>
-        </io>
     </block>
 </headers>

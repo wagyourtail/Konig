@@ -132,10 +132,11 @@ public class Code {
                 blockMap.values().parallelStream().filter(e -> e.inputs.size() == 0).forEach(e -> {
                     runBlock(e, runInputs, runBlocks, blockMap);
                 });
-                return blockMap.values().parallelStream().filter(e -> e.outputs.size() == 0).filter(e -> e.reference.name.equals("globaloutput")).map(e -> runBlocks.get(e.reference)).reduce(new HashMap(), (a, b) -> {
-                    b.forEach((k, v) -> a.put(k, (CompletableFuture<Object>) v.join()));
-                    return a;
+                blockMap.values().parallelStream().filter(e -> e.outputs.size() == 0).map(e -> runBlocks.get(e.reference)).forEach((b) -> {
+                    b.forEach((k, v) -> outputs.put(k, v.join()));
                 });
+                outputs.remove("$void");
+                return outputs;
             });
         };
     }
