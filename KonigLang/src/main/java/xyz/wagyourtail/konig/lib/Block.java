@@ -2,10 +2,11 @@ package xyz.wagyourtail.konig.lib;
 
 import xyz.wagyourtail.konig.structure.headers.BlockIO;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.*;
 
+@Documented
 @Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.METHOD})
 public @interface Block {
     String name();
     String group() default "";

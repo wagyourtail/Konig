@@ -24,9 +24,9 @@ public class InternBlock extends KonigBlock {
         this.method = method;
         this.name = block.name();
         this.group = block.group().equals("") ? defaultGroup : block.group();
-        this.image = Path.of(block.image());
+        this.image = block.image().equals("") ? null : Path.of(block.image());
         for (Block.Generic generic : block.generics()) {
-            BlockIO.Generic g = new BlockIO.Generic(generic.name(), generic.extend(), generic.supers());
+            BlockIO.Generic g = new BlockIO.Generic(generic.name(), generic.extend().equals("") ? null : generic.extend(), generic.supers().equals("") ? null : generic.supers());
             generics.put(g.name, g);
         }
         parseIO(block.inputs(), block.outputs(), io);
@@ -48,7 +48,7 @@ public class InternBlock extends KonigBlock {
         for (Block.Input input : inputs) {
             BlockIO.Input inp = new BlockIO.Input(input.side(), input.justify(), input.name(), input.type(), false);
             io.inputs.add(inp);
-            io.byName.put(name, inp);
+            io.byName.put(inp.name, inp);
             io.elements.computeIfAbsent(inp.side, k -> new HashMap<>()).computeIfAbsent(inp.justify,
                 k -> new ArrayList<>()
             ).add(inp);
@@ -56,7 +56,7 @@ public class InternBlock extends KonigBlock {
         for (Block.Output output : outputs) {
             BlockIO.Output out = new BlockIO.Output(output.side(), output.justify(), output.name(), output.type());
             io.outputs.add(out);
-            io.byName.put(name, out);
+            io.byName.put(out.name, out);
             io.elements.computeIfAbsent(out.side, k -> new HashMap<>()).computeIfAbsent(out.justify,
                 k -> new ArrayList<>()
             ).add(out);
@@ -64,9 +64,19 @@ public class InternBlock extends KonigBlock {
     }
 
     @Override
-    public Function<Map<String, CompletableFuture<Object>>, Map<String, CompletableFuture<Object>>> compile(KonigBlockReference self) throws IllegalAccessException {
+    public Function<Map<String, CompletableFuture<Object>>, Map<String, CompletableFuture<Object>>> compile(KonigBlockReference self) {
+        if (method == null) {
+            throw new IllegalArgumentException("Method must be set before compiling");
+        }
+
         MethodHandles.Lookup lookup = MethodHandles.lookup();
-        MethodHandle handle = lookup.unreflect(method);
+        MethodHandle handle;
+        try {
+            handle = lookup.unreflect(method);
+        } catch (IllegalAccessException e) {
+            throw new IllegalStateException(e);
+        }
+        MethodHandle finalHandle = handle;
 
         Map<String, Function<Map<String, Object>, CompletableFuture<Map<String, Object>>>> compiledInnerCode = new HashMap<>();
 
@@ -92,10 +102,10 @@ public class InternBlock extends KonigBlock {
             }
             for (Block.Hollow hollow : block.hollows()) {
                 if (hollow.index() == -1)
-                    while (paramIndexes.values().contains(++i)) ;
+                    while (paramIndexes.containsValue(++i)) ;
                 else {
                     i = hollow.index();
-                    if (paramIndexes.values().contains(i)) {
+                    if (paramIndexes.containsValue(i)) {
                         throw new IllegalArgumentException("Hollow index " + i + " already used");
                     }
                 }
@@ -145,12 +155,13 @@ public class InternBlock extends KonigBlock {
                 return args;
             }).thenApply(args -> {
                 try {
-                    return handle.invokeWithArguments(args);
+                    return finalHandle.invokeWithArguments(args);
                 } catch (Throwable e) {
+                    e.printStackTrace();
                     throw new RuntimeException(e);
                 }
             });
-
+            if (block.outputs().length == 0) return Collections.singletonMap("$void", cf);
             if (block.outputs().length == 1) return Collections.singletonMap(block.outputs()[0].name(), cf);
             else {
                 Map<String, CompletableFuture<Object>> map = new HashMap<>();

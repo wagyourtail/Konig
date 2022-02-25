@@ -47,6 +47,17 @@ public class KonigHeaders implements KonigFile, Code.CodeParent {
             this.version = version.getNodeValue();
         }
 
+        {
+            KonigHeaders headers = Konig.getInternHeaders("stdlib");
+            for (Map.Entry<String, Map<String, KonigBlock>> entry : headers.getBlocks()
+                .entrySet()) {
+                blockMap.computeIfAbsent(
+                    entry.getKey(),
+                    (e) -> new HashMap<>()
+                ).putAll(entry.getValue());
+            }
+        }
+
         NodeList children = node.getChildNodes();
         for (int i = 0; i < children.getLength(); i++) {
             Node n = children.item(i);

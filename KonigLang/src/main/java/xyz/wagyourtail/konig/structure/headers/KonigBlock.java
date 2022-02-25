@@ -103,7 +103,7 @@ public abstract class KonigBlock {
         );
     }
 
-    public abstract Function<Map<String, CompletableFuture<Object>>, Map<String, CompletableFuture<Object>>> compile(KonigBlockReference self) throws IllegalAccessException;
+    public abstract Function<Map<String, CompletableFuture<Object>>, Map<String, CompletableFuture<Object>>> compile(KonigBlockReference self);
 
 
 }

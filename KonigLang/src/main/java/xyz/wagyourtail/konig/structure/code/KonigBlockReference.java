@@ -17,12 +17,14 @@ public class KonigBlockReference {
     public final Map<String, VirtualIO> virtualIONameMap = new HashMap<>();
     public final Map<String, InnerCode> innerCodeMap = new HashMap<>();
 
+    public String value;
+
     public KonigBlockReference(Code parent) {
         this.parent = parent;
     }
 
     public void parseXML(Node node) throws IOException {
-        id = Integer.parseInt(node.getAttributes().getNamedItem("wireid").getNodeValue());
+        id = Integer.parseInt(node.getAttributes().getNamedItem("blockid").getNodeValue());
         name = node.getNodeName();
 
         NodeList children = node.getChildNodes();
@@ -44,6 +46,10 @@ public class KonigBlockReference {
                 InnerCode innerCode = new InnerCode(this);
                 innerCode.parseXML(child);
                 innerCodeMap.put(innerCode.name, innerCode);
+            } else if (child.getNodeName().equals("value")) {
+                value = child.getTextContent();
+            } else if (!child.getNodeName().equals("#text")) {
+                throw new IOException("Unknown child node: " + child.getNodeName());
             }
         }
     }

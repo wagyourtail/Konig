@@ -232,7 +232,7 @@ to specify the connection, the outer block wll have an id of `-1` in the innerco
 
 if this block is a custom block, then the code tag is required, it's contents will be the same as an overall file's context,
 as in a set of wires, in that case the inner `globalinput` and `globaloutput` tags correspond *only* to 
-the inputs and outputs of the block itself.
+the inputs and outputs of the block itself. 
 ## block referencing
 
 blocks are then referenced in a way that is (incorrectly) shown above, the real way is like:
@@ -293,6 +293,20 @@ When not wired anywhere, the user will not be able to change the value, but it w
 it doesn't make sense, ie, wired to a different type.
 
 if the wire type is "any" then the value will be a string and allow any input.
+
+### global input/output
+globalinput/output will be referenced like other blocks, but will have
+the `<value>` tag to specify the name of the variable to be used.
+ie.
+```xml
+<globalinput blockid="0" x="0" y="0" flipH="false" flipV="false" rotate="0" scaleX="1" scaleY="1">
+    <io>
+        <output name="out" wireid="" />
+    </io>
+    <value>a</value>
+</globalinput>
+```
+
 
 ### "hollow" blocks
 

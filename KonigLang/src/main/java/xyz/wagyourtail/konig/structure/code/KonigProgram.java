@@ -60,7 +60,7 @@ public class KonigProgram implements KonigFile, Code.CodeParent {
                         throw new IOException("Duplicate headers");
                     }
                     headers.parseXML(n);
-                } else if (n.getNodeName().equals("code")) {
+                } else if (n.getNodeName().equals("code") || n.getNodeName().equals("main")) {
                     if (!found.add("code")) {
                         throw new IOException("Duplicate code");
                     }

@@ -1,7 +1,6 @@
 package xyz.wagyourtail.konig.structure.headers;
 
 import org.w3c.dom.Node;
-import xyz.wagyourtail.OnceSupplier;
 import xyz.wagyourtail.konig.structure.code.Code;
 import xyz.wagyourtail.konig.structure.code.KonigBlockReference;
 
@@ -10,7 +9,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 public class KonigCustomBlock extends KonigBlock {
     public final KonigHeaders parent;
@@ -34,7 +32,6 @@ public class KonigCustomBlock extends KonigBlock {
     public Function<Map<String, CompletableFuture<Object>>, Map<String, CompletableFuture<Object>>> compile(KonigBlockReference self) {
         Function<Map<String, Object>, CompletableFuture<Map<String, Object>>> compiledInner = code.compile();
         return (inputs) -> {
-
             CompletableFuture<Map<String, Object>> cf = CompletableFuture.supplyAsync(() -> {
                 Map<String, Object> inputsMap = new HashMap<>();
                 for (Map.Entry<String, CompletableFuture<Object>> input : inputs.entrySet()) {

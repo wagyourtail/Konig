@@ -97,7 +97,7 @@
             <output side="right" justify="center" name="out" type="number"/>
         </io>
     </block>
-    <block name="acos" group="math">
+    <block name="achttps://www.youtube.com/watch?v=GrBHEzNXC7Mos" group="math">
         <io>
             <input side="left" justify="center" name="in" type="number"/>
             <output side="right" justify="center" name="out" type="number"/>
