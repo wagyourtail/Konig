@@ -123,7 +123,7 @@ public class Code {
 
         return (inputs) -> {
             Map<KonigBlockReference, Map<String, CompletableFuture<Object>>> runBlocks = new ConcurrentHashMap<>();
-            Map<String, Object> outputs = new HashMap<>();
+            Map<String, Object> outputs = new ConcurrentHashMap<>();
             Map<String, CompletableFuture<Object>> runInputs = new HashMap<>();
             for (Map.Entry<String, Object> entry : inputs.entrySet()) {
                 runInputs.put(entry.getKey(), CompletableFuture.completedFuture(entry.getValue()));
@@ -133,7 +133,9 @@ public class Code {
                     runBlock(e, runInputs, runBlocks, blockMap);
                 });
                 blockMap.values().parallelStream().filter(e -> e.outputs.size() == 0).map(e -> runBlocks.get(e.reference)).forEach((b) -> {
-                    b.forEach((k, v) -> outputs.put(k, v.join()));
+                    b.forEach((k, v) -> {
+                        if (v.join() != null) outputs.put(k, v.join());
+                    });
                 });
                 outputs.remove("$void");
                 return outputs;

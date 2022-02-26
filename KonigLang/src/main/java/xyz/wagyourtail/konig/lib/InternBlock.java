@@ -132,7 +132,7 @@ public class InternBlock extends KonigBlock {
                 }
                 for (Block.Hollow hollow : block.hollows()) {
                     // technically we're leaking some inputs that don't need to be there (the non-virtual ones)
-                    Map<String, Object> innerInputs = new HashMap<>(inputsMap);
+                    Map<String, Object> innerInputs = new ConcurrentHashMap<>(inputsMap);
 
                     Function<Object[], Map<String, Object>> wrappedInner = (obj) -> {
                         int j = -1;
