@@ -128,18 +128,20 @@ public class Code {
             for (Map.Entry<String, Object> entry : inputs.entrySet()) {
                 runInputs.put(entry.getKey(), CompletableFuture.completedFuture(entry.getValue()));
             }
-            return CompletableFuture.supplyAsync(() -> {
-                blockMap.values().parallelStream().filter(e -> e.inputs.size() == 0).forEach(e -> {
-                    runBlock(e, runInputs, runBlocks, blockMap);
-                });
-                blockMap.values().parallelStream().filter(e -> e.outputs.size() == 0).map(e -> runBlocks.get(e.reference)).forEach((b) -> {
-                    b.forEach((k, v) -> {
-                        if (v.join() != null) outputs.put(k, v.join());
-                    });
+            blockMap.values().parallelStream().filter(e -> e.inputs.size() == 0).forEach(e -> {
+                runBlock(e, runInputs, runBlocks, blockMap);
+            });
+            List<Map.Entry<String, CompletableFuture<Object>>> entries = blockMap.values().parallelStream().filter(e -> e.outputs.size() == 0).map(e -> runBlocks.get(e.reference)).flatMap((b) -> b.entrySet().stream()).collect(Collectors.toList());
+            return CompletableFuture.allOf(entries.parallelStream().map(Map.Entry::getValue).toArray(CompletableFuture[]::new)).thenApply(v -> {
+                entries.parallelStream().forEach(e -> {
+                    if (e.getValue().join() != null) {
+                        outputs.put(e.getKey(), e.getValue().join());
+                    }
                 });
                 outputs.remove("$void");
                 return outputs;
             });
+
         };
     }
 

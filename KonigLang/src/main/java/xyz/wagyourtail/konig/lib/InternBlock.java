@@ -121,7 +121,7 @@ public class InternBlock extends KonigBlock {
         return (inputs) -> {
             Map<String, CompletableFuture<Object>> outputs = new ConcurrentHashMap<>();
 
-            CompletableFuture<Object> cf = CompletableFuture.allOf(inputs.values().toArray(CompletableFuture[]::new)).thenComposeAsync((f) -> CompletableFuture.supplyAsync(() -> {
+            CompletableFuture<Object> cf = CompletableFuture.allOf(inputs.values().toArray(CompletableFuture[]::new)).thenApplyAsync((f) -> {
                 Object[] args = new Object[method.getParameterCount()];
                 Map<String, Object> inputsMap = new HashMap<>();
                 for (Map.Entry<String, CompletableFuture<Object>> input : inputs.entrySet()) {
@@ -165,7 +165,7 @@ public class InternBlock extends KonigBlock {
                     e.printStackTrace();
                     throw new RuntimeException(e);
                 }
-            }));
+            });
             if (block.outputs().length == 0) outputs.put("$void", cf);
             if (block.outputs().length == 1) outputs.put(block.outputs()[0].name(), cf);
             else {
