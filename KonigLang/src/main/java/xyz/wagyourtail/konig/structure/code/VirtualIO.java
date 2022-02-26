@@ -105,6 +105,9 @@ public class VirtualIO {
                             if (loopback != null) {
                                 throw new IOException("Multiple loopback ports");
                             }
+                            if (direction.equals("out")) {
+                                throw new IOException("Loopback port cannot be an output");
+                            }
                             loopback = new Loopback(wireid, side, offset);
                         }
                         default -> throw new IOException("Unknown port type: " + child.getNodeName());

@@ -4,6 +4,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 import xyz.wagyourtail.konig.lib.InternHeaders;
+import xyz.wagyourtail.konig.lib.stdlib.Boolean;
 import xyz.wagyourtail.konig.lib.stdlib.Flow;
 import xyz.wagyourtail.konig.lib.stdlib.Generic;
 import xyz.wagyourtail.konig.lib.stdlib.Math;
@@ -105,6 +106,7 @@ public class Konig {
         headers.parseClass(Math.class, "math");
         headers.parseClass(Generic.class, "generic");
         headers.parseClass(Flow.class, "flow");
+        headers.parseClass(Boolean.class, "boolean");
         //TODO: finish
 
         return headers;

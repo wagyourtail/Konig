@@ -16,7 +16,7 @@ import java.util.function.Function;
 public class Main {
 
     public static void main(String[] args) throws ParserConfigurationException, IOException, SAXException {
-        Path hello_world = Path.of("software-enginnering-bs/language-spec-revisions/1.0/example/helloworld.konig");
+        Path hello_world = Path.of("software-enginnering-bs/language-spec-revisions/1.0/example/count_to_10.konig");
         long start = System.nanoTime();
         KonigFile f = Konig.deserialize(hello_world);
         long end = System.nanoTime();

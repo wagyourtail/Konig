@@ -195,7 +195,7 @@
     </block>
     <block name="loop" group="flow">
         <hollow name="inner" paddingTop=".2" paddingLeft=".2" paddingRight=".2" paddingBottom=".2">
-            <output side="right" justify="center" name="continue" type="boolean"/>
+            <input side="right" justify="center" name="continue" type="boolean"/>
         </hollow>
     </block>
     <block name="if" group="flow">

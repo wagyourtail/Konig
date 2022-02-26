@@ -63,18 +63,12 @@ public class KonigBlockReference {
             return false;
         }
         KonigBlockReference that = (KonigBlockReference) o;
-        return id == that.id && Objects.equals(io, that.io) && Objects.equals(
-            virtualIOGroupsMap,
-            that.virtualIOGroupsMap
-        ) && Objects.equals(virtualIONameMap, that.virtualIONameMap) && Objects.equals(
-            innerCodeMap,
-            that.innerCodeMap
-        );
+        return id == that.id && name.equals(that.name);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, io, virtualIOGroupsMap, virtualIONameMap, innerCodeMap);
+        return Objects.hash(id, name);
     }
 
 }

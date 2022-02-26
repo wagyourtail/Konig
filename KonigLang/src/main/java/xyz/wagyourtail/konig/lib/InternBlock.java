@@ -12,6 +12,7 @@ import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 public class InternBlock extends KonigBlock {
@@ -118,6 +119,7 @@ public class InternBlock extends KonigBlock {
         }
 
         return (inputs) -> {
+            Map<String, CompletableFuture<Object>> outputs = new ConcurrentHashMap<>();
             CompletableFuture<Object> cf = CompletableFuture.supplyAsync(() -> {
                 Object[] args = new Object[method.getParameterCount()];
                 Map<String, Object> inputsMap = new HashMap<>();
@@ -143,8 +145,10 @@ public class InternBlock extends KonigBlock {
 
                         // loopback virtual inputs
                         for (Map.Entry<String, Object> entry : result.entrySet()) {
-                            if (entry.getKey().startsWith("virtual")) {
-                                innerInputs.put(entry.getKey(), entry.getValue());
+                            if (entry.getKey().startsWith("virtual") && entry.getKey().endsWith("$loopback")) {
+                                innerInputs.put(entry.getKey().substring(0, entry.getKey().length() - "$loopback".length()), entry.getValue());
+                            } else {
+                                outputs.put(entry.getKey(), CompletableFuture.completedFuture(entry.getValue()));
                             }
                         }
                         return result;
@@ -161,18 +165,17 @@ public class InternBlock extends KonigBlock {
                     throw new RuntimeException(e);
                 }
             });
-            if (block.outputs().length == 0) return Collections.singletonMap("$void", cf);
-            if (block.outputs().length == 1) return Collections.singletonMap(block.outputs()[0].name(), cf);
+            if (block.outputs().length == 0) outputs.put("$void", cf);
+            if (block.outputs().length == 1) outputs.put(block.outputs()[0].name(), cf);
             else {
-                Map<String, CompletableFuture<Object>> map = new HashMap<>();
                 for (Block.Output output : block.outputs()) {
-                    map.put(output.name(), cf.thenApply(o -> {
+                    outputs.put(output.name(), cf.thenApply(o -> {
                         if (o instanceof Map) return ((Map) o).get(output.name());
                         else return o; //TODO: split this somehow
                     }));
                 }
-                return map;
             }
+            return outputs;
         };
     }
 }

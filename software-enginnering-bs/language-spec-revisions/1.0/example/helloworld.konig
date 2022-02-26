@@ -12,7 +12,7 @@
         <blocks>
             <const blockid="0" x="0" y="0" flipH="false" flipV="false" rotate="0" scaleX="1" scaleY="1">
                 <io>
-                    <input name="out" wireid="0"/>
+                    <output name="out" wireid="0"/>
                 </io>
                 <value>Hello World!</value>
             </const>

@@ -152,6 +152,9 @@ public class Code {
         for (CompiledWire output : bw.outputs) {
             for (KonigBlockReference nextBlockReference : output.outputs.keySet()) {
                 BlockWires nextBlock = blockMap.get(nextBlockReference);
+                if (nextBlock == null) {
+                    throw new RuntimeException("Block not found: " + nextBlockReference);
+                }
                 if (nextBlock.areExpectedWiresPresent(runBlocks.keySet())) {
                     Map<String, CompletableFuture<Object>> nextInputs = new HashMap<>();
                     for (CompiledWire input : nextBlock.inputs) {
@@ -170,68 +173,81 @@ public class Code {
         for (Wire.WireEndpoint endpoint : wire.getEndpoints()) {
             KonigBlockReference br = blockMap.get(endpoint.blockid);
             ReferenceIO.IOElement ioe = br.io.elementMap.get(endpoint.port);
-            if (ioe.wireid != wire.id) {
-                throw new IllegalStateException("Wire " + wire.id + " has endpoint " + endpoint.blockid + ":" + endpoint.port + " which the block does not back-reference to the wire");
-            }
-            KonigBlock block = parent.getBlockByName(br.name);
-            if (block == null) {
-                throw new IllegalStateException("Block " + br.name + " does not exist");
-            }
-            BlockIO.IOElement port = block.io.byName.get(endpoint.port);
-            if (port == null) {
-                if (endpoint.port.startsWith("virtual")) {
-                    String[] parts = endpoint.port.split("\\$");
-                    if (parts.length != 4) {
+            if (ioe == null) {
+                // find if virtual
+                String[] parts = endpoint.port.split("\\$");
+                if (parts.length != 4) {
+                    if (parts.length != 5 || !parts[4].equals("loopback")) {
                         throw new IllegalStateException("Invalid virtual port name: " + endpoint.port);
                     }
-                    VirtualIO.Port p;
-                    if (parts[1].equals("forName")) {
-                        p = br.virtualIONameMap.get(parts[2]).portMap.get(Integer.parseInt(parts[3]));
-                    } else if (parts[1].equals("forGroup")) {
-                        p = br.virtualIOGroupsMap.get(parts[2]).portMap.get(Integer.parseInt(parts[3]));
-                    } else {
-                        throw new IllegalStateException("Invalid virtual port name: " + endpoint.port);
-                    }
-                    if (p == null) {
-                        throw new IllegalStateException("Invalid virtual port name: " + endpoint.port);
-                    }
-                    if (Objects.equals(p.direction, "out")) {
-                        if (input != null) {
-                            throw new IllegalStateException("Multiple inputs for wire " + wire.id);
-                        }
-                        input = new BlockPort(br, endpoint.port);
-                    } else {
-                        output.add(new BlockPort(br, endpoint.port));
-                    }
-                } else {
-                    throw new IllegalStateException("Unknown port: " + endpoint.port);
                 }
-            } else {
-                if (port instanceof BlockIO.Output) {
+                VirtualIO.Port p;
+                if (parts[1].equals("forName")) {
+                    p = br.virtualIONameMap.get(parts[2]).portMap.get(Integer.parseInt(parts[3]));
+                } else if (parts[1].equals("forGroup")) {
+                    p = br.virtualIOGroupsMap.get(parts[2]).portMap.get(Integer.parseInt(parts[3]));
+                } else {
+                    throw new IllegalStateException("Invalid virtual port name: " + endpoint.port);
+                }
+                if (p == null) {
+                    throw new IllegalStateException("Invalid virtual port name: " + endpoint.port);
+                }
+                if (p.outer.wireid != wire.id && br.id > -1) {
+                    throw new IllegalStateException(
+                        "Wire " + wire.id + " has endpoint " + endpoint.blockid + ":" + endpoint.port +
+                            " which the block does not back-reference to the wire");
+                }
+
+                if (Objects.equals(p.direction, "out")) {
                     if (input != null) {
-                        throw new IllegalStateException("Wire " + wire.id + " has multiple inputs");
+                        throw new IllegalStateException("Multiple inputs for wire " + wire.id);
                     }
                     input = new BlockPort(br, endpoint.port);
-                    if (block.generics.get(port.type) == null) {
-                        if (type != null) {
-                            if (!type.equals(port.type) && !port.type.equals("any")) {
-                                throw new IllegalStateException("Wire " + wire.id + " has multiple types");
-                            }
-                        }
-                        type = port.type;
-                    }
-                } else if (port instanceof BlockIO.Input) {
-                    output.add(new BlockPort(br, endpoint.port));
-                    if (block.generics.get(port.type) == null) {
-                        if (type != null) {
-                            if (!type.equals(port.type) && !port.type.equals("any")) {
-                                throw new IllegalStateException("Wire " + wire.id + " has multiple types");
-                            }
-                        }
-                        type = port.type;
-                    }
                 } else {
-                    throw new IllegalStateException("Unknown port type: " + port.getClass());
+                    output.add(new BlockPort(br, endpoint.port));
+                }
+            } else {
+                // skip this check for "virtual" blocks from innercode
+                // TODO: redifine how innercode connects to the outer block to not skip this?
+                if (ioe.wireid != wire.id && br.id > -1) {
+                    throw new IllegalStateException(
+                        "Wire " + wire.id + " has endpoint " + endpoint.blockid + ":" + endpoint.port +
+                            " which the block does not back-reference to the wire");
+                }
+                KonigBlock block = parent.getBlockByName(br.name);
+                if (block == null) {
+                    throw new IllegalStateException("Block " + br.name + " does not exist");
+                }
+                BlockIO.IOElement port = block.io.byName.get(endpoint.port);
+                if (port == null) {
+                    throw new IllegalStateException("Port " + endpoint.port + " does not exist in block " + br.name);
+                } else {
+                    if (port instanceof BlockIO.Output) {
+                        if (input != null) {
+                            throw new IllegalStateException("Wire " + wire.id + " has multiple inputs");
+                        }
+                        input = new BlockPort(br, endpoint.port);
+                        if (block.generics.get(port.type) == null) {
+                            if (type != null) {
+                                if (!type.equals(port.type) && !port.type.equals("any")) {
+                                    throw new IllegalStateException("Wire " + wire.id + " has multiple types");
+                                }
+                            }
+                            type = port.type;
+                        }
+                    } else if (port instanceof BlockIO.Input) {
+                        output.add(new BlockPort(br, endpoint.port));
+                        if (block.generics.get(port.type) == null) {
+                            if (type != null) {
+                                if (!type.equals(port.type) && !port.type.equals("any")) {
+                                    throw new IllegalStateException("Wire " + wire.id + " has multiple types");
+                                }
+                            }
+                            type = port.type;
+                        }
+                    } else {
+                        throw new IllegalStateException("Unknown port type: " + port.getClass());
+                    }
                 }
             }
 

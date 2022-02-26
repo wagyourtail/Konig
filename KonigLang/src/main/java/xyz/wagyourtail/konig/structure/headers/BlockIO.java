@@ -52,6 +52,44 @@ public class BlockIO {
         }
     }
 
+    public void copyTo(BlockIO io) {
+        io.elements.putAll(elements);
+        io.inputs.addAll(inputs);
+        io.outputs.addAll(outputs);
+        io.byName.putAll(byName);
+    }
+
+    public void copyInputsTo(BlockIO io) {
+        io.inputs.addAll(inputs);
+        for (Input input : inputs) {
+            io.elements.computeIfAbsent(input.side, k -> new HashMap<>()).computeIfAbsent(input.justify, k -> new ArrayList<>()).add(input);
+            io.byName.put(input.name, input);
+        }
+    }
+
+    public void copyOutputsTo(BlockIO io) {
+        io.outputs.addAll(outputs);
+        for (Output output : outputs) {
+            io.elements.computeIfAbsent(output.side, k -> new HashMap<>()).computeIfAbsent(output.justify, k -> new ArrayList<>()).add(output);
+            io.byName.put(output.name, output);
+        }
+    }
+
+    public void copyReverseTo(BlockIO io) {
+        for (Input input : inputs) {
+            Output output = new Output(input.side, input.justify, input.name, input.type);
+            io.elements.computeIfAbsent(output.side, k -> new HashMap<>()).computeIfAbsent(output.justify, k -> new ArrayList<>()).add(output);
+            io.outputs.add(output);
+            io.byName.put(output.name, output);
+        }
+        for (Output output : outputs) {
+            Input input = new Input(output.side, output.justify, output.name, output.type, false);
+            io.elements.computeIfAbsent(input.side, k -> new HashMap<>()).computeIfAbsent(input.justify, k -> new ArrayList<>()).add(input);
+            io.inputs.add(input);
+            io.byName.put(input.name, input);
+        }
+    }
+
     @Override
     public int hashCode() {
         return Objects.hash(elements, inputs, outputs, byName);

@@ -1,0 +1,123 @@
+<code name="count to 10 example" version="1.0">
+    <headers>
+
+    </headers>
+    <main>
+        <wires>
+            <wire wireid="0">
+                <end x="0" y="0" block="0" port="out" />
+                <end x="0" y="0" block="1" port="in" />
+            </wire>
+            <wire wireid="1">
+                <end x="0" y="0" block="1" port="out" />
+                <end x="0" y="0" block="2" port="virtual$forName$inner$0" />
+            </wire>
+        </wires>
+        <blocks>
+            <const blockid="0" x="0" y="0" flipH="false" flipV="false" rotate="0" scaleX="1" scaleY="1">
+                <io>
+                    <output name="out" wireid="0"/>
+                </io>
+                <value>0</value>
+            </const>
+            <tonumber blockid="1" x="0" y="0" flipH="false" flipV="false" rotate="0" scaleX="1" scaleY="1">
+                <io>
+                    <input name="in" wireid="0"/>
+                    <output name="out" wireid="1"/>
+                </io>
+            </tonumber>
+            <loop blockid="2" x="0" y="0" flipH="false" flipV="false" rotate="0" scaleX="1" scaleY="1">
+                <virtual forName="inner">
+                    <port direction="in" id="0">
+                        <outer wireid="1" side="left" offset=".4" />
+                        <inner wireid="0" side="left" offset=".15" />
+                        <loopback wireid="2" side="left" offset=".35" />
+                    </port>
+                </virtual>
+                <innercode name="inner">
+                    <wires>
+                        <wire wireid="0">
+                            <end x="0" y="0" block="-2" port="virtual$forName$inner$0" />
+                            <end x="0" y="0" block="0" port="in1" />
+                        </wire>
+                        <wire wireid="1">
+                            <end x="0" y="0" block="1" port="out" />
+                            <end x="0" y="0" block="0" port="in2" />
+                        </wire>
+                        <wire wireid="2">
+                            <end x="0" y="0" block="0" port="out" />
+                            <branch x="0" y="0">
+                                <end x="0" y="0" block="-1" port="virtual$forName$inner$0$loopback" />
+                            </branch>
+                            <branch x="0" y="0">
+                                <end x="0" y="0" block="4" port="in1" />
+                            </branch>
+                            <end x="0" y="0" block="2" port="in" />
+                        </wire>
+                        <wire wireid="3">
+                            <end x="0" y="0" block="3" port="out" />
+                            <end x="0" y="0" block="4" port="in2" />
+                        </wire>
+                        <wire wireid="4">
+                            <end x="0" y="0" block="4" port="out" />
+                            <end x="0" y="0" block="-1" port="continue" />
+                        </wire>
+                        <wire wireid="5">
+                            <end x="0" y="0" block="5" port="out" />
+                            <end x="0" y="0" block="3" port="in" />
+                        </wire>
+                        <wire wireid="6">
+                            <end x="0" y="0" block="6" port="out" />
+                            <end x="0" y="0" block="1" port="in" />
+                        </wire>
+                    </wires>
+                    <blocks>
+                        <add blockid="0" x="0" y="0" flipH="false" flipV="false" rotate="0" scaleX="1" scaleY="1">
+                            <io>
+                                <input name="in1" wireid="0"/>
+                                <input name="in2" wireid="1"/>
+                                <output name="out" wireid="2"/>
+                            </io>
+                        </add>
+                        <const blockid="6" x="0" y="0" flipH="false" flipV="false" rotate="0" scaleX="1" scaleY="1">
+                            <io>
+                                <output name="out" wireid="6"/>
+                            </io>
+                            <value>1</value>
+                        </const>
+                        <print blockid="2" x="0" y="0" flipH="false" flipV="false" rotate="0" scaleX="1" scaleY="1">
+                            <io>
+                                <input name="in" wireid="2"/>
+                            </io>
+                        </print>
+                        <const blockid="5" x="0" y="0" flipH="false" flipV="false" rotate="0" scaleX="1" scaleY="1">
+                            <io>
+                                <output name="out" wireid="5"/>
+                            </io>
+                            <value>10</value>
+                        </const>
+                        <lt blockid="4" x="0" y="0" flipH="false" flipV="false" rotate="0" scaleX="1" scaleY="1">
+                            <io>
+                                <input name="in1" wireid="2"/>
+                                <input name="in2" wireid="3"/>
+                                <output name="out" wireid="4"/>
+                            </io>
+                        </lt>
+                        <tonumber blockid="3" x="0" y="0" flipH="false" flipV="false" rotate="0" scaleX="1" scaleY="1">
+                            <io>
+                                <input name="in" wireid="5"/>
+                                <output name="out" wireid="3"/>
+                            </io>
+                        </tonumber>
+                        <tonumber blockid="1" x="0" y="0" flipH="false" flipV="false" rotate="0" scaleX="1" scaleY="1">
+                            <io>
+                                <input name="in" wireid="6"/>
+                                <output name="out" wireid="1"/>
+                            </io>
+                        </tonumber>
+                    </blocks>
+                </innercode>
+            </loop>
+        </blocks>
+    </main>
+</code>

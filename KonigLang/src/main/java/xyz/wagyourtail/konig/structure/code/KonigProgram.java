@@ -18,7 +18,7 @@ import java.util.function.Function;
 
 public class KonigProgram implements KonigFile, Code.CodeParent {
     private final Path path;
-    private final KonigHeaders headers;
+    public final KonigHeaders headers;
     public final Code code = new Code(this);
     public String version;
 

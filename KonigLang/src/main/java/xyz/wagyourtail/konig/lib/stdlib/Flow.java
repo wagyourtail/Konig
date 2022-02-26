@@ -3,6 +3,7 @@ package xyz.wagyourtail.konig.lib.stdlib;
 import xyz.wagyourtail.konig.lib.Block;
 import xyz.wagyourtail.konig.structure.headers.BlockIO;
 
+import java.util.Map;
 import java.util.function.Function;
 
 public class Flow {
@@ -20,7 +21,7 @@ public class Flow {
         }
     )
     public static void loop(Function<Object[], Object> o) {
-        while ((boolean) o.apply(new Object[]{}));
+        while ((boolean) ((Map) o.apply(new Object[]{})).get("continue"));
     }
 
     @Block(

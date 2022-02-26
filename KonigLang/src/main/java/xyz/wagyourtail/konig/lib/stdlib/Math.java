@@ -18,7 +18,7 @@ public class Math {
             @Block.Output(name="out", type="T", side = BlockIO.Side.BOTTOM, justify = BlockIO.Justify.CENTER)
         }
     )
-    public Object add(Object a, Object b) {
+    public static Object add(Object a, Object b) {
         if (a instanceof Number) {
             return ((Number)a).doubleValue() + ((Number)b).doubleValue();
         } else {

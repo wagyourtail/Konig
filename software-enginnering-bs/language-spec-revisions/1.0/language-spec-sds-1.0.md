@@ -68,7 +68,7 @@ THIS IS NOT THE FULL SPEC AND SHOULD NOT BE USED AS A REFERENCE FOR SUCH
 ```
 
 main also counts as a code block as it can have inputs and outputs.
-a value of -1 (or no value) means an input is not connected.
+a value of -999 (or no value) means an input is not connected.
 
 ### wire branching
 
@@ -211,12 +211,11 @@ there is also an option to have the hollow sections on-top of eachother with a s
 in order to get them to show up like that, is to add a `group="name"` attribute to the hollow block.
 
 with those, there is the option to have a dynamic number of hollow blocks stacked using the 
-`<dynamichollow>` tag, but those arn't allowed to use the `group` attribute.
-
+`<dynamichollow>` tag, but those arn't allowed to use the `name` attribute, or share a group with another hollow block. 
 
 those are specified like so:
 ```xml
-<dynamichollow name="name" paddingTop="0" paddingLeft="0" paddingRight="0" paddingBottom="0">
+<dynamichollow group="name" paddingTop="0" paddingLeft="0" paddingRight="0" paddingBottom="0">
 </dynamichollow>
 ```
 
@@ -226,7 +225,8 @@ inside the "hollow" or "dynamic hollow" tag, there is a `<innercode>` tag, inner
 
 These blocks can also directly interact with their inner code using input/outputs defined within the hollow tag.
 this will act similarly to normal io, styling etc, but will be used to connect the inner code to the outer block.
-to specify the connection, the outer block wll have an id of `-1` in the innercode
+to specify the connection, the outer block wll have an id of `-1` in the innercode for the innercode's outputs (so direction = out, or hollow outputs)
+and `-2` for the innercode's inputs (so direction = in, or hollow inputs).
 
 ### code
 
@@ -351,7 +351,8 @@ The offsets are relative to the left edge of the face they are on, so this would
 
 Also, when this is `direction="in"` this passthrough also allows for a "loopback" so that the inner code can set a value
 for if the block runs the inner code multiple times (like in loop blocks). this will cause the io to offset -.05 and .05 on the inside
-with the right one being the loopback.
+with the right one being the loopback. additionally, it's port string value will have `$loopback` appended to it in order to distinguish it from
+the normal passthrough.
 
 For stacked blocks, the virtual ports can be shared between the blocks as they are on-top of eachother so that makes sense.
 Also, for specifying dynamic hollow blocks, the inner code tags will use the name and then use `id="id"` where the id is specified

@@ -12,13 +12,12 @@ import xyz.wagyourtail.konig.structure.code.KonigProgram;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public class KonigHeaders implements KonigFile, Code.CodeParent {
     private final Path path;
     private final Map<String, Map<String, KonigBlock>> blockMap = new HashMap<>();
+    private final Set<KonigHeaders> inherited = new HashSet<>();
     private String version;
 
     public KonigHeaders(Path path) {
@@ -87,34 +86,16 @@ public class KonigHeaders implements KonigFile, Code.CodeParent {
                             KonigFile file = Konig.deserialize(path.resolve(attrs.getNamedItem("src").getNodeValue()));
                             if (file instanceof KonigHeaders) {
                                 KonigHeaders headers = (KonigHeaders) file;
-                                for (Map.Entry<String, Map<String, KonigBlock>> entry : headers.getBlocks()
-                                    .entrySet()) {
-                                    blockMap.computeIfAbsent(
-                                        entry.getKey(),
-                                        (e) -> new HashMap<>()
-                                    ).putAll(entry.getValue());
-                                }
+                                inherited.add(headers);
                             } else if (file instanceof KonigProgram) {
                                 KonigProgram program = (KonigProgram) file;
-                                for (Map.Entry<String, Map<String, KonigBlock>> entry : program.getBlocks()
-                                    .entrySet()) {
-                                    blockMap.computeIfAbsent(
-                                        entry.getKey(),
-                                        (e) -> new HashMap<>()
-                                    ).putAll(entry.getValue());
-                                }
+                                inherited.add(program.headers);
                             }
                         } else if (attrs.getNamedItem("intern") != null) {
                             String intern = attrs.getNamedItem("intern").getNodeValue();
                             KonigHeaders headers = Konig.getInternHeaders(intern);
                             if (headers != null) {
-                                for (Map.Entry<String, Map<String, KonigBlock>> entry : headers.getBlocks()
-                                    .entrySet()) {
-                                    blockMap.computeIfAbsent(
-                                        entry.getKey(),
-                                        (e) -> new HashMap<>()
-                                    ).putAll(entry.getValue());
-                                }
+                                inherited.add(headers);
                             } else {
                                 throw new IOException("Unable to find intern headers for " + intern);
                             }
@@ -156,6 +137,12 @@ public class KonigHeaders implements KonigFile, Code.CodeParent {
         for (Map<String, KonigBlock> map : blockMap.values()) {
             if (map.containsKey(name)) {
                 return map.get(name);
+            }
+        }
+        for (KonigHeaders headers : inherited) {
+            KonigBlock block = headers.getBlockByName(name);
+            if (block != null) {
+                return block;
             }
         }
         return null;
