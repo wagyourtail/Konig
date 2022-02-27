@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 
 public class Code {
     public final CodeParent parent;
-    public final Executor executor;
+    public final ForkJoinPool executor;
     Map<Integer, Wire> wireMap = new HashMap<>();
     Map<Integer, KonigBlockReference> blockMap = new HashMap<>();
 
@@ -21,7 +21,7 @@ public class Code {
         this(parent, new ForkJoinPool(Runtime.getRuntime().availableProcessors()));
     }
 
-    protected Code(CodeParent parent, Executor executor) {
+    protected Code(CodeParent parent, ForkJoinPool executor) {
         this.parent = parent;
         this.executor = executor;
     }

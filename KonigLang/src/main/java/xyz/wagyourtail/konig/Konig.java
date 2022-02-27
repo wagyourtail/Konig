@@ -15,6 +15,7 @@ import xyz.wagyourtail.konig.structure.headers.KonigHeaders;
 import xyz.wagyourtail.konig.structure.headers.blocks.ConstBlock;
 import xyz.wagyourtail.konig.structure.headers.blocks.GlobalInput;
 import xyz.wagyourtail.konig.structure.headers.blocks.GlobalOutput;
+import xyz.wagyourtail.konig.structure.headers.blocks.StopBlock;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -100,6 +101,13 @@ public class Konig {
         cb.io.outputs.add(out2);
         cb.io.elements.computeIfAbsent(out2.side, (side) -> new HashMap<>()).computeIfAbsent(out2.justify, (justify) -> new ArrayList<>()).add(out2);
         headers.getBlocks().computeIfAbsent("generic", (s) -> new HashMap<>()).put("const", cb);
+
+        StopBlock sb = new StopBlock();
+        BlockIO.Input stop = new BlockIO.Input(BlockIO.Side.LEFT, BlockIO.Justify.CENTER, "stop", "boolean", false);
+        sb.io.byName.put("stop", stop);
+        sb.io.inputs.add(stop);
+        sb.io.elements.computeIfAbsent(stop.side, (side) -> new HashMap<>()).computeIfAbsent(stop.justify, (justify) -> new ArrayList<>()).add(stop);
+        headers.getBlocks().computeIfAbsent("generic", (s) -> new HashMap<>()).put("stop", sb);
 
 
         // parse classes
