@@ -32,13 +32,13 @@ public class KonigCustomBlock extends KonigBlock {
     public Function<Map<String, CompletableFuture<Object>>, Map<String, CompletableFuture<Object>>> compile(KonigBlockReference self) {
         Function<Map<String, Object>, CompletableFuture<Map<String, Object>>> compiledInner = code.compile();
         return (inputs) -> {
-            CompletableFuture<Map<String, Object>> cf = CompletableFuture.supplyAsync(() -> {
+            CompletableFuture<Map<String, Object>> cf = CompletableFuture.allOf(inputs.values().toArray(CompletableFuture[]::new)).thenApplyAsync((f) -> {
                 Map<String, Object> inputsMap = new HashMap<>();
                 for (Map.Entry<String, CompletableFuture<Object>> input : inputs.entrySet()) {
                     inputsMap.put(input.getKey(), input.getValue().join());
                 }
                 return inputsMap;
-            }).thenCompose(compiledInner);
+            }, self.parent.executor).thenCompose(compiledInner);
 
             Map<String, CompletableFuture<Object>> outputs = new HashMap<>();
             for (BlockIO.IOElement output : io.outputs) {

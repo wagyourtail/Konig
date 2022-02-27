@@ -94,7 +94,7 @@
                             <io>
                                 <output name="out" wireid="5"/>
                             </io>
-                            <value>10</value>
+                            <value>10000</value>
                         </const>
                         <lt blockid="4" x="0" y="0" flipH="false" flipV="false" rotate="0" scaleX="1" scaleY="1">
                             <io>

@@ -4,25 +4,27 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import xyz.wagyourtail.konig.structure.headers.BlockIO;
 import xyz.wagyourtail.konig.structure.headers.KonigBlock;
-import xyz.wagyourtail.konig.structure.headers.blocks.GlobalInput;
-import xyz.wagyourtail.konig.structure.headers.blocks.GlobalOutput;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class Code {
     public final CodeParent parent;
+    public final Executor executor;
     Map<Integer, Wire> wireMap = new HashMap<>();
     Map<Integer, KonigBlockReference> blockMap = new HashMap<>();
 
     public Code(CodeParent parent) {
-        this.parent = parent;
+        this(parent, new ForkJoinPool(Runtime.getRuntime().availableProcessors()));
     }
 
+    protected Code(CodeParent parent, Executor executor) {
+        this.parent = parent;
+        this.executor = executor;
+    }
 
     public void parseXML(Node node) throws IOException {
         NodeList children = node.getChildNodes();
@@ -113,12 +115,12 @@ public class Code {
 
         // check for circular references
         blockMap.values()
-            .parallelStream()
+            .stream()
             .filter(bw -> bw.outputs.size() == 0)
             .forEach(e -> e.checkCircular(blockMap, blockMap.keySet()));
 
         // compile the blocks
-        blockMap.values().parallelStream().forEach(bw -> bw.precompile(parent));
+        blockMap.values().stream().forEach(bw -> bw.precompile(parent));
 
 
         return (inputs) -> {
@@ -128,12 +130,12 @@ public class Code {
             for (Map.Entry<String, Object> entry : inputs.entrySet()) {
                 runInputs.put(entry.getKey(), CompletableFuture.completedFuture(entry.getValue()));
             }
-            blockMap.values().parallelStream().filter(e -> e.inputs.size() == 0).forEach(e -> {
+            blockMap.values().stream().filter(e -> e.inputs.size() == 0).forEach(e -> {
                 runBlock(e, runInputs, runBlocks, blockMap);
             });
-            List<Map.Entry<String, CompletableFuture<Object>>> entries = blockMap.values().parallelStream().filter(e -> e.outputs.size() == 0).map(e -> runBlocks.get(e.reference)).flatMap((b) -> b.entrySet().stream()).collect(Collectors.toList());
-            return CompletableFuture.allOf(entries.parallelStream().map(Map.Entry::getValue).toArray(CompletableFuture[]::new)).thenApply(v -> {
-                entries.parallelStream().forEach(e -> {
+            List<Map.Entry<String, CompletableFuture<Object>>> entries = blockMap.values().stream().filter(e -> e.outputs.size() == 0).map(e -> runBlocks.get(e.reference)).flatMap((b) -> b.entrySet().stream()).collect(Collectors.toList());
+            return CompletableFuture.allOf(entries.stream().map(Map.Entry::getValue).toArray(CompletableFuture[]::new)).thenApply(v -> {
+                entries.stream().forEach(e -> {
                     if (e.getValue().join() != null) {
                         outputs.put(e.getKey(), e.getValue().join());
                     }

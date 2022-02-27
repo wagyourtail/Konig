@@ -33,6 +33,12 @@ public class Main {
         compiled.apply(Collections.emptyMap()).join();
         end = System.nanoTime();
         System.out.println("Executed in " + (end - start) / 1000000 + "ms");
+        start = System.nanoTime();
+        for (double i = 0; i < 10000; i++) {
+            System.out.println(i);
+        }
+        end = System.nanoTime();
+        System.out.println("Executed in " + (end - start) / 1000000 + "ms");
     }
 
 }

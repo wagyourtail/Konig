@@ -13,7 +13,7 @@ public class InnerCode extends Code {
     public String name;
     public KonigBlockReference outer;
     public InnerCode(KonigBlockReference block) {
-        super(new InnerParent());
+        super(new InnerParent(), block.parent.executor);
         outer = block;
     }
 

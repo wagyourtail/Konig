@@ -158,7 +158,7 @@ public class InternBlock extends KonigBlock {
                     args[paramIndexes.get(hollow)] = wrappedInner;
                 }
                 return args;
-            }).thenApply(args -> {
+            }, self.parent.executor).thenApply(args -> {
                 try {
                     return finalHandle.invokeWithArguments(args);
                 } catch (Throwable e) {
