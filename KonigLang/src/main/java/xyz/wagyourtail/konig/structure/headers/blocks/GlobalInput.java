@@ -10,7 +10,7 @@ import java.util.function.Function;
 
 public class GlobalInput extends KonigBlock {
     @Override
-    public Function<Map<String, CompletableFuture<Object>>, Map<String, CompletableFuture<Object>>> compile(KonigBlockReference self) {
+    public Function<Map<String, CompletableFuture<Object>>, Map<String, CompletableFuture<Object>>> jitCompile(KonigBlockReference self) {
         return (map) -> Collections.singletonMap("out", map.get(self.value));
     }
 

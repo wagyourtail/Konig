@@ -11,7 +11,7 @@ import java.util.function.Function;
 
 public class StopBlock extends KonigBlock {
     @Override
-    public Function<Map<String, CompletableFuture<Object>>, Map<String, CompletableFuture<Object>>> compile(KonigBlockReference self) {
+    public Function<Map<String, CompletableFuture<Object>>, Map<String, CompletableFuture<Object>>> jitCompile(KonigBlockReference self) {
         return (inp) -> Collections.singletonMap("$void", inp.get("stop").thenApply(o -> {
             if (Generic.toBoolean(o)) {
                 self.parent.executor.shutdownNow();

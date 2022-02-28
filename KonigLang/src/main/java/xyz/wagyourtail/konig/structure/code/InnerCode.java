@@ -26,7 +26,7 @@ public class InnerCode extends Code {
     }
 
     @Override
-    public Function<Map<String, Object>, CompletableFuture<Map<String, Object>>> compile() {
+    public Function<Map<String, Object>, CompletableFuture<Map<String, Object>>> jitCompile() {
         KonigBlock parentBlock = parent.getBlockByName(outer.name);
         KonigBlock childBlock = parent.getBlockByName("$hollowinner");
 
@@ -95,7 +95,7 @@ public class InnerCode extends Code {
             output.io.elementMap.put(value.name, new ReferenceIO.IOElement(value.name, -42));
         }
         blockMap.put(-1, output);
-        return super.compile();
+        return super.jitCompile();
     }
 
     public static class InnerParent implements CodeParent {
@@ -132,7 +132,7 @@ public class InnerCode extends Code {
         }
 
         @Override
-        public Function<Map<String, CompletableFuture<Object>>, Map<String, CompletableFuture<Object>>> compile(KonigBlockReference self) {
+        public Function<Map<String, CompletableFuture<Object>>, Map<String, CompletableFuture<Object>>> jitCompile(KonigBlockReference self) {
             return Function.identity();
         }
 

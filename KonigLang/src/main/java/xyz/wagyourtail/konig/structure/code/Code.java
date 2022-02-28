@@ -95,7 +95,7 @@ public class Code {
         KonigBlock getBlockByName(String name);
     }
 
-    public Function<Map<String, Object>, CompletableFuture<Map<String, Object>>> compile() {
+    public Function<Map<String, Object>, CompletableFuture<Map<String, Object>>> jitCompile() {
         // map all the blocks
         Map<KonigBlockReference, BlockWires> blockMap = new HashMap<>();
         for (Wire wire : wireMap.values()) {
@@ -120,7 +120,7 @@ public class Code {
             .forEach(e -> e.checkCircular(blockMap, blockMap.keySet()));
 
         // compile the blocks
-        blockMap.values().forEach(bw -> bw.precompile(parent));
+        blockMap.values().forEach(bw -> bw.jitCompile(parent));
 
 
         return (inputs) -> {
@@ -309,9 +309,9 @@ public class Code {
             }
         }
 
-        public void precompile(CodeParent parent) {
+        public void jitCompile(CodeParent parent) {
             KonigBlock kb = parent.getBlockByName(reference.name);
-            compiled = kb.compile(reference);
+            compiled = kb.jitCompile(reference);
         }
 
         public synchronized boolean areExpectedWiresPresent(Set<KonigBlockReference> bw) {

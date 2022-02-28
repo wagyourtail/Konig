@@ -78,8 +78,8 @@ public class KonigProgram implements KonigFile, Code.CodeParent {
         return headers.getBlockByName(name);
     }
 
-    public Function<Map<String, Object>, CompletableFuture<Map<String, Object>>> compile() {
-        return code.compile();
+    public Function<Map<String, Object>, CompletableFuture<Map<String, Object>>> jitCompile() {
+        return code.jitCompile();
     }
 
 }

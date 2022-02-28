@@ -16,13 +16,23 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 public class InternBlock extends KonigBlock {
-    Method method;
+    MethodHandle method;
+    int paramCount;
+    Function<Object[], Object> resolved;
     Block block;
 
     public void parseMethod(Method method, String defaultGroup) {
         block = method.getAnnotation(Block.class);
         if (block == null) throw new IllegalArgumentException("Method must be annotated with @Block");
-        this.method = method;
+
+        try {
+            this.method = lookup.unreflect(method);
+        } catch (IllegalAccessException e) {
+            throw new IllegalStateException(e);
+        }
+        paramCount = method.getParameterCount();
+        resolved = MethodHandleUtils.toArgsFunction(this.method);
+
         this.name = block.name();
         this.group = block.group().equals("") ? defaultGroup : block.group();
         this.image = block.image().equals("") ? null : Path.of(block.image());
@@ -67,25 +77,16 @@ public class InternBlock extends KonigBlock {
     private static final MethodHandles.Lookup lookup = MethodHandles.lookup();
 
     @Override
-    public Function<Map<String, CompletableFuture<Object>>, Map<String, CompletableFuture<Object>>> compile(KonigBlockReference self) {
-        if (method == null) {
-            throw new IllegalArgumentException("Method must be set before compiling");
+    public Function<Map<String, CompletableFuture<Object>>, Map<String, CompletableFuture<Object>>> jitCompile(KonigBlockReference self) {
+        if (resolved == null || method == null) {
+            throw new IllegalStateException("Method not parsed");
         }
-
-        MethodHandle handle;
-        try {
-            handle = lookup.unreflect(method);
-        } catch (IllegalAccessException e) {
-            throw new IllegalStateException(e);
-        }
-        Function<Object[], Object> resolved = MethodHandleUtils.toArgsFunction(handle);
-
         Map<String, Function<Map<String, Object>, CompletableFuture<Map<String, Object>>>> compiledInnerCode = new HashMap<>();
 
         for (Map.Entry<String, InnerCode> stringInnerCodeEntry : self.innerCodeMap.entrySet()) {
             String name = stringInnerCodeEntry.getKey();
             InnerCode innerCode = stringInnerCodeEntry.getValue();
-            Function<Map<String, Object>, CompletableFuture<Map<String, Object>>> compiled = innerCode.compile();
+            Function<Map<String, Object>, CompletableFuture<Map<String, Object>>> compiled = innerCode.jitCompile();
             compiledInnerCode.put(name, compiled);
         }
 
@@ -93,11 +94,10 @@ public class InternBlock extends KonigBlock {
         Map<Object, Integer> paramIndexes = new HashMap<>();
         {
             int i = -1;
-            int p = method.getParameterCount();
             for (Block.Input input : block.inputs()) {
                 if (input.index() == -1) ++i;
                 else i = input.index();
-                if (i >= p) {
+                if (i >= paramCount) {
                     throw new IllegalArgumentException("input "  + input.name() + " index out of bounds.");
                 }
                 paramIndexes.put(input, i);
@@ -111,7 +111,7 @@ public class InternBlock extends KonigBlock {
                         throw new IllegalArgumentException("Hollow index " + i + " already used");
                     }
                 }
-                if (i >= p) {
+                if (i >= paramCount) {
                     throw new IllegalArgumentException("hollow "  + hollow.name() + " index out of bounds.");
                 }
                 paramIndexes.put(hollow, i);
@@ -123,7 +123,7 @@ public class InternBlock extends KonigBlock {
             Map<String, CompletableFuture<Object>> outputs = new ConcurrentHashMap<>();
 
             CompletableFuture<Object> cf = CompletableFuture.allOf(inputs.values().toArray(CompletableFuture[]::new)).thenApplyAsync((f) -> {
-                Object[] args = new Object[method.getParameterCount()];
+                Object[] args = new Object[method.type().parameterCount()];
                 Map<String, Object> inputsMap = new HashMap<>();
                 for (Map.Entry<String, CompletableFuture<Object>> input : inputs.entrySet()) {
                     inputsMap.put(input.getKey(), input.getValue().join());

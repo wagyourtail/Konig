@@ -29,8 +29,8 @@ public class KonigCustomBlock extends KonigBlock {
     }
 
     @Override
-    public Function<Map<String, CompletableFuture<Object>>, Map<String, CompletableFuture<Object>>> compile(KonigBlockReference self) {
-        Function<Map<String, Object>, CompletableFuture<Map<String, Object>>> compiledInner = code.compile();
+    public Function<Map<String, CompletableFuture<Object>>, Map<String, CompletableFuture<Object>>> jitCompile(KonigBlockReference self) {
+        Function<Map<String, Object>, CompletableFuture<Map<String, Object>>> compiledInner = code.jitCompile();
         return (inputs) -> {
             CompletableFuture<Map<String, Object>> cf = CompletableFuture.allOf(inputs.values().toArray(CompletableFuture[]::new)).thenApplyAsync((f) -> {
                 Map<String, Object> inputsMap = new HashMap<>();

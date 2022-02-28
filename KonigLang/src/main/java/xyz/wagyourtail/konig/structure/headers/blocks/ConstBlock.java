@@ -11,7 +11,7 @@ import java.util.function.Function;
 public class ConstBlock extends KonigBlock {
 
     @Override
-    public Function<Map<String, CompletableFuture<Object>>, Map<String, CompletableFuture<Object>>> compile(KonigBlockReference self) {
+    public Function<Map<String, CompletableFuture<Object>>, Map<String, CompletableFuture<Object>>> jitCompile(KonigBlockReference self) {
         return (args) -> Collections.singletonMap("out", CompletableFuture.completedFuture(self.value));
     }
 

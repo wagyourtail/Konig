@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Timer;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
@@ -22,7 +21,7 @@ public class Main {
         long end = System.nanoTime();
         System.out.println("Deserialized in " + (end - start) / 1000000 + "ms");
         start = System.nanoTime();
-        Function<Map<String, Object>, CompletableFuture<Map<String, Object>>> compiled = ((KonigProgram) f).compile();
+        Function<Map<String, Object>, CompletableFuture<Map<String, Object>>> compiled = ((KonigProgram) f).jitCompile();
         end = System.nanoTime();
         System.out.println("Compiled in " + (end - start) / 1000000 + "ms");
         start = System.nanoTime();
