@@ -1,13 +1,13 @@
 package xyz.wagyourtail.konig.lib;
 
+import xyz.wagyourtail.MethodHandleUtils;
 import xyz.wagyourtail.konig.structure.code.InnerCode;
 import xyz.wagyourtail.konig.structure.code.KonigBlockReference;
 import xyz.wagyourtail.konig.structure.headers.BlockIO;
 import xyz.wagyourtail.konig.structure.headers.Hollow;
 import xyz.wagyourtail.konig.structure.headers.KonigBlock;
 
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
+import java.lang.invoke.*;
 import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.util.*;
@@ -64,20 +64,21 @@ public class InternBlock extends KonigBlock {
         }
     }
 
+    private static final MethodHandles.Lookup lookup = MethodHandles.lookup();
+
     @Override
     public Function<Map<String, CompletableFuture<Object>>, Map<String, CompletableFuture<Object>>> compile(KonigBlockReference self) {
         if (method == null) {
             throw new IllegalArgumentException("Method must be set before compiling");
         }
 
-        MethodHandles.Lookup lookup = MethodHandles.lookup();
         MethodHandle handle;
         try {
             handle = lookup.unreflect(method);
         } catch (IllegalAccessException e) {
             throw new IllegalStateException(e);
         }
-        MethodHandle finalHandle = handle;
+        Function<Object[], Object> resolved = MethodHandleUtils.toArgsFunction(handle);
 
         Map<String, Function<Map<String, Object>, CompletableFuture<Map<String, Object>>>> compiledInnerCode = new HashMap<>();
 
@@ -160,7 +161,7 @@ public class InternBlock extends KonigBlock {
                 return args;
             }, self.parent.executor).thenApply(args -> {
                 try {
-                    return finalHandle.invokeWithArguments(args);
+                    return resolved.apply(args);
                 } catch (Throwable e) {
                     e.printStackTrace();
                     throw new RuntimeException(e);

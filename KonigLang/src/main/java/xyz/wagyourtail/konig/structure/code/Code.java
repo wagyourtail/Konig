@@ -120,7 +120,7 @@ public class Code {
             .forEach(e -> e.checkCircular(blockMap, blockMap.keySet()));
 
         // compile the blocks
-        blockMap.values().stream().forEach(bw -> bw.precompile(parent));
+        blockMap.values().forEach(bw -> bw.precompile(parent));
 
 
         return (inputs) -> {
@@ -135,7 +135,7 @@ public class Code {
             });
             List<Map.Entry<String, CompletableFuture<Object>>> entries = blockMap.values().stream().filter(e -> e.outputs.size() == 0).map(e -> runBlocks.get(e.reference)).flatMap((b) -> b.entrySet().stream()).collect(Collectors.toList());
             return CompletableFuture.allOf(entries.stream().map(Map.Entry::getValue).toArray(CompletableFuture[]::new)).thenApply(v -> {
-                entries.stream().forEach(e -> {
+                entries.forEach(e -> {
                     if (e.getValue().join() != null) {
                         outputs.put(e.getKey(), e.getValue().join());
                     }
