@@ -91,7 +91,7 @@ public class InternBlock extends KonigBlock {
         }
 
         // pre-check for illegal stuff in these indexes, also pre-compile the absolute index map
-        Map<Object, Integer> paramIndexes = new HashMap<>();
+        Object[] params = new Object[paramCount];
         {
             int i = -1;
             for (Block.Input input : block.inputs()) {
@@ -100,21 +100,24 @@ public class InternBlock extends KonigBlock {
                 if (i >= paramCount) {
                     throw new IllegalArgumentException("input "  + input.name() + " index out of bounds.");
                 }
-                paramIndexes.put(input, i);
+                if (params[i] != null) {
+                    throw new IllegalArgumentException("Input index " + i + " already used");
+                }
+                params[i] = input;
             }
             for (Block.Hollow hollow : block.hollows()) {
                 if (hollow.index() == -1)
-                    while (paramIndexes.containsValue(++i)) ;
+                    while (params[++i] != null) ;
                 else {
                     i = hollow.index();
-                    if (paramIndexes.containsValue(i)) {
-                        throw new IllegalArgumentException("Hollow index " + i + " already used");
-                    }
                 }
                 if (i >= paramCount) {
                     throw new IllegalArgumentException("hollow "  + hollow.name() + " index out of bounds.");
                 }
-                paramIndexes.put(hollow, i);
+                if (params[i] != null) {
+                    throw new IllegalArgumentException("Hollow index " + i + " already used");
+                }
+                params[i] = hollow;
             }
 
         }
@@ -124,39 +127,47 @@ public class InternBlock extends KonigBlock {
 
             CompletableFuture<Object> cf = CompletableFuture.allOf(inputs.values().toArray(CompletableFuture[]::new)).thenApplyAsync((f) -> {
                 Object[] args = new Object[method.type().parameterCount()];
-                Map<String, Object> inputsMap = new HashMap<>();
-                for (Map.Entry<String, CompletableFuture<Object>> input : inputs.entrySet()) {
-                    inputsMap.put(input.getKey(), input.getValue().join());
-                }
-                for (Block.Input input : block.inputs()) {
-                    args[paramIndexes.get(input)] = inputsMap.get(input.name());
+                for (int i = 0; i < args.length; ++i) {
+                    if (params[i] instanceof Block.Input) {
+                        args[i] = inputs.get(((Block.Input) params[i]).name()).join();
+                    } else if (params[i] instanceof Block.Hollow) {
+
+                        int finalI = i;
+                        Function<Object[], Map<String, Object>> wrappedInner = (obj) -> {
+
+                            Map<String, Object> innerInputs = new ConcurrentHashMap<>();
+                            for (Map.Entry<String, CompletableFuture<Object>> input : inputs.entrySet()) {
+                                innerInputs.put(input.getKey(), input.getValue().join());
+                            }
+
+                            int j = -1;
+                            for (Block.Input input : ((Block.Hollow) params[finalI]).inputs()) {
+                                if (input.index() == -1) ++j;
+                                else j = input.index();
+                                innerInputs.put(input.name(), obj[j]);
+                            }
+
+                            Map<String, Object> result = compiledInnerCode.get(((Block.Hollow) params[finalI]).name()).apply(innerInputs).join();
+
+                            // loopback virtual inputs
+                            for (Map.Entry<String, Object> entry : result.entrySet()) {
+                                if (entry.getKey().startsWith("virtual") && entry.getKey().endsWith("$loopback")) {
+                                    inputs.put(entry.getKey().substring(0, entry.getKey().length() - "$loopback".length()), CompletableFuture.completedFuture(entry.getValue()));
+                                } else {
+                                    outputs.put(entry.getKey(), CompletableFuture.completedFuture(entry.getValue()));
+                                }
+                            }
+                            return result;
+                        };
+
+                        args[i] = wrappedInner;
+                    } else {
+                        throw new IllegalStateException("Unknown parameter type");
+                    }
                 }
                 for (Block.Hollow hollow : block.hollows()) {
                     // technically we're leaking some inputs that don't need to be there (the non-virtual ones)
-                    Map<String, Object> innerInputs = new ConcurrentHashMap<>(inputsMap);
 
-                    Function<Object[], Map<String, Object>> wrappedInner = (obj) -> {
-                        int j = -1;
-                        for (Block.Input input : hollow.inputs()) {
-                            if (input.index() == -1) ++j;
-                            else j = input.index();
-                            innerInputs.put(input.name(), obj[j]);
-                        }
-
-                        Map<String, Object> result = compiledInnerCode.get(hollow.name()).apply(innerInputs).join();
-
-                        // loopback virtual inputs
-                        for (Map.Entry<String, Object> entry : result.entrySet()) {
-                            if (entry.getKey().startsWith("virtual") && entry.getKey().endsWith("$loopback")) {
-                                innerInputs.put(entry.getKey().substring(0, entry.getKey().length() - "$loopback".length()), entry.getValue());
-                            } else {
-                                outputs.put(entry.getKey(), CompletableFuture.completedFuture(entry.getValue()));
-                            }
-                        }
-                        return result;
-                    };
-
-                    args[paramIndexes.get(hollow)] = wrappedInner;
                 }
                 return args;
             }, self.parent.executor).thenApply(args -> {
