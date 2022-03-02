@@ -93,7 +93,10 @@ public class Code {
         BiFunction<ForkJoinPool, Map<String, Object>, CompletableFuture<Map<String, Object>>> compiled = jitCompile();
         return (inputs) -> {
             ForkJoinPool pool = async ? new ForkJoinPool(Runtime.getRuntime().availableProcessors()) : null;
-            return compiled.apply(pool, inputs);
+            CompletableFuture<Map<String, Object>> result = compiled.apply(pool, inputs);
+            // kill the pool when done
+            if (pool != null) result.thenRun(pool::shutdown);
+            return result;
         };
     }
 
