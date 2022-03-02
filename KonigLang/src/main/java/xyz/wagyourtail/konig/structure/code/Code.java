@@ -138,7 +138,7 @@ public class Code {
 
 
         return (inputs) -> {
-            Map<KonigBlockReference, Map<String, CompletableFuture<Object>>> runBlocks = new ConcurrentHashMap<>();
+            Map<String, CompletableFuture<Object>>[] runBlocks = new Map[blockMap.length];
             Map<String, Object> outputs = new ConcurrentHashMap<>();
             Map<String, CompletableFuture<Object>> runInputs = new HashMap<>();
             for (Map.Entry<String, Object> entry : inputs.entrySet()) {
@@ -156,7 +156,7 @@ public class Code {
                 }
             }
 
-            List<Map.Entry<String, CompletableFuture<Object>>> entries = Arrays.stream(blockMap).filter(Objects::nonNull).filter(e -> e.outputs.size() == 0).map(e -> runBlocks.get(e.reference)).flatMap((b) -> b.entrySet().stream()).collect(Collectors.toList());
+            List<Map.Entry<String, CompletableFuture<Object>>> entries = Arrays.stream(blockMap).filter(Objects::nonNull).filter(e -> e.outputs.size() == 0).map(e -> runBlocks[e.reference.id + 2]).flatMap((b) -> b.entrySet().stream()).collect(Collectors.toList());
             return CompletableFuture.allOf(entries.stream().map(Map.Entry::getValue).toArray(CompletableFuture[]::new)).thenApply(v -> {
                 entries.forEach(e -> {
                     if (e.getValue().join() != null) {
@@ -170,13 +170,13 @@ public class Code {
         };
     }
 
-    private void runBlock(BlockWires bw, Map<String, CompletableFuture<Object>> runInputs, Map<KonigBlockReference, Map<String, CompletableFuture<Object>>> runBlocks, BlockWires[] blockMap) {
+    private void runBlock(BlockWires bw, Map<String, CompletableFuture<Object>> runInputs, Map<String, CompletableFuture<Object>>[] runBlocks, BlockWires[] blockMap) {
         synchronized (runBlocks) {
-            if (runBlocks.containsKey(bw.reference)) {
+            if (runBlocks[bw.reference.id + 2] != null) {
                 return;
             }
             Map<String, CompletableFuture<Object>> outputs = bw.compiled.apply(runInputs);
-            runBlocks.put(bw.reference, outputs);
+            runBlocks[bw.reference.id + 2] = outputs;
         }
         for (CompiledWire output : bw.outputs) {
             for (KonigBlockReference nextBlockReference : output.outputs.keySet()) {
@@ -184,10 +184,10 @@ public class Code {
                 if (nextBlock == null) {
                     throw new RuntimeException("Block not found: " + nextBlockReference);
                 }
-                if (nextBlock.areExpectedWiresPresent(runBlocks.keySet())) {
+                if (nextBlock.areExpectedWiresPresent(runBlocks)) {
                     Map<String, CompletableFuture<Object>> nextInputs = new HashMap<>();
                     for (CompiledWire input : nextBlock.inputs) {
-                        nextInputs.put(input.outputs.get(nextBlockReference).portName, runBlocks.get(input.input.reference).get(input.input.portName));
+                        nextInputs.put(input.outputs.get(nextBlockReference).portName, runBlocks[input.input.reference.id + 2].get(input.input.portName));
                     }
                     runBlock(nextBlock, nextInputs, runBlocks, blockMap);
                 }
@@ -337,9 +337,9 @@ public class Code {
             compiled = kb.jitCompile(reference);
         }
 
-        public synchronized boolean areExpectedWiresPresent(Set<KonigBlockReference> bw) {
+        public synchronized boolean areExpectedWiresPresent(Map<String, CompletableFuture<Object>>[] bw) {
             for (CompiledWire input : inputs) {
-                if (!bw.contains(input.input.reference)) {
+                if (bw[input.input.reference.id + 2] == null) {
                     return false;
                 }
             }
