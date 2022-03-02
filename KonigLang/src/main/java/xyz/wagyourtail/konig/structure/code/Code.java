@@ -144,9 +144,18 @@ public class Code {
             for (Map.Entry<String, Object> entry : inputs.entrySet()) {
                 runInputs.put(entry.getKey(), CompletableFuture.completedFuture(entry.getValue()));
             }
-            Arrays.stream(blockMap).filter(Objects::nonNull).filter(e -> e.inputs.size() == 0).forEach(e -> {
-                runBlock(e, runInputs, runBlocks, blockMap);
-            });
+//            Arrays.stream(blockMap).filter(Objects::nonNull).filter(e -> e.inputs.size() == 0).forEach(e -> {
+//                runBlock(e, runInputs, runBlocks, blockMap);
+//            });
+
+            for (BlockWires bw : blockMap) {
+                if (bw != null) {
+                    if (bw.inputs.size() == 0) {
+                        runBlock(bw, runInputs, runBlocks, blockMap);
+                    }
+                }
+            }
+
             List<Map.Entry<String, CompletableFuture<Object>>> entries = Arrays.stream(blockMap).filter(Objects::nonNull).filter(e -> e.outputs.size() == 0).map(e -> runBlocks.get(e.reference)).flatMap((b) -> b.entrySet().stream()).collect(Collectors.toList());
             return CompletableFuture.allOf(entries.stream().map(Map.Entry::getValue).toArray(CompletableFuture[]::new)).thenApply(v -> {
                 entries.forEach(e -> {
