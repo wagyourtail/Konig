@@ -136,6 +136,36 @@ public class Code {
             }
         }
 
+        // generate input block list
+        Set<BlockWires> inputBlocks = new HashSet<>();
+        for (BlockWires bw : blockMap) {
+            if (bw != null) {
+                if (bw.inputs.size() == 0) {
+                    inputBlocks.add(bw);
+                }
+            }
+        }
+
+        // gen remaining execution order
+        Set<BlockWires> executionOrder = new LinkedHashSet<>();
+        for (BlockWires bw : inputBlocks) {
+            for (CompiledWire output : bw.outputs) {
+                for (KonigBlockReference outputRef : output.outputs.keySet()) {
+                    genExecutionOrder(blockMap[outputRef.id + 2], blockMap, executionOrder, inputBlocks);
+                }
+            }
+        }
+
+        // generate output block list
+        Set<Integer> outputBlockIds = new HashSet<>();
+        for (BlockWires bw : blockMap) {
+            if (bw != null) {
+                if (bw.outputs.size() == 0) {
+                    outputBlockIds.add(bw.reference.id);
+                }
+            }
+        }
+
 
         return (inputs) -> {
             Map<String, CompletableFuture<Object>>[] runBlocks = new Map[blockMap.length];
@@ -148,15 +178,19 @@ public class Code {
 //                runBlock(e, runInputs, runBlocks, blockMap);
 //            });
 
-            for (BlockWires bw : blockMap) {
-                if (bw != null) {
-                    if (bw.inputs.size() == 0) {
-                        runBlock(bw, runInputs, runBlocks, blockMap);
-                    }
-                }
+            for (BlockWires bw : inputBlocks) {
+                runBlock(bw, runInputs, runBlocks);
             }
 
-            List<Map.Entry<String, CompletableFuture<Object>>> entries = Arrays.stream(blockMap).filter(Objects::nonNull).filter(e -> e.outputs.size() == 0).map(e -> runBlocks[e.reference.id + 2]).flatMap((b) -> b.entrySet().stream()).collect(Collectors.toList());
+            for (BlockWires bw : executionOrder) {
+                Map<String, CompletableFuture<Object>> nextInputs = new HashMap<>();
+                for (CompiledWire input : bw.inputs) {
+                    nextInputs.put(input.outputs.get(bw.reference).portName, runBlocks[input.input.reference.id + 2].get(input.input.portName));
+                }
+                runBlock(bw, nextInputs, runBlocks);
+            }
+
+            List<Map.Entry<String, CompletableFuture<Object>>> entries = outputBlockIds.stream().map(e -> runBlocks[e + 2]).flatMap((b) -> b.entrySet().stream()).collect(Collectors.toList());
             return CompletableFuture.allOf(entries.stream().map(Map.Entry::getValue).toArray(CompletableFuture[]::new)).thenApply(v -> {
                 entries.forEach(e -> {
                     if (e.getValue().join() != null) {
@@ -170,29 +204,24 @@ public class Code {
         };
     }
 
-    private void runBlock(BlockWires bw, Map<String, CompletableFuture<Object>> runInputs, Map<String, CompletableFuture<Object>>[] runBlocks, BlockWires[] blockMap) {
-        synchronized (runBlocks) {
-            if (runBlocks[bw.reference.id + 2] != null) {
-                return;
-            }
-            Map<String, CompletableFuture<Object>> outputs = bw.compiled.apply(runInputs);
-            runBlocks[bw.reference.id + 2] = outputs;
-        }
-        for (CompiledWire output : bw.outputs) {
-            for (KonigBlockReference nextBlockReference : output.outputs.keySet()) {
-                BlockWires nextBlock = blockMap[nextBlockReference.id + 2];
-                if (nextBlock == null) {
-                    throw new RuntimeException("Block not found: " + nextBlockReference);
-                }
-                if (nextBlock.areExpectedWiresPresent(runBlocks)) {
-                    Map<String, CompletableFuture<Object>> nextInputs = new HashMap<>();
-                    for (CompiledWire input : nextBlock.inputs) {
-                        nextInputs.put(input.outputs.get(nextBlockReference).portName, runBlocks[input.input.reference.id + 2].get(input.input.portName));
-                    }
-                    runBlock(nextBlock, nextInputs, runBlocks, blockMap);
-                }
+    private void genExecutionOrder(BlockWires current, BlockWires[] blockMap, Set<BlockWires> executionOrder, Set<BlockWires> inputsBlocks) {
+        for (CompiledWire input : current.inputs) {
+            BlockWires inputBlock = blockMap[input.input.reference.id + 2];
+            if (!executionOrder.contains(inputBlock) && !inputsBlocks.contains(inputBlock)) {
+                genExecutionOrder(inputBlock, blockMap, executionOrder, inputsBlocks);
             }
         }
+        executionOrder.add(current);
+        for (CompiledWire output : current.outputs) {
+            for (KonigBlockReference outputRef : output.outputs.keySet()) {
+                genExecutionOrder(blockMap[outputRef.id + 2], blockMap, executionOrder, inputsBlocks);
+            }
+        }
+    }
+
+    private void runBlock(BlockWires bw, Map<String, CompletableFuture<Object>> runInputs, Map<String, CompletableFuture<Object>>[] runBlocks) {
+        Map<String, CompletableFuture<Object>> outputs = bw.compiled.apply(runInputs);
+        runBlocks[bw.reference.id + 2] = outputs;
     }
 
     public CompiledWire compileWire(Wire wire) {
