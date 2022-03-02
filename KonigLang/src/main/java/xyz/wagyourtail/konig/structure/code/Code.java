@@ -95,7 +95,7 @@ public class Code {
         KonigBlock getBlockByName(String name);
     }
 
-    public Function<Map<String, Object>, CompletableFuture<Map<String, Object>>> jitCompile() {
+    public Function<Map<String, Object>, CompletableFuture<Map<String, Object>>> jitCompile(boolean async) {
         int i = 0;
         for (KonigBlockReference block : this.blockMap.values()) {
             i = Math.max(i, block.id);
@@ -132,7 +132,7 @@ public class Code {
         // compile the blocks
         for (BlockWires bw : blockMap) {
             if (bw != null) {
-                bw.jitCompile(parent);
+                bw.jitCompile(parent, async);
             }
         }
 
@@ -361,9 +361,9 @@ public class Code {
             }
         }
 
-        public void jitCompile(CodeParent parent) {
+        public void jitCompile(CodeParent parent, boolean async) {
             KonigBlock kb = parent.getBlockByName(reference.name);
-            compiled = kb.jitCompile(reference);
+            compiled = kb.jitCompile(reference, async);
         }
 
         public synchronized boolean areExpectedWiresPresent(Map<String, CompletableFuture<Object>>[] bw) {

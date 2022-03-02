@@ -29,23 +29,45 @@ public class KonigCustomBlock extends KonigBlock {
     }
 
     @Override
-    public Function<Map<String, CompletableFuture<Object>>, Map<String, CompletableFuture<Object>>> jitCompile(KonigBlockReference self) {
-        Function<Map<String, Object>, CompletableFuture<Map<String, Object>>> compiledInner = code.jitCompile();
-        return (inputs) -> {
-            CompletableFuture<Map<String, Object>> cf = CompletableFuture.allOf(inputs.values().toArray(CompletableFuture[]::new)).thenApplyAsync((f) -> {
-                Map<String, Object> inputsMap = new HashMap<>();
-                for (Map.Entry<String, CompletableFuture<Object>> input : inputs.entrySet()) {
-                    inputsMap.put(input.getKey(), input.getValue().join());
-                }
-                return inputsMap;
-            }, self.parent.executor).thenCompose(compiledInner);
+    public Function<Map<String, CompletableFuture<Object>>, Map<String, CompletableFuture<Object>>> jitCompile(KonigBlockReference self, boolean async) {
+        Function<Map<String, Object>, CompletableFuture<Map<String, Object>>> compiledInner = code.jitCompile(async);
+        if (async) {
+            return (inputs) -> inputsToOutputsAsync(inputs, compiledInner, self);
+        } else {
+            return (inputs) -> inputsToOutputs(inputs, compiledInner);
+        }
+    }
 
-            Map<String, CompletableFuture<Object>> outputs = new HashMap<>();
-            for (BlockIO.IOElement output : io.outputs) {
-                outputs.put(output.name, cf.thenApply(e -> e.get(output.name)));
-            }
-            return outputs;
-        };
+    public Map<String, CompletableFuture<Object>> inputsToOutputsAsync(Map<String, CompletableFuture<Object>> inputs, Function<Map<String, Object>, CompletableFuture<Map<String, Object>>> compiledInner, KonigBlockReference self) {
+        CompletableFuture<Map<String, Object>> cf = CompletableFuture.allOf(inputs.values().toArray(CompletableFuture[]::new))
+            .thenApplyAsync((f) -> compiledMethodArgsProcessor(inputs), self.parent.executor)
+            .thenCompose(compiledInner);
+
+        Map<String, CompletableFuture<Object>> outputs = new HashMap<>();
+        for (BlockIO.IOElement output : io.outputs) {
+            outputs.put(output.name, cf.thenApply(e -> e.get(output.name)));
+        }
+        return outputs;
+    }
+
+    public Map<String, CompletableFuture<Object>> inputsToOutputs(Map<String, CompletableFuture<Object>> inputs, Function<Map<String, Object>, CompletableFuture<Map<String, Object>>> compiledInner) {
+        CompletableFuture<Map<String, Object>> cf = CompletableFuture.allOf(inputs.values().toArray(CompletableFuture[]::new))
+            .thenApply((f) -> compiledMethodArgsProcessor(inputs))
+            .thenCompose(compiledInner);
+
+        Map<String, CompletableFuture<Object>> outputs = new HashMap<>();
+        for (BlockIO.IOElement output : io.outputs) {
+            outputs.put(output.name, cf.thenApply(e -> e.get(output.name)));
+        }
+        return outputs;
+    }
+
+    public Map<String, Object> compiledMethodArgsProcessor(Map<String, CompletableFuture<Object>> inputs) {
+        Map<String, Object> inputsMap = new HashMap<>();
+        for (Map.Entry<String, CompletableFuture<Object>> input : inputs.entrySet()) {
+            inputsMap.put(input.getKey(), input.getValue().join());
+        }
+        return inputsMap;
     }
 
 }

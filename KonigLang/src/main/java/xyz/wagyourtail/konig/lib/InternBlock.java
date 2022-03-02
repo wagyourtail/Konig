@@ -77,7 +77,7 @@ public class InternBlock extends KonigBlock {
     private static final MethodHandles.Lookup lookup = MethodHandles.lookup();
 
     @Override
-    public Function<Map<String, CompletableFuture<Object>>, Map<String, CompletableFuture<Object>>> jitCompile(KonigBlockReference self) {
+    public Function<Map<String, CompletableFuture<Object>>, Map<String, CompletableFuture<Object>>> jitCompile(KonigBlockReference self, boolean async) {
         if (resolved == null || method == null) {
             throw new IllegalStateException("Method not parsed");
         }
@@ -86,7 +86,7 @@ public class InternBlock extends KonigBlock {
         for (Map.Entry<String, InnerCode> stringInnerCodeEntry : self.innerCodeMap.entrySet()) {
             String name = stringInnerCodeEntry.getKey();
             InnerCode innerCode = stringInnerCodeEntry.getValue();
-            Function<Map<String, Object>, CompletableFuture<Map<String, Object>>> compiled = innerCode.jitCompile();
+            Function<Map<String, Object>, CompletableFuture<Map<String, Object>>> compiled = innerCode.jitCompile(async);
             compiledInnerCode.put(name, compiled);
         }
 
@@ -121,56 +121,19 @@ public class InternBlock extends KonigBlock {
             }
 
         }
+        if (async) {
+            return (inputs) -> inputsToOutputsAsync(inputs, params, compiledInnerCode, self);
+        } else {
+            return (inputs) -> inputsToOutputs(inputs, params, compiledInnerCode);
+        }
+    }
 
-        return (inputs) -> {
-            Map<String, CompletableFuture<Object>> outputs = new ConcurrentHashMap<>();
+    public Map<String, CompletableFuture<Object>> inputsToOutputsAsync(Map<String, CompletableFuture<Object>> inputs, Object[] params, Map<String, Function<Map<String, Object>, CompletableFuture<Map<String, Object>>>> compiledInnerCode, KonigBlockReference self) {
+        Map<String, CompletableFuture<Object>> outputs = new ConcurrentHashMap<>();
 
-            CompletableFuture<Object> cf = CompletableFuture.allOf(inputs.values().toArray(CompletableFuture[]::new)).thenApplyAsync((f) -> {
-                Object[] args = new Object[method.type().parameterCount()];
-                for (int i = 0; i < args.length; ++i) {
-                    if (params[i] instanceof Block.Input) {
-                        args[i] = inputs.get(((Block.Input) params[i]).name()).join();
-                    } else if (params[i] instanceof Block.Hollow) {
-
-                        int finalI = i;
-                        Function<Object[], Map<String, Object>> wrappedInner = (obj) -> {
-
-                            Map<String, Object> innerInputs = new ConcurrentHashMap<>();
-                            for (Map.Entry<String, CompletableFuture<Object>> input : inputs.entrySet()) {
-                                innerInputs.put(input.getKey(), input.getValue().join());
-                            }
-
-                            int j = -1;
-                            for (Block.Input input : ((Block.Hollow) params[finalI]).inputs()) {
-                                if (input.index() == -1) ++j;
-                                else j = input.index();
-                                innerInputs.put(input.name(), obj[j]);
-                            }
-
-                            Map<String, Object> result = compiledInnerCode.get(((Block.Hollow) params[finalI]).name()).apply(innerInputs).join();
-
-                            // loopback virtual inputs
-                            for (Map.Entry<String, Object> entry : result.entrySet()) {
-                                if (entry.getKey().startsWith("virtual") && entry.getKey().endsWith("$loopback")) {
-                                    inputs.put(entry.getKey().substring(0, entry.getKey().length() - "$loopback".length()), CompletableFuture.completedFuture(entry.getValue()));
-                                } else {
-                                    outputs.put(entry.getKey(), CompletableFuture.completedFuture(entry.getValue()));
-                                }
-                            }
-                            return result;
-                        };
-
-                        args[i] = wrappedInner;
-                    } else {
-                        throw new IllegalStateException("Unknown parameter type");
-                    }
-                }
-                for (Block.Hollow hollow : block.hollows()) {
-                    // technically we're leaking some inputs that don't need to be there (the non-virtual ones)
-
-                }
-                return args;
-            }, self.parent.executor).thenApply(args -> {
+        CompletableFuture<Object> cf = CompletableFuture.allOf(inputs.values().toArray(CompletableFuture[]::new))
+            .thenApplyAsync((f) -> compiledMethodArgsProcessor(params, inputs, compiledInnerCode, outputs), self.parent.executor)
+            .thenApply(args -> {
                 try {
                     return resolved.apply(args);
                 } catch (Throwable e) {
@@ -178,17 +141,85 @@ public class InternBlock extends KonigBlock {
                     throw new RuntimeException(e);
                 }
             });
-            if (block.outputs().length == 0) outputs.put("$void", cf);
-            if (block.outputs().length == 1) outputs.put(block.outputs()[0].name(), cf);
-            else {
-                for (Block.Output output : block.outputs()) {
-                    outputs.put(output.name(), cf.thenApply(o -> {
-                        if (o instanceof Map) return ((Map) o).get(output.name());
-                        else return o; //TODO: split this somehow
-                    }));
-                }
+        if (block.outputs().length == 0) outputs.put("$void", cf);
+        if (block.outputs().length == 1) outputs.put(block.outputs()[0].name(), cf);
+        else {
+            for (Block.Output output : block.outputs()) {
+                outputs.put(output.name(), cf.thenApply(o -> {
+                    if (o instanceof Map) return ((Map) o).get(output.name());
+                    else return o; //TODO: split this somehow
+                }));
             }
-            return outputs;
-        };
+        }
+        return outputs;
+    }
+
+    public Map<String, CompletableFuture<Object>> inputsToOutputs(Map<String, CompletableFuture<Object>> inputs, Object[] params, Map<String, Function<Map<String, Object>, CompletableFuture<Map<String, Object>>>> compiledInnerCode) {
+        Map<String, CompletableFuture<Object>> outputs = new ConcurrentHashMap<>();
+
+        CompletableFuture<Object> cf = CompletableFuture.allOf(inputs.values().toArray(CompletableFuture[]::new))
+            .thenApply((f) -> compiledMethodArgsProcessor(params, inputs, compiledInnerCode, outputs))
+            .thenApply(args -> {
+                try {
+                    return resolved.apply(args);
+                } catch (Throwable e) {
+                    e.printStackTrace();
+                    throw new RuntimeException(e);
+                }
+            });
+        if (block.outputs().length == 0) outputs.put("$void", cf);
+        if (block.outputs().length == 1) outputs.put(block.outputs()[0].name(), cf);
+        else {
+            for (Block.Output output : block.outputs()) {
+                outputs.put(output.name(), cf.thenApply(o -> {
+                    if (o instanceof Map) return ((Map) o).get(output.name());
+                    else return o; //TODO: split this somehow
+                }));
+            }
+        }
+        return outputs;
+    }
+
+    public Object[] compiledMethodArgsProcessor(Object[] params, Map<String, CompletableFuture<Object>> inputs, Map<String, Function<Map<String, Object>, CompletableFuture<Map<String, Object>>>> compiledInnerCode, Map<String, CompletableFuture<Object>> outputs) {
+        Object[] args = new Object[method.type().parameterCount()];
+        for (int i = 0; i < args.length; ++i) {
+            if (params[i] instanceof Block.Input) {
+                args[i] = inputs.get(((Block.Input) params[i]).name()).join();
+            } else if (params[i] instanceof Block.Hollow) {
+
+                int finalI = i;
+                Function<Object[], Map<String, Object>> wrappedInner = (obj) -> {
+
+                    Map<String, Object> innerInputs = new ConcurrentHashMap<>();
+                    for (Map.Entry<String, CompletableFuture<Object>> input : inputs.entrySet()) {
+                        innerInputs.put(input.getKey(), input.getValue().join());
+                    }
+
+                    int j = -1;
+                    for (Block.Input input : ((Block.Hollow) params[finalI]).inputs()) {
+                        if (input.index() == -1) ++j;
+                        else j = input.index();
+                        innerInputs.put(input.name(), obj[j]);
+                    }
+
+                    Map<String, Object> result = compiledInnerCode.get(((Block.Hollow) params[finalI]).name()).apply(innerInputs).join();
+
+                    // loopback virtual inputs
+                    for (Map.Entry<String, Object> entry : result.entrySet()) {
+                        if (entry.getKey().startsWith("virtual") && entry.getKey().endsWith("$loopback")) {
+                            inputs.put(entry.getKey().substring(0, entry.getKey().length() - "$loopback".length()), CompletableFuture.completedFuture(entry.getValue()));
+                        } else {
+                            outputs.put(entry.getKey(), CompletableFuture.completedFuture(entry.getValue()));
+                        }
+                    }
+                    return result;
+                };
+
+                args[i] = wrappedInner;
+            } else {
+                throw new IllegalStateException("Unknown parameter type");
+            }
+        }
+        return args;
     }
 }

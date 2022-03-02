@@ -21,7 +21,7 @@ public class Main {
         long end = System.nanoTime();
         System.out.println("Deserialized in " + (end - start) / 1000000 + "ms");
         start = System.nanoTime();
-        Function<Map<String, Object>, CompletableFuture<Map<String, Object>>> compiled = ((KonigProgram) f).jitCompile();
+        Function<Map<String, Object>, CompletableFuture<Map<String, Object>>> compiled = ((KonigProgram) f).jitCompile(true);
         end = System.nanoTime();
         System.out.println("Compiled in " + (end - start) / 1000000 + "ms");
         start = System.nanoTime();
