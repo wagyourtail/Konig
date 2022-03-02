@@ -7,13 +7,15 @@ import xyz.wagyourtail.konig.structure.headers.KonigBlock;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ForkJoinPool;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public class InnerCode extends Code {
     public String name;
     public KonigBlockReference outer;
     public InnerCode(KonigBlockReference block) {
-        super(new InnerParent(), block.parent.executor);
+        super(new InnerParent());
         outer = block;
     }
 
@@ -26,7 +28,7 @@ public class InnerCode extends Code {
     }
 
     @Override
-    public Function<Map<String, Object>, CompletableFuture<Map<String, Object>>> jitCompile(boolean async) {
+    public BiFunction<ForkJoinPool, Map<String, Object>, CompletableFuture<Map<String, Object>>> jitCompile() {
         KonigBlock parentBlock = parent.getBlockByName(outer.name);
         KonigBlock childBlock = parent.getBlockByName("$hollowinner");
 
@@ -95,7 +97,7 @@ public class InnerCode extends Code {
             output.io.elementMap.put(value.name, new ReferenceIO.IOElement(value.name, -42));
         }
         blockMap.put(-1, output);
-        return super.jitCompile(async);
+        return super.jitCompile();
     }
 
     public static class InnerParent implements CodeParent {
@@ -132,8 +134,8 @@ public class InnerCode extends Code {
         }
 
         @Override
-        public Function<Map<String, CompletableFuture<Object>>, Map<String, CompletableFuture<Object>>> jitCompile(KonigBlockReference self, boolean async) {
-            return Function.identity();
+        public BiFunction<ForkJoinPool, Map<String, CompletableFuture<Object>>, Map<String, CompletableFuture<Object>>> jitCompile(KonigBlockReference self) {
+            return (a, b) -> b;
         }
 
     }

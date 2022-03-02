@@ -8,22 +8,16 @@ import xyz.wagyourtail.konig.structure.headers.KonigBlock;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class Code {
     public final CodeParent parent;
-    public final ForkJoinPool executor;
     Map<Integer, Wire> wireMap = new HashMap<>();
     Map<Integer, KonigBlockReference> blockMap = new HashMap<>();
-
     public Code(CodeParent parent) {
-        this(parent, new ForkJoinPool(Runtime.getRuntime().availableProcessors()));
-    }
-
-    protected Code(CodeParent parent, ForkJoinPool executor) {
         this.parent = parent;
-        this.executor = executor;
     }
 
     public void parseXML(Node node) throws IOException {
@@ -96,6 +90,14 @@ public class Code {
     }
 
     public Function<Map<String, Object>, CompletableFuture<Map<String, Object>>> jitCompile(boolean async) {
+        BiFunction<ForkJoinPool, Map<String, Object>, CompletableFuture<Map<String, Object>>> compiled = jitCompile();
+        return (inputs) -> {
+            ForkJoinPool pool = async ? new ForkJoinPool(Runtime.getRuntime().availableProcessors()) : null;
+            return compiled.apply(pool, inputs);
+        };
+    }
+
+    public BiFunction<ForkJoinPool, Map<String, Object>, CompletableFuture<Map<String, Object>>> jitCompile() {
         int i = 0;
         for (KonigBlockReference block : this.blockMap.values()) {
             i = Math.max(i, block.id);
@@ -129,10 +131,11 @@ public class Code {
             .filter(bw -> bw.outputs.size() == 0)
             .forEach(e -> e.checkCircular(blockMap, new HashSet<>(this.blockMap.values())));
 
+
         // compile the blocks
         for (BlockWires bw : blockMap) {
             if (bw != null) {
-                bw.jitCompile(parent, async);
+                bw.jitCompile(parent);
             }
         }
 
@@ -166,20 +169,19 @@ public class Code {
             }
         }
 
-
-        return (inputs) -> {
+        return (pool, inputs) -> {
             Map<String, CompletableFuture<Object>>[] runBlocks = new Map[blockMap.length];
             Map<String, Object> outputs = new ConcurrentHashMap<>();
             Map<String, CompletableFuture<Object>> runInputs = new HashMap<>();
             for (Map.Entry<String, Object> entry : inputs.entrySet()) {
                 runInputs.put(entry.getKey(), CompletableFuture.completedFuture(entry.getValue()));
             }
-//            Arrays.stream(blockMap).filter(Objects::nonNull).filter(e -> e.inputs.size() == 0).forEach(e -> {
-//                runBlock(e, runInputs, runBlocks, blockMap);
-//            });
+            //            Arrays.stream(blockMap).filter(Objects::nonNull).filter(e -> e.inputs.size() == 0).forEach(e -> {
+            //                runBlock(e, runInputs, runBlocks, blockMap);
+            //            });
 
             for (BlockWires bw : inputBlocks) {
-                runBlock(bw, runInputs, runBlocks);
+                runBlock(pool, bw, runInputs, runBlocks);
             }
 
             for (BlockWires bw : executionOrder) {
@@ -187,7 +189,7 @@ public class Code {
                 for (CompiledWire input : bw.inputs) {
                     nextInputs.put(input.outputs.get(bw.reference).portName, runBlocks[input.input.reference.id + 2].get(input.input.portName));
                 }
-                runBlock(bw, nextInputs, runBlocks);
+                runBlock(pool, bw, nextInputs, runBlocks);
             }
 
             List<Map.Entry<String, CompletableFuture<Object>>> entries = outputBlockIds.stream().map(e -> runBlocks[e + 2]).flatMap((b) -> b.entrySet().stream()).collect(Collectors.toList());
@@ -200,7 +202,6 @@ public class Code {
                 outputs.remove("$void");
                 return outputs;
             });
-
         };
     }
 
@@ -219,8 +220,8 @@ public class Code {
         }
     }
 
-    private void runBlock(BlockWires bw, Map<String, CompletableFuture<Object>> runInputs, Map<String, CompletableFuture<Object>>[] runBlocks) {
-        Map<String, CompletableFuture<Object>> outputs = bw.compiled.apply(runInputs);
+    private void runBlock(ForkJoinPool async, BlockWires bw, Map<String, CompletableFuture<Object>> runInputs, Map<String, CompletableFuture<Object>>[] runBlocks) {
+        Map<String, CompletableFuture<Object>> outputs = bw.compiled.apply(async, runInputs);
         runBlocks[bw.reference.id + 2] = outputs;
     }
 
@@ -343,7 +344,7 @@ public class Code {
         public final Set<CompiledWire> inputs = new HashSet<>();
         public final Set<CompiledWire> outputs = new HashSet<>();
 
-        public Function<Map<String, CompletableFuture<Object>>, Map<String, CompletableFuture<Object>>> compiled;
+        public BiFunction<ForkJoinPool, Map<String, CompletableFuture<Object>>, Map<String, CompletableFuture<Object>>> compiled;
 
         public BlockWires(KonigBlockReference reference) {
             this.reference = reference;
@@ -361,9 +362,9 @@ public class Code {
             }
         }
 
-        public void jitCompile(CodeParent parent, boolean async) {
+        public void jitCompile(CodeParent parent) {
             KonigBlock kb = parent.getBlockByName(reference.name);
-            compiled = kb.jitCompile(reference, async);
+            compiled = kb.jitCompile(reference);
         }
 
         public synchronized boolean areExpectedWiresPresent(Map<String, CompletableFuture<Object>>[] bw) {

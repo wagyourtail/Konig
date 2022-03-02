@@ -6,12 +6,14 @@ import xyz.wagyourtail.konig.structure.headers.KonigBlock;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ForkJoinPool;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public class GlobalOutput extends KonigBlock {
     @Override
-    public Function<Map<String, CompletableFuture<Object>>, Map<String, CompletableFuture<Object>>> jitCompile(KonigBlockReference self, boolean async) {
-        return (map) -> Collections.singletonMap(self.value, map.get("in"));
+    public BiFunction<ForkJoinPool, Map<String, CompletableFuture<Object>>, Map<String, CompletableFuture<Object>>> jitCompile(KonigBlockReference self) {
+        return (async, map) -> Collections.singletonMap(self.value, map.get("in"));
     }
 
 }

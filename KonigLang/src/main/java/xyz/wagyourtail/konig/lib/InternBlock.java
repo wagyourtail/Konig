@@ -13,6 +13,8 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ForkJoinPool;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public class InternBlock extends KonigBlock {
@@ -77,16 +79,16 @@ public class InternBlock extends KonigBlock {
     private static final MethodHandles.Lookup lookup = MethodHandles.lookup();
 
     @Override
-    public Function<Map<String, CompletableFuture<Object>>, Map<String, CompletableFuture<Object>>> jitCompile(KonigBlockReference self, boolean async) {
+    public BiFunction<ForkJoinPool, Map<String, CompletableFuture<Object>>, Map<String, CompletableFuture<Object>>> jitCompile(KonigBlockReference self) {
         if (resolved == null || method == null) {
             throw new IllegalStateException("Method not parsed");
         }
-        Map<String, Function<Map<String, Object>, CompletableFuture<Map<String, Object>>>> compiledInnerCode = new HashMap<>();
+        Map<String, BiFunction<ForkJoinPool, Map<String, Object>, CompletableFuture<Map<String, Object>>>> compiledInnerCode = new HashMap<>();
 
         for (Map.Entry<String, InnerCode> stringInnerCodeEntry : self.innerCodeMap.entrySet()) {
             String name = stringInnerCodeEntry.getKey();
             InnerCode innerCode = stringInnerCodeEntry.getValue();
-            Function<Map<String, Object>, CompletableFuture<Map<String, Object>>> compiled = innerCode.jitCompile(async);
+            BiFunction<ForkJoinPool, Map<String, Object>, CompletableFuture<Map<String, Object>>> compiled = innerCode.jitCompile();
             compiledInnerCode.put(name, compiled);
         }
 
@@ -121,18 +123,20 @@ public class InternBlock extends KonigBlock {
             }
 
         }
-        if (async) {
-            return (inputs) -> inputsToOutputsAsync(inputs, params, compiledInnerCode, self);
-        } else {
-            return (inputs) -> inputsToOutputs(inputs, params, compiledInnerCode);
-        }
+        return (async, inputs) -> {
+            if (async != null) {
+                return inputsToOutputsAsync(inputs, params, compiledInnerCode, async);
+            } else {
+                return inputsToOutputs(inputs, params, compiledInnerCode);
+            }
+        };
     }
 
-    public Map<String, CompletableFuture<Object>> inputsToOutputsAsync(Map<String, CompletableFuture<Object>> inputs, Object[] params, Map<String, Function<Map<String, Object>, CompletableFuture<Map<String, Object>>>> compiledInnerCode, KonigBlockReference self) {
+    public Map<String, CompletableFuture<Object>> inputsToOutputsAsync(Map<String, CompletableFuture<Object>> inputs, Object[] params, Map<String, BiFunction<ForkJoinPool, Map<String, Object>, CompletableFuture<Map<String, Object>>>> compiledInnerCode, ForkJoinPool executor) {
         Map<String, CompletableFuture<Object>> outputs = new ConcurrentHashMap<>();
 
         CompletableFuture<Object> cf = CompletableFuture.allOf(inputs.values().toArray(CompletableFuture[]::new))
-            .thenApplyAsync((f) -> compiledMethodArgsProcessor(params, inputs, compiledInnerCode, outputs), self.parent.executor)
+            .thenApplyAsync((f) -> compiledMethodArgsProcessor(params, inputs, compiledInnerCode, outputs, executor), executor)
             .thenApply(args -> {
                 try {
                     return resolved.apply(args);
@@ -154,11 +158,11 @@ public class InternBlock extends KonigBlock {
         return outputs;
     }
 
-    public Map<String, CompletableFuture<Object>> inputsToOutputs(Map<String, CompletableFuture<Object>> inputs, Object[] params, Map<String, Function<Map<String, Object>, CompletableFuture<Map<String, Object>>>> compiledInnerCode) {
+    public Map<String, CompletableFuture<Object>> inputsToOutputs(Map<String, CompletableFuture<Object>> inputs, Object[] params, Map<String, BiFunction<ForkJoinPool, Map<String, Object>, CompletableFuture<Map<String, Object>>>> compiledInnerCode) {
         Map<String, CompletableFuture<Object>> outputs = new ConcurrentHashMap<>();
 
         CompletableFuture<Object> cf = CompletableFuture.allOf(inputs.values().toArray(CompletableFuture[]::new))
-            .thenApply((f) -> compiledMethodArgsProcessor(params, inputs, compiledInnerCode, outputs))
+            .thenApply((f) -> compiledMethodArgsProcessor(params, inputs, compiledInnerCode, outputs, null))
             .thenApply(args -> {
                 try {
                     return resolved.apply(args);
@@ -180,7 +184,7 @@ public class InternBlock extends KonigBlock {
         return outputs;
     }
 
-    public Object[] compiledMethodArgsProcessor(Object[] params, Map<String, CompletableFuture<Object>> inputs, Map<String, Function<Map<String, Object>, CompletableFuture<Map<String, Object>>>> compiledInnerCode, Map<String, CompletableFuture<Object>> outputs) {
+    public Object[] compiledMethodArgsProcessor(Object[] params, Map<String, CompletableFuture<Object>> inputs, Map<String, BiFunction<ForkJoinPool, Map<String, Object>, CompletableFuture<Map<String, Object>>>> compiledInnerCode, Map<String, CompletableFuture<Object>> outputs, ForkJoinPool executor) {
         Object[] args = new Object[method.type().parameterCount()];
         for (int i = 0; i < args.length; ++i) {
             if (params[i] instanceof Block.Input) {
@@ -202,7 +206,7 @@ public class InternBlock extends KonigBlock {
                         innerInputs.put(input.name(), obj[j]);
                     }
 
-                    Map<String, Object> result = compiledInnerCode.get(((Block.Hollow) params[finalI]).name()).apply(innerInputs).join();
+                    Map<String, Object> result = compiledInnerCode.get(((Block.Hollow) params[finalI]).name()).apply(executor, innerInputs).join();
 
                     // loopback virtual inputs
                     for (Map.Entry<String, Object> entry : result.entrySet()) {
