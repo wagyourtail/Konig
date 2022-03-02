@@ -1,0 +1,49 @@
+repositories {
+    maven {
+        name 'JetBrains Maven Repository'
+        url 'https://packages.jetbrains.team/maven/p/skija/maven'
+    }
+    mavenCentral()
+}
+
+var lwjgl_version = '3.3.1'
+
+dependencies {
+    implementation project(":KonigLang")
+
+    var lwjgl_modules_no_natives = [
+         "lwjgl-jawt",
+         "lwjgl-egl",
+         "lwjgl-opencl",
+    ]
+
+    var lwjgl_modules = [
+         "lwjgl",
+         "lwjgl-assimp",
+         "lwjgl-glfw",
+         "lwjgl-jemalloc",
+         "lwjgl-lmdb",
+         "lwjgl-nanovg",
+         "lwjgl-nfd",
+         "lwjgl-nuklear",
+         "lwjgl-openal",
+         "lwjgl-opengl",
+         "lwjgl-opengles",
+         "lwjgl-par",
+         "lwjgl-sse",
+         "lwjgl-stb",
+         "lwjgl-tinyfd",
+         "lwjgl-xxhash"
+     ]
+
+    for (module in lwjgl_modules) {
+        implementation "org.lwjgl:${module}:${lwjgl_version}"
+        implementation "org.lwjgl:${module}:${lwjgl_version}:natives-windows"
+        implementation "org.lwjgl:${module}:${lwjgl_version}:natives-linux"
+        implementation "org.lwjgl:${module}:${lwjgl_version}:natives-macos"
+    }
+
+    for (module in lwjgl_modules_no_natives) {
+        implementation "org.lwjgl:${module}:${lwjgl_version}"
+    }
+}

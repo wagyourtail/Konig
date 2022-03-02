@@ -96,31 +96,45 @@ public class Code {
     }
 
     public Function<Map<String, Object>, CompletableFuture<Map<String, Object>>> jitCompile() {
-        // map all the blocks
-        Map<KonigBlockReference, BlockWires> blockMap = new HashMap<>();
+        int i = 0;
+        for (KonigBlockReference block : this.blockMap.values()) {
+            i = Math.max(i, block.id);
+        }
+        BlockWires[] blockMap = new BlockWires[i+3];
+
         for (Wire wire : wireMap.values()) {
             CompiledWire cw = compileWire(wire);
-            blockMap.computeIfAbsent(cw.input.reference, BlockWires::new).outputs.add(cw);
+            if (blockMap[cw.input.reference.id + 2] == null) {
+                blockMap[cw.input.reference.id + 2] = new BlockWires(cw.input.reference);
+            }
+            blockMap[cw.input.reference.id + 2].outputs.add(cw);
             for (BlockPort output : cw.outputs.values()) {
-                blockMap.computeIfAbsent(output.reference, BlockWires::new).inputs.add(cw);
+                if (blockMap[output.reference.id + 2] == null) {
+                    blockMap[output.reference.id + 2] = new BlockWires(output.reference);
+                }
+                blockMap[output.reference.id + 2].inputs.add(cw);
             }
         }
 
         // check for missing blocks
         for (KonigBlockReference block : this.blockMap.values()) {
-            if (!blockMap.containsKey(block)) {
-                blockMap.put(block, new BlockWires(block));
+            if (blockMap[block.id + 2] == null) {
+                blockMap[block.id + 2] = new BlockWires(block);
             }
         }
 
         // check for circular references
-        blockMap.values()
-            .stream()
+        Arrays.stream(blockMap)
+            .filter(Objects::nonNull)
             .filter(bw -> bw.outputs.size() == 0)
-            .forEach(e -> e.checkCircular(blockMap, blockMap.keySet()));
+            .forEach(e -> e.checkCircular(blockMap, new HashSet<>(this.blockMap.values())));
 
         // compile the blocks
-        blockMap.values().forEach(bw -> bw.jitCompile(parent));
+        for (BlockWires bw : blockMap) {
+            if (bw != null) {
+                bw.jitCompile(parent);
+            }
+        }
 
 
         return (inputs) -> {
@@ -130,10 +144,10 @@ public class Code {
             for (Map.Entry<String, Object> entry : inputs.entrySet()) {
                 runInputs.put(entry.getKey(), CompletableFuture.completedFuture(entry.getValue()));
             }
-            blockMap.values().stream().filter(e -> e.inputs.size() == 0).forEach(e -> {
+            Arrays.stream(blockMap).filter(Objects::nonNull).filter(e -> e.inputs.size() == 0).forEach(e -> {
                 runBlock(e, runInputs, runBlocks, blockMap);
             });
-            List<Map.Entry<String, CompletableFuture<Object>>> entries = blockMap.values().stream().filter(e -> e.outputs.size() == 0).map(e -> runBlocks.get(e.reference)).flatMap((b) -> b.entrySet().stream()).collect(Collectors.toList());
+            List<Map.Entry<String, CompletableFuture<Object>>> entries = Arrays.stream(blockMap).filter(Objects::nonNull).filter(e -> e.outputs.size() == 0).map(e -> runBlocks.get(e.reference)).flatMap((b) -> b.entrySet().stream()).collect(Collectors.toList());
             return CompletableFuture.allOf(entries.stream().map(Map.Entry::getValue).toArray(CompletableFuture[]::new)).thenApply(v -> {
                 entries.forEach(e -> {
                     if (e.getValue().join() != null) {
@@ -147,7 +161,7 @@ public class Code {
         };
     }
 
-    private void runBlock(BlockWires bw, Map<String, CompletableFuture<Object>> runInputs, Map<KonigBlockReference, Map<String, CompletableFuture<Object>>> runBlocks, Map<KonigBlockReference, BlockWires> blockMap) {
+    private void runBlock(BlockWires bw, Map<String, CompletableFuture<Object>> runInputs, Map<KonigBlockReference, Map<String, CompletableFuture<Object>>> runBlocks, BlockWires[] blockMap) {
         synchronized (runBlocks) {
             if (runBlocks.containsKey(bw.reference)) {
                 return;
@@ -157,7 +171,7 @@ public class Code {
         }
         for (CompiledWire output : bw.outputs) {
             for (KonigBlockReference nextBlockReference : output.outputs.keySet()) {
-                BlockWires nextBlock = blockMap.get(nextBlockReference);
+                BlockWires nextBlock = blockMap[nextBlockReference.id + 2];
                 if (nextBlock == null) {
                     throw new RuntimeException("Block not found: " + nextBlockReference);
                 }
@@ -297,12 +311,12 @@ public class Code {
             this.reference = reference;
         }
 
-        public void checkCircular(Map<KonigBlockReference, BlockWires> wireMap, Set<KonigBlockReference> remaining) {
+        public void checkCircular(BlockWires[] wireMap, Set<KonigBlockReference> remaining) {
             if (remaining.contains(reference)) {
                 HashSet<KonigBlockReference> visited = new HashSet<>(remaining);
                 visited.remove(reference);
                 for (CompiledWire input : inputs) {
-                    wireMap.get(input.input.reference).checkCircular(wireMap, visited);
+                    wireMap[input.input.reference.id + 2].checkCircular(wireMap, visited);
                 }
             } else {
                 throw new IllegalStateException("Circular wire into: " + reference);
