@@ -1,95 +1,87 @@
-/*
- * Created by JFormDesigner on Tue Mar 01 21:55:07 MST 2022
- */
-
 package xyz.wagyourtail.konig.editor;
 
-import java.awt.*;
-import javax.swing.*;
-import javax.swing.GroupLayout;
+import org.lwjgl.glfw.GLFWErrorCallback;
+import org.lwjgl.glfw.GLFWVidMode;
+import org.lwjgl.opengl.GL;
+import org.lwjgl.system.MemoryStack;
 
-/**
- * @author unknown
- */
-public class KonigEditor extends JFrame {
-    public KonigEditor() {
-        initComponents();
+import java.io.IOException;
+import java.nio.IntBuffer;
+import java.nio.file.Path;
+
+import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL11C.GL_DEPTH_BUFFER_BIT;
+import static org.lwjgl.opengl.GL11C.glClearColor;
+
+public class KonigEditor {
+    private Window window;
+    private Font f;
+
+    public void start() throws IOException {
+        init();
+        loop();
+
+        window.shutdown();
+        glfwTerminate();
+        glfwSetErrorCallback(null).free();
     }
 
-    private void initComponents() {
-        // JFormDesigner - Component initialization - DO NOT MODIFY  //GEN-BEGIN:initComponents
-        panel1 = new JPanel();
-        button1 = new JButton();
-        panel2 = new JPanel();
+    public void init() throws IOException {
+        GLFWErrorCallback.createPrint(System.err).set();
 
-        //======== this ========
-        setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-        var contentPane = getContentPane();
+        if (!glfwInit()) {
+            throw new IllegalStateException("Unable to initialize GLFW");
+        }
 
-        //======== panel1 ========
-        {
+        glfwDefaultWindowHints();
+        glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
-            //---- button1 ----
-            button1.setText("text");
+        window = new Window("Konig Editor", 800, 600);
 
-            GroupLayout panel1Layout = new GroupLayout(panel1);
-            panel1.setLayout(panel1Layout);
-            panel1Layout.setHorizontalGroup(
-                panel1Layout.createParallelGroup()
-                    .addGroup(panel1Layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(button1)
-                        .addContainerGap(16, Short.MAX_VALUE))
-            );
-            panel1Layout.setVerticalGroup(
-                panel1Layout.createParallelGroup()
-                    .addGroup(panel1Layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(button1)
-                        .addContainerGap(223, Short.MAX_VALUE))
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            IntBuffer pWidth = stack.mallocInt(1);
+            IntBuffer pHeight = stack.mallocInt(1);
+
+            glfwGetWindowSize(window.handle, pWidth, pHeight);
+
+            GLFWVidMode vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+
+            glfwSetWindowPos(
+                window.handle,
+                (vidmode.width() - pWidth.get(0)) / 2,
+                (vidmode.height() - pHeight.get(0)) / 2
             );
         }
 
-        //======== panel2 ========
-        {
-            panel2.setLayout(new GridLayout(1, 1));
-            addLWJGLWindow();
-        }
+        f = new Font("./demo/FiraSans.ttf");
 
-        GroupLayout contentPaneLayout = new GroupLayout(contentPane);
-        contentPane.setLayout(contentPaneLayout);
-        contentPaneLayout.setHorizontalGroup(
-            contentPaneLayout.createParallelGroup()
-                .addGroup(contentPaneLayout.createSequentialGroup()
-                    .addContainerGap()
-                    .addComponent(panel1, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                    .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
-                    .addComponent(panel2, GroupLayout.DEFAULT_SIZE, 280, Short.MAX_VALUE)
-                    .addContainerGap())
-        );
-        contentPaneLayout.setVerticalGroup(
-            contentPaneLayout.createParallelGroup()
-                .addGroup(contentPaneLayout.createSequentialGroup()
-                    .addContainerGap()
-                    .addGroup(contentPaneLayout.createParallelGroup()
-                        .addComponent(panel1, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(panel2, GroupLayout.DEFAULT_SIZE, 259, Short.MAX_VALUE))
-                    .addContainerGap())
-        );
-        pack();
-        setLocationRelativeTo(getOwner());
-        // JFormDesigner - End of component initialization  //GEN-END:initComponents
+        // make the OpenGL context current
+        glfwMakeContextCurrent(window.handle);
+
+        // Enable v-sync
+        glfwSwapInterval(1);
+
+        window.setVisible(true);
     }
 
-    // JFormDesigner - Variables declaration - DO NOT MODIFY  //GEN-BEGIN:variables
-    private JPanel panel1;
-    private JButton button1;
-    private JPanel panel2;
-    // JFormDesigner - End of variables declaration  //GEN-END:variables
+    public void loop() {
+        GL.createCapabilities();
 
-    private void addLWJGLWindow() {
-        GLComponent component = new GLComponent();
-        panel2.add(component);
-        component.startRenderLoop();
+        glClearColor(1.0f, 0.0f, 0.0f, 0.0f);
+
+        while (!glfwWindowShouldClose(window.handle)) {
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            glPushMatrix();
+            glTranslatef(-1, -1, 0f);
+            glScalef(window.getWidth() / 2f, window.getHeight() / 2f, 1f);
+            f.drawString("Hello, world!", 0, 0);
+
+
+            glPopMatrix();
+            glfwSwapBuffers(window.handle);
+            glfwPollEvents();
+        }
     }
 }
