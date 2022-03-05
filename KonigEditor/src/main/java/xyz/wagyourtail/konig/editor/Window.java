@@ -9,6 +9,7 @@ import java.util.function.Consumer;
 
 import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
 import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.opengl.GL11.glViewport;
 
 public class Window {
     public final long handle;
@@ -26,13 +27,20 @@ public class Window {
             throw new RuntimeException("Failed to create the GLFW window");
         }
 
-        this.width = width;
-        this.height = height;
-
         glfwSetWindowSizeCallback(handle, (window, width1, height1) -> {
             this.width = width1;
             this.height = height1;
+            glViewport(0, 0, width1, height1);
         });
+    }
+
+    public void setupFramebuffer() {
+        int[] widthBuffer = new int[1];
+        int[] heightBuffer = new int[1];
+        glfwGetFramebufferSize(this.handle, widthBuffer, heightBuffer);
+        this.width = widthBuffer[0];
+        this.height = heightBuffer[0];
+        glViewport(0, 0, this.width, this.height);
     }
 
     public void shutdown() {
