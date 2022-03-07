@@ -33,6 +33,7 @@ public class Font {
     private final int ascent;
     private final int descent;
     private final int lineGap;
+    public final int FONT_HEIGHT = 16;
 
     private STBTTBakedChar.Buffer cdata;
 
@@ -55,7 +56,7 @@ public class Font {
             lineGap = pLineGap.get(0);
         }
 
-        scale = stbtt_ScaleForPixelHeight(fontInfo, 16);
+        scale = stbtt_ScaleForPixelHeight(fontInfo, FONT_HEIGHT);
     }
 
     private STBTTBakedChar.Buffer init(int BITMAP_W, int BITMAP_H) {
@@ -80,7 +81,10 @@ public class Font {
         return cdata;
     }
 
-    public float drawString(String text, int x, int y) {
+    public float drawString(String text, float x, float y) {
+        // move y to top instead of bottom
+        y += FONT_HEIGHT;
+
         if (cdata == null) {
             cdata = init(1024, 1024);
         }
@@ -116,6 +120,91 @@ public class Font {
                 float x1 = scale(cpX, q.x1(), 1f);
                 float y0 = scale(cpY, q.y0(), 1f);
                 float y1 = scale(cpY, q.y1(), 1f);
+
+                glTexCoord2f(q.s0(), q.t0());
+                glVertex2f(x0 + x, y0 + y);
+
+                glTexCoord2f(q.s1(), q.t0());
+                glVertex2f(x1 + x, y0 + y);
+
+                glTexCoord2f(q.s1(), q.t1());
+                glVertex2f(x1 + x, y1 + y);
+
+                glTexCoord2f(q.s0(), q.t1());
+                glVertex2f(x0 + x, y1 + y);
+            }
+            glEnd();
+            return q.x1();
+        }
+    }
+
+    public float getWidth(String text) {
+        int width = 0;
+
+        try (MemoryStack stack = stackPush()) {
+            IntBuffer pCodePoint       = stack.mallocInt(1);
+            IntBuffer pAdvancedWidth   = stack.mallocInt(1);
+            IntBuffer pLeftSideBearing = stack.mallocInt(1);
+
+            int i = 0;
+            while (i < text.length()) {
+                i += getCP(text, text.length(), i, pCodePoint);
+                int cp = pCodePoint.get(0);
+
+                stbtt_GetCodepointHMetrics(fontInfo, cp, pAdvancedWidth, pLeftSideBearing);
+                width += pAdvancedWidth.get(0);
+
+                if (i < text.length()) {
+                    getCP(text, text.length(), i, pCodePoint);
+                    width += stbtt_GetCodepointKernAdvance(fontInfo, cp, pCodePoint.get(0));
+                }
+            }
+        }
+
+        return width * scale;
+    }
+
+    public float drawTrimmed(String text, float x, float y, float width) {
+        if (cdata == null) {
+            cdata = init(1024, 1024);
+        }
+
+        try (MemoryStack stack = stackPush()) {
+            IntBuffer pCodePoint = stack.mallocInt(1);
+
+            FloatBuffer xP = stack.floats(0f);
+            FloatBuffer yP = stack.floats(0f);
+
+            STBTTAlignedQuad q = STBTTAlignedQuad.mallocStack(stack);
+
+            int lineStart = 0;
+            float lineY = 0;
+
+            glBegin(GL_QUADS);
+            for (int i = 0, to = text.length(); i < to;) {
+                i += getCP(text, to, i, pCodePoint);
+                int cp = pCodePoint.get(0);
+                if (cp == '\n') {
+                    throw new IllegalStateException("Newline not supported");
+                }
+                float cpX = xP.get(0);
+                float cpY = yP.get(0);
+                stbtt_GetBakedQuad(cdata, 1024, 1024, cp - 32, xP, yP, q, true);
+                xP.put(0, scale(cpX, xP.get(0), 1));
+                // kerning
+                if (i < to) {
+                    getCP(text, to, i, pCodePoint);
+                    xP.put(0, xP.get(0) + stbtt_GetCodepointKernAdvance(fontInfo, cp, pCodePoint.get(0)) * 1f);
+                }
+                float x0 = scale(cpX, q.x0(), 1f);
+                float x1 = scale(cpX, q.x1(), 1f);
+                float y0 = scale(cpY, q.y0(), 1f);
+                float y1 = scale(cpY, q.y1(), 1f);
+
+                if (q.x1() - x > width) {
+                    glEnd();
+                    return q.x0();
+                }
 
                 glTexCoord2f(q.s0(), q.t0());
                 glVertex2f(x0 + x, y0 + y);
