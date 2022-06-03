@@ -1,4 +1,4 @@
-package xyz.wagyourtail.konig.editor.glfw;
+package xyz.wagyourtail.wagyourgui.glfw;
 
 import org.lwjgl.system.MemoryUtil;
 
@@ -39,6 +39,12 @@ public class Window {
         glfwSetMouseButtonCallback(handle, (window, button, action, mods) -> {
             for (MouseListener listener : mouseListeners) {
                 listener.onMouseButton(button, action, mods);
+            }
+        });
+
+        glfwSetCursorPosCallback(handle, (window, x, y) -> {
+            for (MouseListener listener : mouseListeners) {
+                listener.onMousePos(x, y);
             }
         });
 

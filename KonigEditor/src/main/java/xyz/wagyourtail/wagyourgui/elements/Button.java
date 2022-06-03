@@ -1,6 +1,6 @@
-package xyz.wagyourtail.konig.editor.elements;
+package xyz.wagyourtail.wagyourgui.elements;
 
-import xyz.wagyourtail.konig.editor.Font;
+import xyz.wagyourtail.wagyourgui.Font;
 
 import java.util.function.Consumer;
 
@@ -136,7 +136,7 @@ public class Button extends BaseElement {
 
         float w = font.getWidth(text);
         if (w < width - 4) {
-            DrawableHelper.drawCenteredString(font, text, x + width / 2 - w / 2, y + height / 2 - font.FONT_HEIGHT / 2f, hover ? hoverTextColor : textColor);
+            DrawableHelper.drawCenteredString(font, text, x + width / 2, y + height / 2 - font.FONT_HEIGHT / 2f, hover ? hoverTextColor : textColor);
         } else {
             DrawableHelper.drawTrimmedString(font, text, x + 2, y + height / 2 - font.FONT_HEIGHT / 2f, width - 4, hover ? hoverTextColor : textColor);
         }

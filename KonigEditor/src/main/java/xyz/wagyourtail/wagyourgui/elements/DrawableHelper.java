@@ -1,8 +1,8 @@
-package xyz.wagyourtail.konig.editor.elements;
+package xyz.wagyourtail.wagyourgui.elements;
 
 import org.lwjgl.opengl.GL11;
-import xyz.wagyourtail.konig.editor.Font;
-import xyz.wagyourtail.konig.editor.GLBuilder;
+import xyz.wagyourtail.wagyourgui.Font;
+import xyz.wagyourtail.wagyourgui.GLBuilder;
 
 public interface DrawableHelper {
     GLBuilder builder = GLBuilder.getBuilder();

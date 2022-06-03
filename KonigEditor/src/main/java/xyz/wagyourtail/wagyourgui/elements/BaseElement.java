@@ -1,4 +1,4 @@
-package xyz.wagyourtail.konig.editor.elements;
+package xyz.wagyourtail.wagyourgui.elements;
 
 public abstract class BaseElement implements DrawableHelper {
     public boolean onClick(float x, float y, int button) {

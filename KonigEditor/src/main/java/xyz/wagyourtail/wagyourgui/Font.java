@@ -1,4 +1,4 @@
-package xyz.wagyourtail.konig.editor;
+package xyz.wagyourtail.wagyourgui;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.stb.STBTTAlignedQuad;
@@ -161,7 +161,7 @@ public class Font {
             }
         }
 
-        return width * scale;
+        return width * scale * 2;
     }
 
     public float drawTrimmed(String text, float x, float y, float width) {

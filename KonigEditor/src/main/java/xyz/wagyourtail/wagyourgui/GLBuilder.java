@@ -1,4 +1,4 @@
-package xyz.wagyourtail.konig.editor;
+package xyz.wagyourtail.wagyourgui;
 
 import org.lwjgl.opengl.GL11;
 

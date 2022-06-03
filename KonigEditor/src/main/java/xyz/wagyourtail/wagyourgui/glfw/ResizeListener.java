@@ -1,4 +1,4 @@
-package xyz.wagyourtail.konig.editor.glfw;
+package xyz.wagyourtail.wagyourgui.glfw;
 
 public interface ResizeListener {
 

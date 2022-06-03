@@ -1,4 +1,4 @@
-package xyz.wagyourtail.konig.editor.glfw;
+package xyz.wagyourtail.wagyourgui.glfw;
 
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWVidMode;
@@ -6,10 +6,10 @@ import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL14;
 import org.lwjgl.system.MemoryStack;
-import xyz.wagyourtail.konig.editor.Font;
-import xyz.wagyourtail.konig.editor.elements.DrawableHelper;
-import xyz.wagyourtail.konig.editor.screens.BaseScreen;
-import xyz.wagyourtail.konig.editor.screens.EditorMainScreen;
+import xyz.wagyourtail.wagyourgui.Font;
+import xyz.wagyourtail.wagyourgui.elements.DrawableHelper;
+import xyz.wagyourtail.wagyourgui.screens.BaseScreen;
+import xyz.wagyourtail.wagyourgui.screens.EditorMainScreen;
 
 import java.io.IOException;
 import java.nio.IntBuffer;
@@ -163,6 +163,15 @@ public class GLFWSession implements ResizeListener, MouseListener, KeyListener {
         double[] cursorY = new double[1];
         glfwGetCursorPos(window.handle, cursorX, cursorY);
         screen.onMouseButton((float) cursorX[0], (float) cursorY[0], button, action, mods);
+    }
+
+    @Override
+    public void onMousePos(double x, double y) {
+        for (int i = 0; i < 6; ++i) {
+            if (glfwGetMouseButton(window.handle, i) == GLFW_PRESS) {
+                screen.onMousePos((float) x, (float) y, i);
+            }
+        }
     }
 
     @Override

@@ -44,6 +44,14 @@ public class Code {
         return false;
     }
 
+    public List<Wire> getWires() {
+        return List.copyOf(wireMap.values());
+    }
+
+    public List<KonigBlockReference> getBlocks() {
+        return List.copyOf(blockMap.values());
+    }
+
     public void parseWires(Node wires) throws IOException {
         NodeList children = wires.getChildNodes();
         for (int i = 0; i < children.getLength(); i++) {

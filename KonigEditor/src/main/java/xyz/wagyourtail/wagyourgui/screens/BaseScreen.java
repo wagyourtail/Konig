@@ -1,8 +1,8 @@
-package xyz.wagyourtail.konig.editor.screens;
+package xyz.wagyourtail.wagyourgui.screens;
 
-import xyz.wagyourtail.konig.editor.elements.BaseElement;
-import xyz.wagyourtail.konig.editor.glfw.GLFWSession;
-import xyz.wagyourtail.konig.editor.glfw.Window;
+import xyz.wagyourtail.wagyourgui.elements.BaseElement;
+import xyz.wagyourtail.wagyourgui.glfw.GLFWSession;
+import xyz.wagyourtail.wagyourgui.glfw.Window;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -24,6 +24,14 @@ public abstract class BaseScreen extends BaseElement {
     private final float[] sX = new float[6];
     private final float[] sY = new float[6];
 
+    public void onMousePos(float x, float y, int button) {
+        if (button < 6) {
+            onDrag(x, y, x - sX[button], y - sY[button], button);
+            sX[button] = x;
+            sY[button] = y;
+        }
+    }
+
     public void onMouseButton(float x, float y, int button, int action, int mods) {
         switch (action) {
             case 0:
@@ -32,13 +40,6 @@ public abstract class BaseScreen extends BaseElement {
             case 1:
                 onClick(x, y, button);
                 if (button < 6) {
-                    sX[button] = x;
-                    sY[button] = y;
-                }
-                break;
-            case 2:
-                if (button < 6) {
-                    onDrag(x, y, x - sX[button], y - sY[button], button);
                     sX[button] = x;
                     sY[button] = y;
                 }

@@ -2,6 +2,7 @@ package xyz.wagyourtail.konig.structure.code;
 
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import xyz.wagyourtail.konig.structure.headers.KonigBlock;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -12,6 +13,15 @@ public class KonigBlockReference {
     public final Code parent;
     public int id;
     public String name;
+
+    public float x;
+    public float y;
+    public float scaleX;
+    public float scaleY;
+    public int rotation;
+    public boolean flipH;
+    public boolean flipV;
+
     public final ReferenceIO io = new ReferenceIO();
     public final Map<String, VirtualIO> virtualIOGroupsMap = new HashMap<>();
     public final Map<String, VirtualIO> virtualIONameMap = new HashMap<>();
@@ -26,6 +36,14 @@ public class KonigBlockReference {
     public void parseXML(Node node) throws IOException {
         id = Integer.parseInt(node.getAttributes().getNamedItem("blockid").getNodeValue());
         name = node.getNodeName();
+
+        x = Float.parseFloat(node.getAttributes().getNamedItem("x").getNodeValue());
+        y = Float.parseFloat(node.getAttributes().getNamedItem("y").getNodeValue());
+        scaleX = Float.parseFloat(node.getAttributes().getNamedItem("scaleX").getNodeValue());
+        scaleY = Float.parseFloat(node.getAttributes().getNamedItem("scaleY").getNodeValue());
+        rotation = Integer.parseInt(node.getAttributes().getNamedItem("rotate").getNodeValue()) % 4;
+        flipH = Boolean.parseBoolean(node.getAttributes().getNamedItem("flipH").getNodeValue());
+        flipV = Boolean.parseBoolean(node.getAttributes().getNamedItem("flipV").getNodeValue());
 
         NodeList children = node.getChildNodes();
         for (int i = 0; i < children.getLength(); i++) {
@@ -52,5 +70,9 @@ public class KonigBlockReference {
                 throw new IOException("Unknown child node: " + child.getNodeName());
             }
         }
+    }
+
+    public KonigBlock attemptToGetBlockSpec() {
+        return parent.parent.getBlockByName(name);
     }
 }

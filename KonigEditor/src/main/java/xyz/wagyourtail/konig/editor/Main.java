@@ -1,6 +1,6 @@
 package xyz.wagyourtail.konig.editor;
 
-import xyz.wagyourtail.konig.editor.glfw.GLFWSession;
+import xyz.wagyourtail.wagyourgui.glfw.GLFWSession;
 
 import java.io.IOException;
 
