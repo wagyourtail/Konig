@@ -2,9 +2,9 @@ package xyz.wagyourtail.wagyourgui.screens;
 
 import org.xml.sax.SAXException;
 import xyz.wagyourtail.konig.Konig;
+import xyz.wagyourtail.konig.editor.canvas.RenderCode;
 import xyz.wagyourtail.wagyourgui.elements.Button;
 import xyz.wagyourtail.wagyourgui.elements.DrawableHelper;
-import xyz.wagyourtail.konig.editor.canvas.RenderCanvas;
 import xyz.wagyourtail.wagyourgui.glfw.GLFWSession;
 import xyz.wagyourtail.wagyourgui.glfw.Window;
 import xyz.wagyourtail.konig.structure.code.KonigProgram;
@@ -37,7 +37,7 @@ public class EditorMainScreen extends BaseScreen {
         long start = System.nanoTime();
         try {
             KonigProgram f = (KonigProgram) Konig.deserialize(hello_world);
-            elements.add(new RenderCanvas(200, 200, window.getWidth() - 200, window.getHeight() - 200, f.code, session.font));
+            elements.add(new RenderCode(200, 200, window.getWidth() - 200, window.getHeight() - 200, f.code, session.font));
         } catch (ParserConfigurationException | IOException | SAXException e) {
             throw new RuntimeException(e);
         }

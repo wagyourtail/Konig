@@ -23,6 +23,18 @@ public class GLBuilder {
         return this;
     }
 
+    public GLBuilder uv(float u, float v) {
+        if (!state) throw new IllegalStateException("not building");
+        GL11.glTexCoord2f(u, v);
+        return this;
+    }
+
+    public GLBuilder uv(float u, float v, float w, float h) {
+        if (!state) throw new IllegalStateException("not building");
+        GL11.glTexCoord2f(u / w, v / h);
+        return this;
+    }
+
     public GLBuilder color(int r, int g, int b, int a) {
         GL11.glColor4f(r/255f, g/255f, b/255f, a/255f);
         return this;

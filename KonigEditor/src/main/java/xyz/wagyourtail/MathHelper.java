@@ -33,13 +33,13 @@ public class MathHelper {
             outsidepointRegion = point1Region != INSIDE ? point1Region : point2Region;
 
             if ((outsidepointRegion & LEFT) != 0) {
-                outsidePoint = new Point(rect.topLeftX, delta(outsidePoint.x, point1.x)*lineSlope + point1.y);
+                outsidePoint = new Point(rect.x1, delta(outsidePoint.x, point1.x)*lineSlope + point1.y);
             } else if ((outsidepointRegion & RIGHT) != 0) {
-                outsidePoint = new Point(rect.bottomRightX, delta(outsidePoint.x, point1.x)*lineSlope + point1.y);
+                outsidePoint = new Point(rect.x2, delta(outsidePoint.x, point1.x)*lineSlope + point1.y);
             } else if ((outsidepointRegion & BOTTOM) != 0) {
-                outsidePoint = new Point(lineIsVertical ? point1.x : delta(outsidePoint.y, point1.y)/lineSlope + point1.x, rect.topLeftY);
+                outsidePoint = new Point(lineIsVertical ? point1.x : delta(outsidePoint.y, point1.y)/lineSlope + point1.x, rect.y1);
             } else if ((outsidepointRegion & TOP) != 0) {
-                outsidePoint = new Point(lineIsVertical ? point1.x : delta(outsidePoint.y, point1.y)/lineSlope + point1.x, rect.bottomRightY);
+                outsidePoint = new Point(lineIsVertical ? point1.x : delta(outsidePoint.y, point1.y)/lineSlope + point1.x, rect.y2);
             }
 
             if (outsidepointRegion == point1Region) {
@@ -57,24 +57,24 @@ public class MathHelper {
 
     public static boolean clipRect(AtomicReference<Rectangle> rect, Rectangle clipRect) {
         Rectangle rect1 = rect.get();
-        if (rect1.bottomRightX < clipRect.topLeftX || rect1.topLeftX > clipRect.bottomRightX || rect1.bottomRightY < clipRect.topLeftY || rect1.topLeftY > clipRect.bottomRightY) {
+        if (rect1.x2 < clipRect.x1 || rect1.x1 > clipRect.x2 || rect1.y2 < clipRect.y1 || rect1.y1 > clipRect.y2) {
             return false;
         }
 
-        if (rect1.topLeftX < clipRect.topLeftX) {
-            rect1 = new Rectangle(clipRect.topLeftX, rect1.topLeftY, rect1.bottomRightX, rect1.bottomRightY);
+        if (rect1.x1 < clipRect.x1) {
+            rect1 = new Rectangle(clipRect.x1, rect1.y1, rect1.x2, rect1.y2);
         }
 
-        if (rect1.bottomRightX > clipRect.bottomRightX) {
-            rect1 = new Rectangle(rect1.topLeftX, rect1.topLeftY, clipRect.bottomRightX, rect1.bottomRightY);
+        if (rect1.x2 > clipRect.x2) {
+            rect1 = new Rectangle(rect1.x1, rect1.y1, clipRect.x2, rect1.y2);
         }
 
-        if (rect1.topLeftY < clipRect.topLeftY) {
-            rect1 = new Rectangle(rect1.topLeftX, clipRect.topLeftY, rect1.bottomRightX, rect1.bottomRightY);
+        if (rect1.y1 < clipRect.y1) {
+            rect1 = new Rectangle(rect1.x1, clipRect.y1, rect1.x2, rect1.y2);
         }
 
-        if (rect1.bottomRightY > clipRect.bottomRightY) {
-            rect1 = new Rectangle(rect1.topLeftX, rect1.topLeftY, rect1.bottomRightX, clipRect.bottomRightY);
+        if (rect1.y2 > clipRect.y2) {
+            rect1 = new Rectangle(rect1.x1, rect1.y1, rect1.x2, clipRect.y2);
         }
 
         rect.set(rect1);
@@ -85,33 +85,33 @@ public class MathHelper {
         return (Math.abs(value1 - value2) < MINIMUM_DELTA) ? 0 : (value1 - value2);
     }
 
-    public static record Rectangle(float topLeftX, float topLeftY, float bottomRightX, float bottomRightY) {
+    public static record Rectangle(float x1, float y1, float x2, float y2) {
         public boolean isInside(Point p) {
-            return p.x() >= topLeftX && p.x() <= bottomRightX && p.y() >= topLeftY && p.y() <= bottomRightY;
+            return p.x() >= x1 && p.x() <= x2 && p.y() >= y1 && p.y() <= y2;
         }
 
         public int getRegion(Point p) {
-            int region = (p.x < topLeftX) ? LEFT : (p.x > bottomRightX) ? RIGHT : INSIDE;
-            if (p.y < topLeftY)
+            int region = (p.x < x1) ? LEFT : (p.x > x2) ? RIGHT : INSIDE;
+            if (p.y < y1)
                 region |= BOTTOM;
-            else if (p.y > bottomRightY)
+            else if (p.y > y2)
                 region |= TOP;
             return region;
         }
     }
 
-    public static record LineSegment(float startX, float startY, float endX, float endY) {
+    public static record LineSegment(float x1, float y1, float x2, float y2) {
 
         public float getLength() {
-            return (float) Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
+            return (float) Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
         }
 
         public Point getPoint1() {
-            return new Point(startX, startY);
+            return new Point(x1, y1);
         }
 
         public Point getPoint2() {
-            return new Point(endX, endY);
+            return new Point(x2, y2);
         }
     }
 
