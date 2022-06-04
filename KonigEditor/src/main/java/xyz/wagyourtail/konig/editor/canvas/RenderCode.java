@@ -55,6 +55,41 @@ public class RenderCode extends ElementContainer {
         compileCode();
     }
 
+    @Override
+    public boolean onClick(float x, float y, int button) {
+        float scaledMouseX = (x - this.x) * viewportWidth / width + viewportX;
+        float scaledMouseY = (y - this.y) * viewportHeight / height + viewportY;
+        return super.onClick(scaledMouseX, scaledMouseY, button);
+    }
+
+    @Override
+    public boolean onDrag(float x, float y, float dx, float dy, int button) {
+        float scaledMouseX = (x - this.x) * viewportWidth / width + viewportX;
+        float scaledMouseY = (y - this.y) * viewportHeight / height + viewportY;
+        float scaledMouseDX = dx * viewportWidth / width;
+        float scaledMouseDY = dy * viewportHeight / height;
+        return super.onDrag(scaledMouseX, scaledMouseY, scaledMouseDX, scaledMouseDY, button);
+    }
+
+    @Override
+    public boolean onRelease(float x, float y, int button) {
+        float scaledMouseX = (x - this.x) * viewportWidth / width + viewportX;
+        float scaledMouseY = (y - this.y) * viewportHeight / height + viewportY;
+        return super.onRelease(scaledMouseX, scaledMouseY, button);
+    }
+
+    @Override
+    public boolean onScroll(float x, float y, float dx, float dy) {
+        float scaledMouseX = (x - this.x) * viewportWidth / width + viewportX;
+        float scaledMouseY = (y - this.y) * viewportHeight / height + viewportY;
+        return super.onScroll(scaledMouseX, scaledMouseY, dx, dy);
+    }
+
+    @Override
+    public boolean shouldFocus(float mouseX, float mouseY) {
+        return mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height;
+    }
+
     public void compileCode() {
         compileWires.clear();
         compileBlocks.clear();

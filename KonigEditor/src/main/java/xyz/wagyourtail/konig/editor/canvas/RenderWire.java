@@ -25,6 +25,16 @@ public class RenderWire extends ElementContainer {
         compileWire(wire);
     }
 
+    @Override
+    public boolean shouldFocus(float mouseX, float mouseY) {
+        for (BaseElement element : elements) {
+            if (element.shouldFocus(mouseX, mouseY)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static List<RenderWire> compile(List<Wire> wires, Font font, RenderCode code) {
         List<RenderWire> renderWires = new ArrayList<>();
         for (Wire wire : wires) {
@@ -104,6 +114,32 @@ public class RenderWire extends ElementContainer {
                     .vertex(segment1.x2(), segment1.y2())
                     .end();
             }
+        }
+
+        @Override
+        public boolean shouldFocus(float mouseX, float mouseY) {
+            if (prev == null) {
+                return false;
+            }
+            // create a tight box around the line
+            float x1 = (float) prev.segment.x;
+            float y1 = (float) prev.segment.y;
+            float x2 = (float) segment.x;
+            float y2 = (float) segment.y;
+            float x3 = Math.min(x1, x2);
+            float y3 = Math.min(y1, y2);
+            float x4 = Math.max(x1, x2);
+            float y4 = Math.max(y1, y2);
+            x3 -= LINE_WIDTH * 4 * code.viewportWidth / code.width;
+            y3 -= LINE_WIDTH * 4 * code.viewportHeight / code.height;
+            x4 += LINE_WIDTH * 4 * code.viewportWidth / code.width;
+            y4 += LINE_WIDTH * 4 * code.viewportHeight / code.height;
+            return mouseX >= x3 && mouseX <= x4 && mouseY >= y3 && mouseY <= y4;
+        }
+
+        @Override
+        public void onFocus() {
+            System.out.println("Focus wire segment: " + wireId);
         }
 
     }

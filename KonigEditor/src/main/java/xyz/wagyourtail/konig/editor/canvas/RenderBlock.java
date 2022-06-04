@@ -2,6 +2,7 @@ package xyz.wagyourtail.konig.editor.canvas;
 
 import org.lwjgl.opengl.GL11;
 import xyz.wagyourtail.MathHelper;
+import xyz.wagyourtail.konig.editor.canvas.block.RenderConstBlock;
 import xyz.wagyourtail.konig.structure.code.KonigBlockReference;
 import xyz.wagyourtail.konig.structure.headers.KonigBlock;
 import xyz.wagyourtail.wagyourgui.Font;
@@ -15,7 +16,9 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class RenderBlock extends BaseElement {
-    public static final Map<String, RenderBlockCreator> special_cases = Map.of();
+    public static final Map<String, RenderBlockCreator> special_cases = Map.of(
+        "const", RenderConstBlock::new
+    );
 
     //TODO: make this a cache of some kind?
     Map<KonigBlock, Texture> blockTextures = new HashMap<>();
@@ -31,7 +34,7 @@ public class RenderBlock extends BaseElement {
     public static List<RenderBlock> compile(List<KonigBlockReference> blocks, Font font, RenderCode code) {
         List<RenderBlock> renderBlocks = new ArrayList<>();
         for (KonigBlockReference block : blocks) {
-            renderBlocks.add(new RenderBlock(block, font, code));
+            renderBlocks.add(special_cases.getOrDefault(block.name, RenderBlock::new).create(block, font, code));
         }
         return renderBlocks;
     }
@@ -106,7 +109,7 @@ public class RenderBlock extends BaseElement {
                 }
 
             } else {
-                // render in yellow
+                // render in gray
                 DrawableHelper.rect(
                     rect.x1(),
                     rect.y1(),
