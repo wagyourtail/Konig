@@ -50,14 +50,19 @@ public abstract class BaseScreen extends BaseElement {
     @Override
     public boolean onClick(float x, float y, int button) {
         for (BaseElement e : elements) {
-            if (e.shouldFocus(x, y)) {
+            if (e.shouldFocus(x, y) && focusedElement != e) {
                 BaseElement old = focusedElement;
                 focusedElement = e;
                 if (old != null) {
-                    old.onFocusLost();
+                    old.onFocusLost(e);
                 }
-                focusedElement.onFocus();
+                focusedElement.onFocus(old);
             }
+        }
+        if (focusedElement != null && !focusedElement.shouldFocus(x, y)) {
+            BaseElement old = focusedElement;
+            focusedElement = null;
+            old.onFocusLost(this);
         }
         if (focusedElement != null) {
             return focusedElement.onClick(x, y, button);

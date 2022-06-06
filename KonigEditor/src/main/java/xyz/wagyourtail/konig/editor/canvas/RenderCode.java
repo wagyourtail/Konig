@@ -1,5 +1,6 @@
 package xyz.wagyourtail.konig.editor.canvas;
 
+import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 import xyz.wagyourtail.konig.structure.code.Code;
 import xyz.wagyourtail.wagyourgui.Font;
@@ -20,10 +21,10 @@ public class RenderCode extends ElementContainer {
     protected final float height;
 
 
-    protected final float viewportX;
-    protected final float viewportY;
-    protected final float viewportWidth;
-    protected final float viewportHeight;
+    protected float viewportX;
+    protected float viewportY;
+    protected float viewportWidth;
+    protected float viewportHeight;
 
 
 
@@ -68,7 +69,16 @@ public class RenderCode extends ElementContainer {
         float scaledMouseY = (y - this.y) * viewportHeight / height + viewportY;
         float scaledMouseDX = dx * viewportWidth / width;
         float scaledMouseDY = dy * viewportHeight / height;
-        return super.onDrag(scaledMouseX, scaledMouseY, scaledMouseDX, scaledMouseDY, button);
+        if (super.onDrag(scaledMouseX, scaledMouseY, scaledMouseDX, scaledMouseDY, button)) {
+            return true;
+        }
+        // drag viewport
+        if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+            viewportX -= scaledMouseDX;
+            viewportY -= scaledMouseDY;
+            return true;
+        }
+        return false;
     }
 
     @Override
@@ -82,7 +92,31 @@ public class RenderCode extends ElementContainer {
     public boolean onScroll(float x, float y, float dx, float dy) {
         float scaledMouseX = (x - this.x) * viewportWidth / width + viewportX;
         float scaledMouseY = (y - this.y) * viewportHeight / height + viewportY;
-        return super.onScroll(scaledMouseX, scaledMouseY, dx, dy);
+        if (super.onScroll(scaledMouseX, scaledMouseY, dx, dy)) {
+            return true;
+        }
+        // zoom viewport, about mouse position
+        float viewportHeightBefore = viewportHeight;
+        float viewportWidthBefore = viewportWidth;
+        if (dy > 0) {
+            viewportHeight *= 1.1f;
+            viewportWidth *= 1.1f;
+        } else {
+            viewportHeight *= 0.9f;
+            viewportWidth *= 0.9f;
+        }
+        float viewportHeightDiff = viewportHeight - viewportHeightBefore;
+        float viewportWidthDiff = viewportWidth - viewportWidthBefore;
+        float mouseRatioX = (scaledMouseX - viewportX) / viewportWidthBefore;
+        float mouseRatioY = (scaledMouseY - viewportY) / viewportHeightBefore;
+        if (dy > 0) {
+            viewportX -= viewportWidthDiff / 2 * (1 - mouseRatioX);
+            viewportY -= viewportHeightDiff / 2 * (1 - mouseRatioY);
+        } else {
+            viewportX -= viewportWidthDiff / 2 * mouseRatioX;
+            viewportY -= viewportHeightDiff / 2 * mouseRatioY;
+        }
+        return true;
     }
 
     @Override

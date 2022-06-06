@@ -11,14 +11,19 @@ public abstract class ElementContainer extends BaseElement {
     @Override
     public boolean onClick(float x, float y, int button) {
         for (BaseElement element : elements) {
-            if (element.shouldFocus(x, y)) {
+            if (element.shouldFocus(x, y) && focusedElement != element) {
                 BaseElement old = focusedElement;
                 focusedElement = element;
                 if (old != null) {
-                    old.onFocusLost();
+                    old.onFocusLost(element);
                 }
-                focusedElement.onFocus();
+                focusedElement.onFocus(old);
             }
+        }
+        if (focusedElement != null && !focusedElement.shouldFocus(x, y)) {
+            BaseElement old = focusedElement;
+            focusedElement = null;
+            old.onFocusLost(this);
         }
         if (focusedElement != null) {
             return focusedElement.onClick(x, y, button);
@@ -67,9 +72,9 @@ public abstract class ElementContainer extends BaseElement {
     }
 
     @Override
-    public void onFocusLost() {
+    public void onFocusLost(BaseElement nextFocus) {
         if (focusedElement != null) {
-            focusedElement.onFocusLost();
+            focusedElement.onFocusLost(nextFocus);
         }
     }
 

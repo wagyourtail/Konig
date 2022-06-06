@@ -29,9 +29,9 @@ public abstract class BaseElement implements DrawableHelper {
         return false;
     }
 
-    public void onFocus() {}
+    public void onFocus(BaseElement prevFocus) {}
 
-    public void onFocusLost() {}
+    public void onFocusLost(BaseElement nextFocus) {}
 
     public abstract void onRender(float mouseX, float mouseY);
 }

@@ -58,6 +58,41 @@ public class Wire {
         }
     }
 
+    public boolean removeSegment(WireSegment segment) {
+        if (endpoints.contains(segment)) {
+            endpoints.remove(segment);
+        }
+        if (segments.remove(segment)) {
+            return true;
+        }
+        for (WireSegment s : segments) {
+            if (s instanceof WireBranch) {
+                if (((WireBranch) s).removeSegment(segment)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public void insertSegment(Wire.WireSegment after, Wire.WireSegment newSeg) {
+        int index = segments.indexOf(after);
+        if (index != -1) {
+            segments.add(index + 1, newSeg);
+        } else {
+            for (WireSegment s : segments) {
+                if (s instanceof WireBranch) {
+                    if (((WireBranch) s).insertSegment(after, newSeg)) {
+                        break;
+                    }
+                }
+            }
+        }
+        if (newSeg instanceof WireEndpoint) {
+            endpoints.add((WireEndpoint) newSeg);
+        }
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -79,35 +114,17 @@ public class Wire {
     }
 
     public static class WireSegment {
-        public final double x, y;
+        public double x, y;
 
         public WireSegment(double x, double y) {
             this.x = x;
             this.y = y;
         }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (!(o instanceof WireSegment)) {
-                return false;
-            }
-            WireSegment that = (WireSegment) o;
-            return Double.compare(that.x, x) == 0 && Double.compare(that.y, y) == 0;
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(x, y);
-        }
-
     }
 
     public static class WireEndpoint extends WireSegment {
         public final int blockid;
-        public final String port;
+        public String port;
 
         public WireEndpoint(int blockid, double x, double y, String port) {
             super(x, y);
@@ -115,26 +132,10 @@ public class Wire {
             this.port = port;
         }
 
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (!(o instanceof WireEndpoint)) {
-                return false;
-            }
-            if (!super.equals(o)) {
-                return false;
-            }
-            WireEndpoint that = (WireEndpoint) o;
-            return blockid == that.blockid && Objects.equals(port, that.port);
+        public WireEndpoint(int blockid, double x, double y) {
+            super(x, y);
+            this.blockid = blockid;
         }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(super.hashCode(), blockid, port);
-        }
-
     }
 
     public static class WireBranch extends WireSegment {
@@ -169,26 +170,36 @@ public class Wire {
             }
         }
 
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) {
+        public boolean removeSegment(WireSegment segment) {
+            if (segment == endpoint) {
+                endpoint = null;
+            }
+            for (WireSegment s : subSegments) {
+                if (s instanceof WireBranch) {
+                    ((WireBranch) s).removeSegment(segment);
+                }
+            }
+            return subSegments.remove(segment);
+        }
+
+        public boolean insertSegment(WireSegment after, WireSegment newSeg) {
+            if (after == null) {
+                subSegments.add(newSeg);
                 return true;
             }
-            if (!(o instanceof WireBranch)) {
-                return false;
+            int index = subSegments.indexOf(after);
+            if (index != -1) {
+                subSegments.add(index + 1, newSeg);
+                return true;
+            } else {
+                for (WireSegment s : subSegments) {
+                    if (s instanceof WireBranch) {
+                        return ((WireBranch) s).insertSegment(after, newSeg);
+                    }
+                }
             }
-            if (!super.equals(o)) {
-                return false;
-            }
-            WireBranch that = (WireBranch) o;
-            return Objects.equals(subSegments, that.subSegments) && Objects.equals(endpoint, that.endpoint);
+            return false;
         }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(super.hashCode(), subSegments, endpoint);
-        }
-
     }
 
 }
