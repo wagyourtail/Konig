@@ -4,14 +4,16 @@ import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 import xyz.wagyourtail.konig.structure.code.Code;
 import xyz.wagyourtail.wagyourgui.Font;
+import xyz.wagyourtail.wagyourgui.elements.BaseElement;
 import xyz.wagyourtail.wagyourgui.elements.DrawableHelper;
 import xyz.wagyourtail.wagyourgui.elements.ElementContainer;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
-public class RenderCode extends ElementContainer {
-
+public class RenderCode extends ElementContainer implements RenderCodeParent, RenderBlockParent {
+    protected final RenderCodeParent parent;
     protected final Code code;
     protected final Font font;
 
@@ -31,7 +33,8 @@ public class RenderCode extends ElementContainer {
     public final List<RenderWire> compileWires = new ArrayList<>();
     public final List<RenderBlock> compileBlocks = new ArrayList<>();
 
-    public RenderCode(int x, int y, int width, int height, Code code, Font font) {
+    public RenderCode(RenderCodeParent parent, int x, int y, int width, int height, Code code, Font font) {
+        this.parent = parent;
         this.x = x;
         this.y = y;
         this.width = width;
@@ -135,6 +138,22 @@ public class RenderCode extends ElementContainer {
     }
 
     @Override
+    public void onFocus(BaseElement prevFocus) {
+        Optional<RenderBlock> placeBlock = getPlacingBlock();
+        if (placeBlock.isPresent()) {
+            if (placeBlock.get().code != this) {
+                if (focusedElement instanceof RenderBlock) {
+                    if (!((RenderBlock) focusedElement).getBlockSpec().hollow()) {
+                        setPlacingBlock(new RenderBlock(placeBlock.get().getBlock(), font, this));
+                    }
+                } else {
+                    setPlacingBlock(new RenderBlock(placeBlock.get().getBlock(), font, this));
+                }
+            }
+        }
+    }
+
+    @Override
     public void onRender(float mouseX, float mouseY) {
         // render stuff withing view from code
         // scale canvas to view
@@ -160,7 +179,47 @@ public class RenderCode extends ElementContainer {
 
         super.onRender(scaledMouseX, scaledMouseY);
 
+        Optional<RenderBlock> placeBlock = getPlacingBlock();
+        if (placeBlock.isPresent()) {
+            RenderBlock block = placeBlock.get();
+            if (block.code == this) {
+                block.block.x = scaledMouseX - block.block.scaleX / 2;
+                block.block.y = scaledMouseY - block.block.scaleY / 2;
+                block.onRender(scaledMouseX, scaledMouseY);
+            }
+        }
+
         GL11.glPopMatrix();
+    }
+
+    @Override
+    public Optional<RenderBlock> getPlacingBlock() {
+        return parent.getPlacingBlock();
+    }
+
+    @Override
+    public void setPlacingBlock(RenderBlock block) {
+        parent.setPlacingBlock(block);
+    }
+
+    @Override
+    public float viewportX() {
+        return viewportX;
+    }
+
+    @Override
+    public float viewportY() {
+        return viewportY;
+    }
+
+    @Override
+    public float viewportWidth() {
+        return viewportWidth;
+    }
+
+    @Override
+    public float viewportHeight() {
+        return viewportHeight;
     }
 
 }

@@ -183,22 +183,4 @@ public class Boolean {
     public static boolean xor(boolean inp1, boolean inp2) {
         return inp1 ^ inp2;
     }
-
-    @Block(
-        name = "iif",
-        generics = {
-            @Block.Generic(name = "T")
-        },
-        inputs = {
-            @Block.Input(name = "condition", type = "boolean", side = BlockIO.Side.LEFT, justify = BlockIO.Justify.CENTER),
-            @Block.Input(name = "then", type = "T", side = BlockIO.Side.LEFT, justify = BlockIO.Justify.CENTER),
-            @Block.Input(name = "else", type = "T", side = BlockIO.Side.LEFT, justify = BlockIO.Justify.CENTER)
-        },
-        outputs = {
-            @Block.Output(name = "out", type = "T", side = BlockIO.Side.RIGHT, justify = BlockIO.Justify.CENTER)
-        }
-    )
-    public static Object ifThenElse(boolean condition, Object then, Object else_) {
-        return condition ? then : else_;
-    }
 }

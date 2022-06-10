@@ -79,6 +79,8 @@ public class Konig {
 
         // define 3 "special" blocks
         GlobalInput gi = new GlobalInput();
+        gi.name = "globalinput";
+        gi.group = "generic";
         gi.generics.put("T", new BlockIO.Generic("T", null, null));
         BlockIO.Output out = new BlockIO.Output(BlockIO.Side.RIGHT, BlockIO.Justify.CENTER, "out", "T");
         gi.io.byName.put("out", out);
@@ -87,6 +89,8 @@ public class Konig {
         headers.getBlocks().computeIfAbsent("generic", (s) -> new HashMap<>()).put("globalinput", gi);
 
         GlobalOutput go = new GlobalOutput();
+        go.name = "globaloutput";
+        go.group = "generic";
         go.generics.put("T", new BlockIO.Generic("T", null, null));
         BlockIO.Input in = new BlockIO.Input(BlockIO.Side.LEFT, BlockIO.Justify.CENTER, "in", "T", false);
         go.io.byName.put("in", in);
@@ -95,6 +99,8 @@ public class Konig {
         headers.getBlocks().computeIfAbsent("generic", (s) -> new HashMap<>()).put("globaloutput", go);
 
         ConstBlock cb = new ConstBlock();
+        cb.name = "const";
+        cb.group = "generic";
         cb.generics.put("T", new BlockIO.Generic("T", null, null));
         BlockIO.Output out2 = new BlockIO.Output(BlockIO.Side.RIGHT, BlockIO.Justify.CENTER, "out", "T");
         cb.io.byName.put("out", out2);
@@ -103,6 +109,8 @@ public class Konig {
         headers.getBlocks().computeIfAbsent("generic", (s) -> new HashMap<>()).put("const", cb);
 
         StopBlock sb = new StopBlock();
+        sb.name = "stop";
+        sb.group = "generic";
         BlockIO.Input stop = new BlockIO.Input(BlockIO.Side.LEFT, BlockIO.Justify.CENTER, "stop", "boolean", false);
         sb.io.byName.put("stop", stop);
         sb.io.inputs.add(stop);

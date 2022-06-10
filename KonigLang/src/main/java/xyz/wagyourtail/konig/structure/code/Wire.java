@@ -14,11 +14,11 @@ public class Wire {
     public int id;
 
     public List<WireEndpoint> getEndpoints() {
-        return endpoints;
+        return List.copyOf(endpoints);
     }
 
     public List<WireSegment> getSegments() {
-        return segments;
+        return List.copyOf(segments);
     }
 
     public void parseXML(Node node) throws IOException {

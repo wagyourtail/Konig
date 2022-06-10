@@ -3,6 +3,7 @@ package xyz.wagyourtail.konig.editor.canvas.blocks;
 import org.lwjgl.glfw.GLFW;
 import xyz.wagyourtail.MathHelper;
 import xyz.wagyourtail.konig.editor.canvas.RenderBlock;
+import xyz.wagyourtail.konig.editor.canvas.RenderBlockParent;
 import xyz.wagyourtail.konig.editor.canvas.RenderCode;
 import xyz.wagyourtail.konig.structure.code.KonigBlockReference;
 import xyz.wagyourtail.wagyourgui.Font;
@@ -15,7 +16,7 @@ public class RenderConstBlock extends RenderBlock {
     public boolean hilighted = false;
 
 
-    public RenderConstBlock(KonigBlockReference block, Font font, RenderCode code) {
+    public RenderConstBlock(KonigBlockReference block, Font font, RenderBlockParent code) {
         super(block, font, code);
     }
 
@@ -86,7 +87,7 @@ public class RenderConstBlock extends RenderBlock {
             font,
             block.value,
             rect.x1() + FONT_SCALE,
-            rect.y1() + (rect.y2() - rect.y1()) / 2 + FONT_SCALE / 2,
+            rect.y1() + (rect.y2() - rect.y1()) / 2,
             rect.x2() - rect.x1() - FONT_SCALE * 2,
             FONT_SCALE,
             0xFF000000

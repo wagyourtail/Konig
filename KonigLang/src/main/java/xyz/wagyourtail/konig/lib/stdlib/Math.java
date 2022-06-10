@@ -12,10 +12,10 @@ public class Math {
         },
         inputs = {
             @Block.Input(name="in1", type="T", side = BlockIO.Side.LEFT, justify = BlockIO.Justify.CENTER),
-            @Block.Input(name="in2", type="T", side = BlockIO.Side.RIGHT, justify = BlockIO.Justify.CENTER)
+            @Block.Input(name="in2", type="T", side = BlockIO.Side.LEFT, justify = BlockIO.Justify.CENTER)
         },
         outputs = {
-            @Block.Output(name="out", type="T", side = BlockIO.Side.BOTTOM, justify = BlockIO.Justify.CENTER)
+            @Block.Output(name="out", type="T", side = BlockIO.Side.RIGHT, justify = BlockIO.Justify.CENTER)
         }
     )
     public static Object add(Object a, Object b) {
@@ -33,10 +33,10 @@ public class Math {
         },
         inputs = {
             @Block.Input(name="in1", type="T", side = BlockIO.Side.LEFT, justify = BlockIO.Justify.CENTER),
-            @Block.Input(name="in2", type="T", side = BlockIO.Side.RIGHT, justify = BlockIO.Justify.CENTER)
+            @Block.Input(name="in2", type="T", side = BlockIO.Side.LEFT, justify = BlockIO.Justify.CENTER)
         },
         outputs = {
-            @Block.Output(name="out", type="T", side = BlockIO.Side.BOTTOM, justify = BlockIO.Justify.CENTER)
+            @Block.Output(name="out", type="T", side = BlockIO.Side.RIGHT, justify = BlockIO.Justify.CENTER)
         }
     )
     public static Object sub(Object a, Object b) {
@@ -51,10 +51,10 @@ public class Math {
         name = "mul",
         inputs = {
             @Block.Input(name="in1", type="number", side = BlockIO.Side.LEFT, justify = BlockIO.Justify.CENTER),
-            @Block.Input(name="in2", type="number", side = BlockIO.Side.RIGHT, justify = BlockIO.Justify.CENTER)
+            @Block.Input(name="in2", type="number", side = BlockIO.Side.LEFT, justify = BlockIO.Justify.CENTER)
         },
         outputs = {
-            @Block.Output(name="out", type="number", side = BlockIO.Side.BOTTOM, justify = BlockIO.Justify.CENTER)
+            @Block.Output(name="out", type="number", side = BlockIO.Side.RIGHT, justify = BlockIO.Justify.CENTER)
         }
     )
     public static Object mul(Object a, Object b) {
@@ -69,10 +69,10 @@ public class Math {
         name = "div",
         inputs = {
             @Block.Input(name="in1", type="number", side = BlockIO.Side.LEFT, justify = BlockIO.Justify.CENTER),
-            @Block.Input(name="in2", type="number", side = BlockIO.Side.RIGHT, justify = BlockIO.Justify.CENTER)
+            @Block.Input(name="in2", type="number", side = BlockIO.Side.LEFT, justify = BlockIO.Justify.CENTER)
         },
         outputs = {
-            @Block.Output(name="out", type="number", side = BlockIO.Side.BOTTOM, justify = BlockIO.Justify.CENTER)
+            @Block.Output(name="out", type="number", side = BlockIO.Side.RIGHT, justify = BlockIO.Justify.CENTER)
         }
     )
     public static Object div(Object a, Object b) {
@@ -87,10 +87,10 @@ public class Math {
         name = "mod",
         inputs = {
             @Block.Input(name="in1", type="number", side = BlockIO.Side.LEFT, justify = BlockIO.Justify.CENTER),
-            @Block.Input(name="in2", type="number", side = BlockIO.Side.RIGHT, justify = BlockIO.Justify.CENTER)
+            @Block.Input(name="in2", type="number", side = BlockIO.Side.LEFT, justify = BlockIO.Justify.CENTER)
         },
         outputs = {
-            @Block.Output(name="out", type="number", side = BlockIO.Side.BOTTOM, justify = BlockIO.Justify.CENTER)
+            @Block.Output(name="out", type="number", side = BlockIO.Side.RIGHT, justify = BlockIO.Justify.CENTER)
         }
     )
     public static double mod(double a, double b) {
@@ -101,10 +101,10 @@ public class Math {
         name = "pow",
         inputs = {
             @Block.Input(name="in1", type="number", side = BlockIO.Side.LEFT, justify = BlockIO.Justify.CENTER),
-            @Block.Input(name="in2", type="number", side = BlockIO.Side.RIGHT, justify = BlockIO.Justify.CENTER)
+            @Block.Input(name="in2", type="number", side = BlockIO.Side.LEFT, justify = BlockIO.Justify.CENTER)
         },
         outputs = {
-            @Block.Output(name="out", type="number", side = BlockIO.Side.BOTTOM, justify = BlockIO.Justify.CENTER)
+            @Block.Output(name="out", type="number", side = BlockIO.Side.RIGHT, justify = BlockIO.Justify.CENTER)
         }
     )
     public static double pow(double a, double b) {
@@ -117,7 +117,7 @@ public class Math {
             @Block.Input(name="in", type="number", side = BlockIO.Side.LEFT, justify = BlockIO.Justify.CENTER)
         },
         outputs = {
-            @Block.Output(name="out", type="number", side = BlockIO.Side.BOTTOM, justify = BlockIO.Justify.CENTER)
+            @Block.Output(name="out", type="number", side = BlockIO.Side.RIGHT, justify = BlockIO.Justify.CENTER)
         }
     )
     public static double sqrt(double a) {
@@ -130,7 +130,7 @@ public class Math {
             @Block.Input(name="in", type="number", side = BlockIO.Side.LEFT, justify = BlockIO.Justify.CENTER)
         },
         outputs = {
-            @Block.Output(name="out", type="number", side = BlockIO.Side.BOTTOM, justify = BlockIO.Justify.CENTER)
+            @Block.Output(name="out", type="number", side = BlockIO.Side.RIGHT, justify = BlockIO.Justify.CENTER)
         }
     )
     public static double abs(double a) {
@@ -143,7 +143,7 @@ public class Math {
             @Block.Input(name="in", type="number", side = BlockIO.Side.LEFT, justify = BlockIO.Justify.CENTER)
         },
         outputs = {
-            @Block.Output(name="out", type="number", side = BlockIO.Side.BOTTOM, justify = BlockIO.Justify.CENTER)
+            @Block.Output(name="out", type="number", side = BlockIO.Side.RIGHT, justify = BlockIO.Justify.CENTER)
         }
     )
     public static double sin(double a) {
@@ -156,7 +156,7 @@ public class Math {
             @Block.Input(name="in", type="number", side = BlockIO.Side.LEFT, justify = BlockIO.Justify.CENTER)
         },
         outputs = {
-            @Block.Output(name="out", type="number", side = BlockIO.Side.BOTTOM, justify = BlockIO.Justify.CENTER)
+            @Block.Output(name="out", type="number", side = BlockIO.Side.RIGHT, justify = BlockIO.Justify.CENTER)
         }
     )
     public static double cos(double a) {
@@ -169,7 +169,7 @@ public class Math {
             @Block.Input(name="in", type="number", side = BlockIO.Side.LEFT, justify = BlockIO.Justify.CENTER)
         },
         outputs = {
-            @Block.Output(name="out", type="number", side = BlockIO.Side.BOTTOM, justify = BlockIO.Justify.CENTER)
+            @Block.Output(name="out", type="number", side = BlockIO.Side.RIGHT, justify = BlockIO.Justify.CENTER)
         }
     )
     public static double tan(double a) {
@@ -182,7 +182,7 @@ public class Math {
             @Block.Input(name="in", type="number", side = BlockIO.Side.LEFT, justify = BlockIO.Justify.CENTER)
         },
         outputs = {
-            @Block.Output(name="out", type="number", side = BlockIO.Side.BOTTOM, justify = BlockIO.Justify.CENTER)
+            @Block.Output(name="out", type="number", side = BlockIO.Side.RIGHT, justify = BlockIO.Justify.CENTER)
         }
     )
     public static double asin(double a) {
@@ -195,7 +195,7 @@ public class Math {
             @Block.Input(name="in", type="number", side = BlockIO.Side.LEFT, justify = BlockIO.Justify.CENTER)
         },
         outputs = {
-            @Block.Output(name="out", type="number", side = BlockIO.Side.BOTTOM, justify = BlockIO.Justify.CENTER)
+            @Block.Output(name="out", type="number", side = BlockIO.Side.RIGHT, justify = BlockIO.Justify.CENTER)
         }
     )
     public static double acos(double a) {
@@ -208,7 +208,7 @@ public class Math {
             @Block.Input(name="in", type="number", side = BlockIO.Side.LEFT, justify = BlockIO.Justify.CENTER)
         },
         outputs = {
-            @Block.Output(name="out", type="number", side = BlockIO.Side.BOTTOM, justify = BlockIO.Justify.CENTER)
+            @Block.Output(name="out", type="number", side = BlockIO.Side.RIGHT, justify = BlockIO.Justify.CENTER)
         }
     )
     public static double atan(double a) {
@@ -219,10 +219,10 @@ public class Math {
         name = "atan2",
         inputs = {
             @Block.Input(name = "in1", type = "number", side = BlockIO.Side.LEFT, justify = BlockIO.Justify.CENTER),
-            @Block.Input(name = "in2", type = "number", side = BlockIO.Side.RIGHT, justify = BlockIO.Justify.CENTER)
+            @Block.Input(name = "in2", type = "number", side = BlockIO.Side.LEFT, justify = BlockIO.Justify.CENTER)
         },
         outputs = {
-            @Block.Output(name = "out", type = "number", side = BlockIO.Side.BOTTOM, justify = BlockIO.Justify.CENTER)
+            @Block.Output(name = "out", type = "number", side = BlockIO.Side.RIGHT, justify = BlockIO.Justify.CENTER)
         }
     )
     public static double atan2(double a, double b) {
@@ -235,7 +235,7 @@ public class Math {
             @Block.Input(name="in", type="number", side = BlockIO.Side.LEFT, justify = BlockIO.Justify.CENTER)
         },
         outputs = {
-            @Block.Output(name="out", type="number", side = BlockIO.Side.BOTTOM, justify = BlockIO.Justify.CENTER)
+            @Block.Output(name="out", type="number", side = BlockIO.Side.RIGHT, justify = BlockIO.Justify.CENTER)
         }
     )
     public static double log(double a) {
@@ -248,7 +248,7 @@ public class Math {
             @Block.Input(name="in", type="number", side = BlockIO.Side.LEFT, justify = BlockIO.Justify.CENTER)
         },
         outputs = {
-            @Block.Output(name="out", type="number", side = BlockIO.Side.BOTTOM, justify = BlockIO.Justify.CENTER)
+            @Block.Output(name="out", type="number", side = BlockIO.Side.RIGHT, justify = BlockIO.Justify.CENTER)
         }
     )
     public static double ln(double a) {
@@ -261,7 +261,7 @@ public class Math {
             @Block.Input(name="in", type="number", side = BlockIO.Side.LEFT, justify = BlockIO.Justify.CENTER)
         },
         outputs = {
-            @Block.Output(name="out", type="number", side = BlockIO.Side.BOTTOM, justify = BlockIO.Justify.CENTER)
+            @Block.Output(name="out", type="number", side = BlockIO.Side.RIGHT, justify = BlockIO.Justify.CENTER)
         }
     )
     public static double exp(double a) {
@@ -274,7 +274,7 @@ public class Math {
             @Block.Input(name="in", type="number", side = BlockIO.Side.LEFT, justify = BlockIO.Justify.CENTER)
         },
         outputs = {
-            @Block.Output(name="out", type="number", side = BlockIO.Side.BOTTOM, justify = BlockIO.Justify.CENTER)
+            @Block.Output(name="out", type="number", side = BlockIO.Side.RIGHT, justify = BlockIO.Justify.CENTER)
         }
     )
     public static double floor(double a) {
@@ -287,7 +287,7 @@ public class Math {
             @Block.Input(name="in", type="number", side = BlockIO.Side.LEFT, justify = BlockIO.Justify.CENTER)
         },
         outputs = {
-            @Block.Output(name="out", type="number", side = BlockIO.Side.BOTTOM, justify = BlockIO.Justify.CENTER)
+            @Block.Output(name="out", type="number", side = BlockIO.Side.RIGHT, justify = BlockIO.Justify.CENTER)
         }
     )
     public static double ceil(double a) {
@@ -300,7 +300,7 @@ public class Math {
             @Block.Input(name="in", type="number", side = BlockIO.Side.LEFT, justify = BlockIO.Justify.CENTER)
         },
         outputs = {
-            @Block.Output(name="out", type="number", side = BlockIO.Side.BOTTOM, justify = BlockIO.Justify.CENTER)
+            @Block.Output(name="out", type="number", side = BlockIO.Side.RIGHT, justify = BlockIO.Justify.CENTER)
         }
     )
     public static double round(double a) {
@@ -311,7 +311,7 @@ public class Math {
         name = "rand",
         inputs = {},
         outputs = {
-            @Block.Output(name="out", type="number", side = BlockIO.Side.BOTTOM, justify = BlockIO.Justify.CENTER)
+            @Block.Output(name="out", type="number", side = BlockIO.Side.RIGHT, justify = BlockIO.Justify.CENTER)
         }
     )
     public static double rand() {
@@ -324,7 +324,7 @@ public class Math {
             @Block.Input(name="in", type="number", side = BlockIO.Side.LEFT, justify = BlockIO.Justify.CENTER)
         },
         outputs = {
-            @Block.Output(name="out", type="number", side = BlockIO.Side.BOTTOM, justify = BlockIO.Justify.CENTER)
+            @Block.Output(name="out", type="number", side = BlockIO.Side.RIGHT, justify = BlockIO.Justify.CENTER)
         }
     )
     public static double randInt(double a) {
@@ -335,10 +335,10 @@ public class Math {
         name = "randrange",
         inputs = {
             @Block.Input(name="in1", type="number", side = BlockIO.Side.LEFT, justify = BlockIO.Justify.CENTER),
-            @Block.Input(name="in2", type="number", side = BlockIO.Side.RIGHT, justify = BlockIO.Justify.CENTER)
+            @Block.Input(name="in2", type="number", side = BlockIO.Side.LEFT, justify = BlockIO.Justify.CENTER)
         },
         outputs = {
-            @Block.Output(name="out", type="number", side = BlockIO.Side.BOTTOM, justify = BlockIO.Justify.CENTER)
+            @Block.Output(name="out", type="number", side = BlockIO.Side.RIGHT, justify = BlockIO.Justify.CENTER)
         }
     )
     public static double randRange(double a, double b) {

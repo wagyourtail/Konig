@@ -30,14 +30,14 @@ public class RenderBlock extends ElementContainer {
 
     protected BaseElement prev;
 
-    protected final RenderCode code;
+    protected final RenderBlockParent code;
     protected final Font font;
 
     protected final KonigBlockReference block;
     protected final KonigBlock blockSpec;
 
 
-    public static List<RenderBlock> compile(List<KonigBlockReference> blocks, Font font, RenderCode code) {
+    public static List<RenderBlock> compile(List<KonigBlockReference> blocks, Font font, RenderBlockParent code) {
         List<RenderBlock> renderBlocks = new ArrayList<>();
         for (KonigBlockReference block : blocks) {
             renderBlocks.add(special_cases.getOrDefault(block.name, RenderBlock::new).create(block, font, code));
@@ -45,12 +45,20 @@ public class RenderBlock extends ElementContainer {
         return renderBlocks;
     }
 
-    public RenderBlock(KonigBlockReference block, Font font, RenderCode code) {
+    public RenderBlock(KonigBlockReference block, Font font, RenderBlockParent code) {
         this.block = block;
         this.font = font;
         this.code = code;
         this.blockSpec = block.attemptToGetBlockSpec();
         initIO();
+    }
+
+    public KonigBlock getBlockSpec() {
+        return blockSpec;
+    }
+
+    public KonigBlockReference getBlock() {
+        return block;
     }
 
     protected void initIO() {
@@ -98,7 +106,7 @@ public class RenderBlock extends ElementContainer {
                 break;
         }
 
-        elements.add(new IOPlug(block.x + x, block.y + y, io));
+        elements.add(new IOPlug(x, y, io));
     }
 
     private float getJustifyPos(BlockIO.Justify justify, int index, int countOnJustify, float blockScale) {
@@ -107,7 +115,7 @@ public class RenderBlock extends ElementContainer {
                 return  .1f + index * .2f;
             case CENTER:
                 if (countOnJustify % 2 == 0) {
-                    return blockScale / 2 - countOnJustify * .1f + index * .2f;
+                    return blockScale / 2 - countOnJustify * .1f + .1f + index * .2f;
                 } else {
                     return blockScale / 2 - (countOnJustify - 1) * .1f + index * .2f;
                 }
@@ -126,7 +134,7 @@ public class RenderBlock extends ElementContainer {
             block.y + block.scaleY
         ));
 
-        if (!MathHelper.clipRect(r, new MathHelper.Rectangle(code.viewportX, code.viewportY, code.viewportX + code.viewportWidth, code.viewportY + code.viewportHeight))) {
+        if (!MathHelper.clipRect(r, new MathHelper.Rectangle(code.viewportX(), code.viewportY(), code.viewportX() + code.viewportWidth(), code.viewportY() + code.viewportHeight()))) {
             return null;
         }
 
@@ -144,7 +152,11 @@ public class RenderBlock extends ElementContainer {
     }
 
     public void renderSubElements(float mouseX, float mouseY) {
+        // translate to block position
+        GL11.glPushMatrix();
+        GL11.glTranslatef(block.x, block.y, 0);
         super.onRender(mouseX, mouseY);
+        GL11.glPopMatrix();
     }
 
     @Override
@@ -222,7 +234,7 @@ public class RenderBlock extends ElementContainer {
 
         // check if rect is trimmed
         if (rect.x1() != block.x || rect.y1() != block.y || rect.x2() != block.x + block.scaleX || rect.y2() != block.y + block.scaleY) {
-            super.onRender(mouseX, mouseY);
+            renderSubElements(mouseX, mouseY);
             return;
         }
 
@@ -231,17 +243,18 @@ public class RenderBlock extends ElementContainer {
         GL11.glPushMatrix();
         if (width > block.scaleX) {
             GL11.glTranslatef(block.x + block.scaleX / 2, block.y + block.scaleY / 2, 0);
-            GL11.glScalef(block.scaleX / width, block.scaleY / width, 1);
+            GL11.glScalef(block.scaleX / width, block.scaleX / width, 1);
         }
-        DrawableHelper.drawCenteredString(font, block.name, 0, 0, 0xFF000000);
+        //get scaled font height
+        DrawableHelper.drawCenteredString(font, block.name, 0, -font.FONT_HEIGHT / 2f, 0xFF000000);
         GL11.glPopMatrix();
 
-        super.onRender(mouseX, mouseY);
+        renderSubElements(mouseX, mouseY);
     }
 
     @Override
     public boolean onClick(float x, float y, int button) {
-        super.onClick(x, y, button);
+        super.onClick(x - block.x, y - block.y, button);
         if (prev instanceof RenderWire) {
             RenderWire p = (RenderWire) prev;
             for (Wire.WireEndpoint end : p.wire.getEndpoints()) {
@@ -257,7 +270,7 @@ public class RenderBlock extends ElementContainer {
 
     @FunctionalInterface
     public interface RenderBlockCreator {
-        RenderBlock create(KonigBlockReference block, Font font, RenderCode code);
+        RenderBlock create(KonigBlockReference block, Font font, RenderBlockParent code);
     }
 
     public class IOPlug extends BaseElement {

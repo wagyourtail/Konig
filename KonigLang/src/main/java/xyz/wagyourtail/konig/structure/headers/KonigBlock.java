@@ -25,6 +25,10 @@ public abstract class KonigBlock {
     public String group;
     public Path image;
 
+    public boolean hollow() {
+        return !hollowsByName.isEmpty();
+    }
+
     public void parseXML(Node node) throws IOException {
         name = node.getAttributes().getNamedItem("name").getNodeValue();
         group = node.getAttributes().getNamedItem("group").getNodeValue();

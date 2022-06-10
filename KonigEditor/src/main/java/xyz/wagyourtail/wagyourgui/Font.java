@@ -165,6 +165,9 @@ public class Font {
     }
 
     public float drawTrimmed(String text, float x, float y, float width) {
+        // move y to top instead of bottom
+        y += FONT_HEIGHT;
+
         if (cdata == null) {
             cdata = init(1024, 1024);
         }

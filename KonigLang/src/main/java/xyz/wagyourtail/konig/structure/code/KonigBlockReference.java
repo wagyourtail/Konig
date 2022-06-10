@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Objects;
 
 public class KonigBlockReference {
-    public final Code parent;
+    public Code parent;
     public int id;
     public String name;
 
@@ -70,6 +70,21 @@ public class KonigBlockReference {
                 throw new IOException("Unknown child node: " + child.getNodeName());
             }
         }
+    }
+
+    public KonigBlockReference copy(Code parent) {
+        KonigBlockReference clone = new KonigBlockReference(parent);
+        clone.id = id;
+        clone.name = name;
+        clone.x = x;
+        clone.y = y;
+        clone.scaleX = scaleX;
+        clone.scaleY = scaleY;
+        clone.rotation = rotation;
+        clone.flipH = flipH;
+        clone.flipV = flipV;
+        clone.value = value;
+        return clone;
     }
 
     public KonigBlock attemptToGetBlockSpec() {

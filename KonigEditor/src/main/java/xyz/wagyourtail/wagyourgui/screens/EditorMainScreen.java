@@ -2,9 +2,13 @@ package xyz.wagyourtail.wagyourgui.screens;
 
 import org.xml.sax.SAXException;
 import xyz.wagyourtail.konig.Konig;
+import xyz.wagyourtail.konig.editor.blockselect.BlockSelector;
+import xyz.wagyourtail.konig.editor.canvas.RenderBlock;
 import xyz.wagyourtail.konig.editor.canvas.RenderCode;
+import xyz.wagyourtail.konig.editor.canvas.RenderCodeParent;
 import xyz.wagyourtail.wagyourgui.elements.Button;
 import xyz.wagyourtail.wagyourgui.elements.DrawableHelper;
+import xyz.wagyourtail.wagyourgui.elements.HorizontalScrollBar;
 import xyz.wagyourtail.wagyourgui.glfw.GLFWSession;
 import xyz.wagyourtail.wagyourgui.glfw.Window;
 import xyz.wagyourtail.konig.structure.code.KonigProgram;
@@ -13,8 +17,11 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Optional;
 
-public class EditorMainScreen extends BaseScreen {
+public class EditorMainScreen extends BaseScreen implements RenderCodeParent {
+
+    private RenderBlock placeBlock;
 
     public EditorMainScreen(GLFWSession session) {
         super(session);
@@ -31,19 +38,39 @@ public class EditorMainScreen extends BaseScreen {
     public void init(Window window) {
 
 
-        Path hello_world = Path.of("software-enginnering-bs/language-spec-revisions/1.0/example/helloworld.konig");
+        Path hello_world = Path.of("software-engineering-bs/language-spec-revisions/1.0/example/helloworld.konig");
         long start = System.nanoTime();
         try {
             KonigProgram f = (KonigProgram) Konig.deserialize(hello_world);
-            elements.add(new RenderCode(200, 200, window.getWidth() - 200, window.getHeight() - 200, f.code, session.font));
+            elements.add(new RenderCode(
+                this,
+                0, 20, window.getWidth(), window.getHeight() - 200, f.code, session.font));
 
 
-            elements.add(new Button(0, 0, 200, 200, session.font, "New Project", 0, 0x7FFFFFFF, 0xFFFFFFFF, 0xFF000000, (btn) -> {
+            elements.add(new Button(0, 0, 100, 20, session.font, "New Project", 0, 0x7FFFFFFF, 0xFFFFFFFF, 0xFF000000, (btn) -> {
                 f.jitCompile(true).apply(Map.of());
+            }));
+
+            elements.add(new BlockSelector(0, window.getHeight() - 200, window.getWidth(), 200, session.font, (block) -> {
+                if (block != null) {
+                    setPlacingBlock(new RenderBlock(block, session.font, null));
+                } else {
+                    setPlacingBlock(null);
+                }
             }));
         } catch (ParserConfigurationException | IOException | SAXException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public Optional<RenderBlock> getPlacingBlock() {
+        return Optional.ofNullable(placeBlock);
+    }
+
+    @Override
+    public void setPlacingBlock(RenderBlock block) {
+        this.placeBlock = block;
     }
 
 }
