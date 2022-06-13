@@ -4,7 +4,9 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+import xyz.wagyourtail.XMLBuilder;
 import xyz.wagyourtail.konig.Konig;
+import xyz.wagyourtail.konig.lib.InternHeaders;
 import xyz.wagyourtail.konig.structure.KonigFile;
 import xyz.wagyourtail.konig.structure.code.Code;
 import xyz.wagyourtail.konig.structure.code.KonigProgram;
@@ -46,16 +48,9 @@ public class KonigHeaders implements KonigFile, Code.CodeParent {
             this.version = version.getNodeValue();
         }
 
-        {
-            KonigHeaders headers = Konig.getInternHeaders("stdlib");
-            for (Map.Entry<String, Map<String, KonigBlock>> entry : headers.getBlocks()
-                .entrySet()) {
-                blockMap.computeIfAbsent(
-                    entry.getKey(),
-                    (e) -> new HashMap<>()
-                ).putAll(entry.getValue());
-            }
-        }
+
+        inherited.add(Konig.getInternHeaders("stdlib"));
+
 
         NodeList children = node.getChildNodes();
         for (int i = 0; i < children.getLength(); i++) {
@@ -110,6 +105,28 @@ public class KonigHeaders implements KonigFile, Code.CodeParent {
 
             }
         }
+    }
+
+    @Override
+    public XMLBuilder toXML() {
+        XMLBuilder builder = new XMLBuilder("headers");
+        if (version != null) builder.addStringOption("version", version);
+        for (KonigHeaders headers : inherited) {
+            if (headers instanceof InternHeaders) {
+                if (((InternHeaders) headers).name.equals("stdlib")) {
+                    continue;
+                }
+                builder.append(new XMLBuilder("include", XMLBuilder.SELF_CLOSING).addStringOption("intern", ((InternHeaders) headers).name));
+            } else {
+                builder.append(new XMLBuilder("include", XMLBuilder.SELF_CLOSING).addStringOption("src", headers.getPath().toString()));
+            }
+        }
+        for (Map<String, KonigBlock> value : blockMap.values()) {
+            for (KonigBlock block : value.values()) {
+                builder.append(block.toXML());
+            }
+        }
+        return builder;
     }
 
     @Override

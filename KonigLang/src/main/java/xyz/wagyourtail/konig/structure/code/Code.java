@@ -53,6 +53,10 @@ public class Code {
         return List.copyOf(blockMap.values());
     }
 
+    public Map<Integer, KonigBlockReference> getBlockMap() {
+        return Map.copyOf(blockMap);
+    }
+
     public void addBlock(KonigBlockReference block) {
         if (block.id == -1 || blockMap.containsKey(block.id)) {
             int id = 0;
@@ -90,7 +94,11 @@ public class Code {
     }
 
     public XMLBuilder toXML() {
-        XMLBuilder builder = new XMLBuilder("main");
+        return toXML("main");
+    }
+
+    public XMLBuilder toXML(String name) {
+        XMLBuilder builder = new XMLBuilder(name);
         XMLBuilder wires = new XMLBuilder("wires");
         for (Wire wire : wireMap.values()) {
             wires.append(wire.toXML());

@@ -6,8 +6,11 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 
 public class InternHeaders extends KonigHeaders {
-    public InternHeaders() {
+    public final String name;
+
+    public InternHeaders(String name) {
         super(null);
+        this.name = name;
     }
 
     public void parseClass(Class<?> clazz, String defaultGroup) {

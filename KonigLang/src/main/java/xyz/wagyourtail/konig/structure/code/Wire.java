@@ -131,7 +131,7 @@ public class Wire {
         }
 
         public XMLBuilder toXML() {
-            XMLBuilder builder = new XMLBuilder("segment");
+            XMLBuilder builder = new XMLBuilder("segment", XMLBuilder.SELF_CLOSING);
             builder.addStringOption("x", Double.toString(x));
             builder.addStringOption("y", Double.toString(y));
             return builder;
@@ -155,7 +155,7 @@ public class Wire {
 
         @Override
         public XMLBuilder toXML() {
-            XMLBuilder builder = new XMLBuilder("end");
+            XMLBuilder builder = new XMLBuilder("end", XMLBuilder.SELF_CLOSING);
             builder.addStringOption("x", Double.toString(x));
             builder.addStringOption("y", Double.toString(y));
             builder.addStringOption("block", Integer.toString(blockid));

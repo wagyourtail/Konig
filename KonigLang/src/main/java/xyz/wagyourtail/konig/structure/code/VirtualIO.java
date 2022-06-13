@@ -210,7 +210,7 @@ public class VirtualIO {
 
         @Override
         public XMLBuilder toXML() {
-            return new XMLBuilder("outer")
+            return new XMLBuilder("outer", XMLBuilder.SELF_CLOSING)
                 .addStringOption("wireid", Integer.toString(wireid))
                 .addStringOption("side", side)
                 .addStringOption("offset", Double.toString(offset));
@@ -225,7 +225,7 @@ public class VirtualIO {
 
         @Override
         public XMLBuilder toXML() {
-            return new XMLBuilder("inner")
+            return new XMLBuilder("inner", XMLBuilder.SELF_CLOSING)
                 .addStringOption("wireid", Integer.toString(wireid))
                 .addStringOption("side", side)
                 .addStringOption("offset", Double.toString(offset));
@@ -239,7 +239,7 @@ public class VirtualIO {
 
         @Override
         public XMLBuilder toXML() {
-            return new XMLBuilder("loopback")
+            return new XMLBuilder("loopback", XMLBuilder.SELF_CLOSING)
                 .addStringOption("wireid", Integer.toString(wireid))
                 .addStringOption("side", side)
                 .addStringOption("offset", Double.toString(offset));

@@ -3,11 +3,15 @@ package xyz.wagyourtail;
 import java.util.*;
 
 public class XMLBuilder {
-    public final Map<String, String> options = new HashMap<>();
-    public final List<Object> children = new LinkedList<>();
+    public static final int INLINE = 0b1;
+    public static final int START_NEW_LINE = 0b10;
+    public static final int SELF_CLOSING = 0b100;
+    public final Map<String, String> options = new LinkedHashMap<>();
+    public final List<Object> children = new ArrayList<>();
     public final String type;
     public boolean inline;
     public boolean startNewLine;
+    public boolean selfClosing;
 
     public XMLBuilder(String type) {
         this.type = type;
@@ -15,16 +19,11 @@ public class XMLBuilder {
         this.startNewLine = true;
     }
 
-    public XMLBuilder(String type, boolean inline) {
+    public XMLBuilder(String type, int flags) {
         this.type = type;
-        this.inline = inline;
-        this.startNewLine = !inline;
-    }
-
-    public XMLBuilder(String type, boolean inline, boolean startNewLine) {
-        this.type = type;
-        this.inline = inline;
-        this.startNewLine = startNewLine;
+        this.inline = (flags & INLINE) != 0;
+        this.startNewLine = !inline || (flags & START_NEW_LINE) != 0;
+        this.selfClosing = (flags & SELF_CLOSING) != 0;
     }
 
 
@@ -72,10 +71,15 @@ public class XMLBuilder {
                 builder.append("=").append(option.getValue());
             }
         }
-        builder.append(">");
         if (children.isEmpty()) {
-            builder.append("</").append(type).append(">");
+            if (selfClosing) {
+                builder.append("/>");
+            } else {
+                builder.append(">");
+                builder.append("</").append(type).append(">");
+            }
         } else {
+            builder.append(">");
             boolean inline = this.inline;
             for (Object rawChild : children) {
                 if (rawChild instanceof XMLBuilder) {

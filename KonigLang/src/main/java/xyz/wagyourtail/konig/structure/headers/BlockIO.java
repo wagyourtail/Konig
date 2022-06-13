@@ -3,6 +3,7 @@ package xyz.wagyourtail.konig.structure.headers;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import xyz.wagyourtail.XMLBuilder;
 
 import java.io.IOException;
 import java.util.*;
@@ -50,6 +51,18 @@ public class BlockIO {
                 }
             }
         }
+    }
+
+    public XMLBuilder toXML() {
+        XMLBuilder builder = new XMLBuilder("io");
+        for (Map<Justify, List<IOElement>> side : elements.values()) {
+            for (List<IOElement> justify : side.values()) {
+                for (IOElement element : justify) {
+                    builder.append(element.toXML());
+                }
+            }
+        }
+        return builder;
     }
 
     public void copyTo(BlockIO io) {
@@ -122,7 +135,7 @@ public class BlockIO {
         RIGHT
     }
 
-    public static class IOElement {
+    public static abstract class IOElement {
         public final Side side;
         public final Justify justify;
         public final String name;
@@ -153,6 +166,14 @@ public class BlockIO {
                 Objects.equals(type, ioElement.type);
         }
 
+        protected void buildXML(XMLBuilder builder) {
+            builder.addStringOption("side", side.name().toLowerCase(Locale.ROOT))
+                .addStringOption("justify", justify.name().toLowerCase(Locale.ROOT))
+                .addStringOption("name", name)
+                .addStringOption("type", type);
+        }
+
+        public abstract XMLBuilder toXML();
     }
 
     public static class Input extends IOElement {
@@ -179,6 +200,14 @@ public class BlockIO {
         }
 
         @Override
+        public XMLBuilder toXML() {
+            XMLBuilder builder = new XMLBuilder("input");
+            buildXML(builder);
+            builder.addStringOption("optional", optional ? "true" : "false");
+            return builder;
+        }
+
+        @Override
         public int hashCode() {
             return Objects.hash(super.hashCode(), optional);
         }
@@ -189,6 +218,13 @@ public class BlockIO {
 
         public Output(Side side, Justify justify, String name, String type) {
             super(side, justify, name, type);
+        }
+
+        @Override
+        public XMLBuilder toXML() {
+            XMLBuilder builder = new XMLBuilder("output");
+            buildXML(builder);
+            return builder;
         }
 
     }
@@ -202,6 +238,18 @@ public class BlockIO {
             this.name = name;
             this.extend = extend;
             this.supers = supers;
+        }
+
+        public XMLBuilder toXML() {
+            XMLBuilder builder = new XMLBuilder("generic");
+            builder.addStringOption("name", name);
+            if (extend != null) {
+                builder.addStringOption("extends", extend);
+            }
+            if (supers != null) {
+                builder.addStringOption("supers", supers);
+            }
+            return builder;
         }
     }
 

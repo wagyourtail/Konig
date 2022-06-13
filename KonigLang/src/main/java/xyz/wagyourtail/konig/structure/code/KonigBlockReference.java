@@ -94,7 +94,7 @@ public class KonigBlockReference {
             builder.append(entry.getValue().toXML(entry.getKey()));
         }
         if (value != null) {
-            builder.append(new XMLBuilder("value").append(value));
+            builder.append(new XMLBuilder("value", XMLBuilder.INLINE | XMLBuilder.START_NEW_LINE).append(value));
         }
         return builder;
     }

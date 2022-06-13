@@ -47,8 +47,12 @@ public class EditorMainScreen extends BaseScreen implements RenderCodeParent {
                 0, 20, window.getWidth(), window.getHeight() - 200, f.code, session.font));
 
 
-            elements.add(new Button(0, 0, 100, 20, session.font, "New Project", 0, 0x7FFFFFFF, 0xFFFFFFFF, 0xFF000000, (btn) -> {
+            elements.add(new Button(0, 0, 100, 20, session.font, "Run", 0, 0x7FFFFFFF, 0xFFFFFFFF, 0xFF000000, (btn) -> {
                 f.jitCompile(true).apply(Map.of());
+            }));
+
+            elements.add(new Button(100, 0, 100, 20, session.font, "Write", 0, 0x7FFFFFFF, 0xFFFFFFFF, 0xFF000000, (btn) -> {
+                System.out.println(f.toXML());
             }));
 
             elements.add(new BlockSelector(0, window.getHeight() - 200, window.getWidth(), 200, session.font, (block) -> {

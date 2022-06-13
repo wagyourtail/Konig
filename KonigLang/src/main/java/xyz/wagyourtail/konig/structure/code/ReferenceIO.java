@@ -108,7 +108,7 @@ public class ReferenceIO {
 
         @Override
         public XMLBuilder toXML() {
-            return new XMLBuilder("input").addStringOption("name", name).addStringOption("wireid", Integer.toString(wireid));
+            return new XMLBuilder("input", XMLBuilder.SELF_CLOSING).addStringOption("name", name).addStringOption("wireid", Integer.toString(wireid));
         }
 
     }
@@ -120,7 +120,7 @@ public class ReferenceIO {
 
         @Override
         public XMLBuilder toXML() {
-            return new XMLBuilder("output").addStringOption("name", name).addStringOption("wireid", Integer.toString(wireid));
+            return new XMLBuilder("output", XMLBuilder.SELF_CLOSING).addStringOption("name", name).addStringOption("wireid", Integer.toString(wireid));
         }
 
     }

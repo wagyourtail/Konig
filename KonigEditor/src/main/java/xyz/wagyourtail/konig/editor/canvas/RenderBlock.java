@@ -290,10 +290,10 @@ public class RenderBlock extends ElementContainer {
 
     public class IOPlug extends BaseElement {
         private static final float PORT_RADIUS = .05f;
-        private BlockIO.IOElement element;
+        private final BlockIO.IOElement element;
 
-        private float x;
-        private float y;
+        private final float x;
+        private final float y;
 
         public IOPlug(float x, float y, BlockIO.IOElement element) {
             this.element = element;
@@ -309,6 +309,10 @@ public class RenderBlock extends ElementContainer {
         @Override
         public void onFocus(BaseElement prevFocus) {
             super.onFocus(prevFocus);
+            // check if already plugged in
+            if (block.io.elementMap.get(element.name) != null) {
+                return;
+            }
             if (prev instanceof RenderWire) {
                 RenderWire p = (RenderWire) prev;
                 for (Wire.WireEndpoint end : p.wire.getEndpoints()) {
@@ -345,13 +349,47 @@ public class RenderBlock extends ElementContainer {
 
         @Override
         public void onRender(float mouseX, float mouseY) {
-            DrawableHelper.rect(
-                x - PORT_RADIUS,
-                y - PORT_RADIUS,
-                x + PORT_RADIUS,
-                y + PORT_RADIUS,
-                0xFF000000
-            );
+            // check if plugged in
+            if (block.io.elementMap.get(element.name) != null) {
+                // triangle
+                GL11.glDisable(GL11.GL_TEXTURE_2D);
+                GL11.glEnable(GL11.GL_COLOR);
+                GLBuilder builder = GLBuilder.getBuilder().begin(GL11.GL_TRIANGLES).color(0xFF000000);
+                switch (element.side) {
+                    case TOP:
+                        builder.vertex(x, y - PORT_RADIUS)
+                            .vertex(x + PORT_RADIUS, y - PORT_RADIUS)
+                            .vertex(x - PORT_RADIUS, y - PORT_RADIUS)
+                            .end();
+                        break;
+                    case BOTTOM:
+                        builder.vertex(x, y - PORT_RADIUS)
+                            .vertex(x + PORT_RADIUS, y + PORT_RADIUS)
+                            .vertex(x - PORT_RADIUS, y + PORT_RADIUS)
+                            .end();
+                        break;
+                    case LEFT:
+                        builder.vertex(x - PORT_RADIUS, y)
+                            .vertex(x + PORT_RADIUS, y - PORT_RADIUS)
+                            .vertex(x + PORT_RADIUS, y + PORT_RADIUS)
+                            .end();
+                        break;
+                    case RIGHT:
+                        builder.vertex(x + PORT_RADIUS, y)
+                            .vertex(x - PORT_RADIUS, y - PORT_RADIUS)
+                            .vertex(x - PORT_RADIUS, y + PORT_RADIUS)
+                            .end();
+                        break;
+                }
+            } else {
+                DrawableHelper.rect(
+                    x - PORT_RADIUS,
+                    y - PORT_RADIUS,
+                    x + PORT_RADIUS,
+                    y + PORT_RADIUS,
+                    0xFF000000
+                );
+            }
         }
 
     }

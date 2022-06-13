@@ -13,6 +13,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class RenderCode extends ElementContainer implements RenderCodeParent, RenderBlockParent {
+    public static final boolean SNAP_TO_GRID = true;
+    public static final float GRID_SIZE = .1f;
     protected final RenderCodeParent parent;
     protected final Code code;
     protected final Font font;

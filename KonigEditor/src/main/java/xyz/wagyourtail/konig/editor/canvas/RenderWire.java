@@ -13,6 +13,7 @@ import xyz.wagyourtail.wagyourgui.elements.ElementContainer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class RenderWire extends ElementContainer {
@@ -118,8 +119,13 @@ public class RenderWire extends ElementContainer {
         @Override
         public void onRender(float mouseX, float mouseY) {
             if (movingWithMouse) {
-                segment.x = mouseX;
-                segment.y = mouseY;
+                if (RenderCode.SNAP_TO_GRID) {
+                    segment.x = mouseX - mouseX % RenderCode.GRID_SIZE;
+                    segment.y = mouseY - mouseY % RenderCode.GRID_SIZE;
+                } else {
+                    segment.x = mouseX;
+                    segment.y = mouseY;
+                }
             }
 
             if (prev != null) {
@@ -163,8 +169,7 @@ public class RenderWire extends ElementContainer {
                 if (keycode == GLFW.GLFW_KEY_ESCAPE && next == null) {
                     wire.removeSegment(segment);
                     if (segment instanceof Wire.WireEndpoint) {
-                        //TODO: work with virtual io
-                        removeEndpointFromBlock();
+                        removeEndpointFromBlock(((Wire.WireEndpoint) segment).blockid);
                     }
                     if (prev.next == this) {
                         prev.next = null;
@@ -206,7 +211,7 @@ public class RenderWire extends ElementContainer {
                     // convert to not endpoint
                     if (segment instanceof Wire.WireEndpoint) {
                         Wire.WireSegment seg1 = new Wire.WireSegment(segment.x, segment.y);
-                        removeEndpointFromBlock();
+                        removeEndpointFromBlock(((Wire.WireEndpoint) segment).blockid);
                         wire.insertSegment(segment, seg1);
                         wire.removeSegment(segment);
                         segment = seg1;
@@ -243,19 +248,19 @@ public class RenderWire extends ElementContainer {
                         seg = new RenderWireSegment(new Wire.WireBranch(x, y));
                     }
                     if (prev.branch != this) {
+                        wire.insertSegment(prev.segment, seg.segment);
                         prev.next = seg;
                         seg.prev = prev;
                         seg.next = this;
                         prev = seg;
-                        wire.insertSegment(prev.segment, seg.segment);
                     } else {
+                        wire.insertSegment(segment, seg.segment);
+                        wire.removeSegment(segment);
+                        wire.insertSegment(seg.segment, segment);
                         prev.branch = seg;
                         seg.prev = prev;
                         seg.next = this;
                         prev = seg;
-                        ((Wire.WireBranch) seg.prev.segment).insertSegment(segment, seg.segment);
-                        wire.removeSegment(segment);
-                        wire.insertSegment(seg.segment, segment);
                     }
                     RenderWireSegment seg2 = new RenderWireSegment(new Wire.WireSegment(x, y));
                     ((Wire.WireBranch) seg.segment).insertSegment(null, seg2.segment);
@@ -271,8 +276,9 @@ public class RenderWire extends ElementContainer {
             return false;
         }
 
-        private void removeEndpointFromBlock() {
-            code.code.getBlocks().stream().filter(e -> e.id == ((Wire.WireEndpoint) segment).blockid).findFirst().ifPresent(e -> {
+        private void removeEndpointFromBlock(int blockid) {
+            //TODO: work with virtual io
+            Optional.ofNullable(code.code.getBlockMap().get(blockid)).ifPresent(e -> {
                 e.io.elementMap.values().stream().filter(f -> f.wireid == wire.id && Objects.equals(f.name, ((Wire.WireEndpoint) segment).port)).findFirst().ifPresent(e.io::remove);
             });
         }
@@ -298,7 +304,6 @@ public class RenderWire extends ElementContainer {
             } else if (nextFocus instanceof RenderWire) {
                 //TODO, connect wires?
             }
-            System.out.println("focus lost");
             super.onFocusLost(nextFocus);
         }
 

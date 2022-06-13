@@ -1,6 +1,7 @@
 package xyz.wagyourtail.konig.structure.headers;
 
 import org.w3c.dom.Node;
+import xyz.wagyourtail.XMLBuilder;
 import xyz.wagyourtail.konig.structure.code.Code;
 import xyz.wagyourtail.konig.structure.code.KonigBlockReference;
 
@@ -10,7 +11,6 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ForkJoinPool;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 public class KonigCustomBlock extends KonigBlock {
     public final KonigHeaders parent;
@@ -28,6 +28,12 @@ public class KonigCustomBlock extends KonigBlock {
             return true;
         }
         return super.parseChild(child);
+    }
+
+    @Override
+    public XMLBuilder toXML() {
+        XMLBuilder codeXML = code.toXML("code");
+        return super.toXML().append(codeXML);
     }
 
     @Override

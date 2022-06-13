@@ -3,6 +3,7 @@ package xyz.wagyourtail.konig.structure.code;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+import xyz.wagyourtail.XMLBuilder;
 import xyz.wagyourtail.konig.structure.KonigFile;
 import xyz.wagyourtail.konig.structure.headers.KonigBlock;
 import xyz.wagyourtail.konig.structure.headers.KonigHeaders;
@@ -20,6 +21,7 @@ public class KonigProgram implements KonigFile, Code.CodeParent {
     private final Path path;
     public final KonigHeaders headers;
     public final Code code = new Code(this);
+    public String name;
     public String version;
 
     public KonigProgram(Path path) {
@@ -48,6 +50,10 @@ public class KonigProgram implements KonigFile, Code.CodeParent {
         if (version != null) {
             this.version = version.getNodeValue();
         }
+        Node name = node.getAttributes().getNamedItem("name");
+        if (name != null) {
+            this.name = name.getNodeValue();
+        }
 
         NodeList nodes = node.getChildNodes();
         Set<String> found = new HashSet<>();
@@ -70,6 +76,18 @@ public class KonigProgram implements KonigFile, Code.CodeParent {
                 }
             }
         }
+    }
+
+    @Override
+    public XMLBuilder toXML() {
+        XMLBuilder builder = new XMLBuilder("code");
+        builder.addStringOption("name", name == null ? path.getFileName().toString().replace(".konig", "") : name);
+        if (version != null) {
+            builder.addStringOption("version", version);
+        }
+        builder.append(headers.toXML());
+        builder.append(code.toXML());
+        return builder;
     }
 
     @Override

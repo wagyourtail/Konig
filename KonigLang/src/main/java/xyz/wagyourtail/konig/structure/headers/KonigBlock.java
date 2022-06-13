@@ -3,6 +3,7 @@ package xyz.wagyourtail.konig.structure.headers;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import xyz.wagyourtail.XMLBuilder;
 import xyz.wagyourtail.konig.structure.code.KonigBlockReference;
 
 import java.io.IOException;
@@ -85,6 +86,29 @@ public abstract class KonigBlock {
                 }
             }
         }
+    }
+
+
+    public XMLBuilder toXML() {
+        XMLBuilder builder = new XMLBuilder("block");
+        builder.addStringOption("name", name);
+        builder.addStringOption("group", group);
+        builder.append(io.toXML());
+        if (image != null) {
+            builder.append(new XMLBuilder("image").addStringOption("src", image.toString()));
+        }
+        for (Hollow hollow : hollowsByName.values()) {
+            builder.append(hollow.toXML());
+        }
+        for (Map<String, Hollow> value : hollowsByGroupName.values()) {
+            for (Hollow hollow : value.values()) {
+                builder.append(hollow.toXML());
+            }
+        }
+        for (BlockIO.Generic generic : generics.values()) {
+            builder.append(generic.toXML());
+        }
+        return builder;
     }
 
     @Override

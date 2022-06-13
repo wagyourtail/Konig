@@ -75,7 +75,7 @@ public class Konig {
     }
 
     protected static KonigHeaders stdlib() {
-        InternHeaders headers = new InternHeaders();
+        InternHeaders headers = new InternHeaders("stdlib");
 
         // define 3 "special" blocks
         GlobalInput gi = new GlobalInput();
