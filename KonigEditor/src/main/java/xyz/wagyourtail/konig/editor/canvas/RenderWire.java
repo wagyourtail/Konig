@@ -12,15 +12,13 @@ import xyz.wagyourtail.wagyourgui.elements.ElementContainer;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class RenderWire extends ElementContainer {
     public final RenderCode code;
     public final Wire wire;
     public final Font font;
-
-    private RenderWireSegment hoverXSegment;
-    private RenderWireSegment hoverYSegment;
     protected RenderWire(Wire wire, Font font, RenderCode code) {
         this.font = font;
         this.code = code;
@@ -31,14 +29,20 @@ public class RenderWire extends ElementContainer {
     @Override
     public boolean shouldFocus(float mouseX, float mouseY) {
         for (BaseElement element : elements) {
-            if (element == hoverXSegment || element == hoverYSegment) {
-                continue;
-            }
             if (element.shouldFocus(mouseX, mouseY)) {
                 return true;
             }
         }
         return false;
+    }
+
+    @Override
+    public boolean onClick(float x, float y, int button) {
+        if (focusedElement != null && focusedElement.shouldFocus(x, y)) {
+            return focusedElement.onClick(x, y, button);
+        } else {
+            return super.onClick(x, y, button);
+        }
     }
 
     public static List<RenderWire> compile(List<Wire> wires, Font font, RenderCode code) {
@@ -96,283 +100,6 @@ public class RenderWire extends ElementContainer {
         }
     }
 
-
-    @Override
-    public void onRender(float mouseX, float mouseY) {
-        if (hoverYSegment != hoverXSegment) {
-            if (hoverXSegment != null) {
-                hoverXSegment.segment.x = mouseX;
-                //            System.out.println("X: " + mouseX);
-            }
-            if (hoverYSegment != null) {
-                hoverYSegment.segment.y = mouseY;
-                //            System.out.println("Y: " + mouseY);
-            }
-        } else if (hoverYSegment != null) {
-            // detect disallowed direction
-            if (hoverYSegment.prev.prev != null && hoverYSegment.prev.prev.segment.x == hoverYSegment.prev.segment.x) {
-                // check if negative or positive is ok
-                if (hoverYSegment.prev.prev.segment.y < hoverYSegment.prev.segment.y) {
-                    if (mouseY > hoverYSegment.prev.segment.y) {
-                        if (Math.abs(mouseY - hoverYSegment.prev.segment.y) > Math.abs(mouseX - hoverYSegment.prev.segment.x)) {
-                            hoverXSegment.segment.x = hoverXSegment.prev.segment.x;
-                            hoverYSegment.segment.y = mouseY;
-                        } else {
-                            hoverYSegment.segment.x = mouseX;
-                            hoverXSegment.segment.y = hoverYSegment.prev.segment.y;
-
-                        }
-                    } else {
-                        hoverYSegment.segment.x = mouseX;
-                        hoverYSegment.segment.y = hoverYSegment.prev.segment.y;
-                    }
-                } else {
-                    if (mouseY < hoverYSegment.prev.segment.y) {
-                        if (Math.abs(mouseY - hoverYSegment.prev.segment.y) > Math.abs(mouseX - hoverYSegment.prev.segment.x)) {
-                            hoverXSegment.segment.x = hoverXSegment.prev.segment.x;
-                            hoverYSegment.segment.y = mouseY;
-                        } else {
-                            hoverYSegment.segment.x = mouseX;
-                            hoverXSegment.segment.y = hoverYSegment.prev.segment.y;
-
-                        }
-                    } else {
-                        hoverYSegment.segment.x = mouseX;
-                        hoverYSegment.segment.y = hoverYSegment.prev.segment.y;
-                    }
-                }
-            } else if (hoverXSegment.prev.prev != null && hoverXSegment.prev.prev.segment.y == hoverXSegment.prev.segment.y) {
-                // check if negative or positive is ok
-                if (hoverXSegment.prev.prev.segment.x < hoverXSegment.prev.segment.x) {
-                    if (mouseX > hoverXSegment.prev.segment.x) {
-                        if (Math.abs(mouseX - hoverXSegment.prev.segment.x) > Math.abs(mouseY - hoverXSegment.prev.segment.y)) {
-                            hoverXSegment.segment.x = mouseX;
-                            hoverYSegment.segment.y = hoverYSegment.prev.segment.y;
-                        } else {
-                            hoverYSegment.segment.x = hoverYSegment.prev.segment.x;
-                            hoverXSegment.segment.y = mouseY;
-                        }
-                    } else {
-                        hoverXSegment.segment.x = hoverXSegment.prev.segment.x;
-                        hoverXSegment.segment.y = mouseY;
-                    }
-                } else {
-                    if (mouseX < hoverXSegment.prev.segment.x) {
-                        if (Math.abs(mouseX - hoverXSegment.prev.segment.x) > Math.abs(mouseY - hoverXSegment.prev.segment.y)) {
-                            hoverXSegment.segment.x = mouseX;
-                            hoverYSegment.segment.y = hoverYSegment.prev.segment.y;
-                        } else {
-                            hoverYSegment.segment.x = hoverYSegment.prev.segment.x;
-                            hoverXSegment.segment.y = mouseY;
-                        }
-                    } else {
-                        hoverXSegment.segment.x = hoverXSegment.prev.segment.x;
-                        hoverXSegment.segment.y = mouseY;
-                    }
-                }
-            } else {
-                if (Math.abs(mouseX - hoverXSegment.prev.segment.x) > Math.abs(mouseY - hoverXSegment.prev.segment.y)) {
-                    hoverXSegment.segment.x = mouseX;
-                    hoverYSegment.segment.y = hoverYSegment.prev.segment.y;
-                } else {
-                    hoverYSegment.segment.x = hoverYSegment.prev.segment.x;
-                    hoverXSegment.segment.y = mouseY;
-                }
-            }
-        }
-        super.onRender(mouseX, mouseY);
-    }
-
-    @Override
-    public boolean onKey(int keycode, int scancode, int action, int mods) {
-        if (action != 1) {
-            return false;
-        }
-        if (keycode == GLFW.GLFW_KEY_ESCAPE) {
-            if (hoverYSegment != null) {
-                if (hoverYSegment.prev.segment instanceof Wire.WireBranch) {
-                    if (hoverYSegment.prev.branch == hoverYSegment) {
-                        if (hoverYSegment.prev.prev.segment.x == hoverYSegment.prev.next.segment.x ||
-                            hoverYSegment.prev.prev.segment.y == hoverYSegment.prev.next.segment.y) {
-                            // delete branch & segment
-                            RenderWireSegment prev = hoverYSegment.prev.prev;
-                            RenderWireSegment next = hoverYSegment.prev.next;
-                            prev.next = next;
-                            next.prev = prev;
-                            elements.remove(hoverYSegment.prev);
-                            elements.remove(hoverYSegment);
-                            wire.removeSegment(hoverYSegment.prev.segment);
-                            wire.removeSegment(hoverYSegment.segment);
-                        } else {
-                            // replace branch with segment
-                            RenderWireSegment prev = hoverYSegment.prev;
-                            RenderWireSegment next = hoverYSegment.next;
-                            Wire.WireSegment newSeg = new Wire.WireSegment(
-                                hoverXSegment.segment.x,
-                                hoverYSegment.segment.y
-                            );
-                            RenderWireSegment newSegRend = new RenderWireSegment(newSeg);
-                            prev.next = newSegRend;
-                            newSegRend.prev = prev;
-                            newSegRend.next = next;
-                            next.prev = newSegRend;
-                            wire.insertSegment(hoverYSegment.segment, newSeg);
-                            elements.add(newSegRend);
-                            wire.removeSegment(hoverYSegment.segment);
-                            elements.remove(hoverYSegment);
-                        }
-                    } else {
-                        // replace branch with segment
-                        RenderWireSegment prev = hoverYSegment.prev.prev;
-                        RenderWireSegment next = hoverYSegment.prev.branch;
-                        wire.removeSegment(hoverYSegment.segment);
-                        wire.removeSegment(hoverYSegment.prev.segment);
-                        Wire.WireSegment newSeg = new Wire.WireSegment(
-                            hoverYSegment.prev.segment.x,
-                            hoverYSegment.prev.segment.y
-                        );
-                        wire.insertSegment(prev.segment, newSeg);
-                        RenderWireSegment newSegRend = new RenderWireSegment(newSeg);
-                        prev.next = newSegRend;
-                        newSegRend.prev = prev;
-                        newSegRend.next = next;
-                        next.prev = newSegRend;
-                        Wire.WireSegment prevSeg = newSeg;
-                        for (Wire.WireSegment seg : ((Wire.WireBranch) hoverYSegment.prev.segment).subSegments) {
-                            wire.insertSegment(prevSeg, seg);
-                            prevSeg = seg;
-                        }
-                        elements.remove(hoverYSegment.prev);
-                        elements.remove(hoverYSegment);
-                        elements.add(newSegRend);
-                    }
-                } else {
-                    // delete segment
-                    hoverYSegment.prev.next = null;
-                    elements.remove(hoverYSegment);
-                    wire.removeSegment(hoverYSegment.segment);
-                }
-                hoverXSegment = null;
-                hoverYSegment = null;
-                return true;
-            } else if (hoverXSegment != null) {
-                if (hoverXSegment.prev.segment instanceof Wire.WireBranch) {
-                    if (hoverXSegment.prev.branch == hoverXSegment) {
-                        if (hoverXSegment.prev.prev.segment.x == hoverXSegment.prev.next.segment.x ||
-                            hoverXSegment.prev.prev.segment.y == hoverXSegment.prev.next.segment.y) {
-                            // delete branch & segment
-                            RenderWireSegment prev = hoverXSegment.prev.prev;
-                            RenderWireSegment next = hoverXSegment.prev.next;
-                            prev.next = next;
-                            next.prev = prev;
-                            elements.remove(hoverXSegment.prev);
-                            elements.remove(hoverXSegment);
-                            wire.removeSegment(hoverXSegment.prev.segment);
-                            wire.removeSegment(hoverXSegment.segment);
-                        } else {
-                            // replace branch with segment
-                            RenderWireSegment prev = hoverXSegment.prev;
-                            RenderWireSegment next = hoverXSegment.next;
-                            Wire.WireSegment newSeg = new Wire.WireSegment(
-                                hoverXSegment.prev.segment.x,
-                                hoverXSegment.prev.segment.y
-                            );
-                            RenderWireSegment newSegRend = new RenderWireSegment(newSeg);
-                            prev.next = newSegRend;
-                            newSegRend.prev = prev;
-                            newSegRend.next = next;
-                            next.prev = newSegRend;
-                            wire.insertSegment(hoverXSegment.segment, newSeg);
-                            elements.add(newSegRend);
-                            wire.removeSegment(hoverXSegment.segment);
-                            elements.remove(hoverXSegment);
-                        }
-                    } else {
-                        // replace branch with segment
-                        RenderWireSegment prev = hoverXSegment.prev.prev;
-                        RenderWireSegment next = hoverXSegment.prev.branch;
-                        wire.removeSegment(hoverXSegment.segment);
-                        wire.removeSegment(hoverXSegment.prev.segment);
-                        Wire.WireSegment newSeg = new Wire.WireSegment(
-                            hoverXSegment.prev.segment.x,
-                            hoverXSegment.prev.segment.y
-                        );
-                        wire.insertSegment(prev.segment, newSeg);
-                        RenderWireSegment newSegRend = new RenderWireSegment(newSeg);
-                        prev.next = newSegRend;
-                        newSegRend.prev = prev;
-                        newSegRend.next = next;
-                        next.prev = newSegRend;
-                        Wire.WireSegment prevSeg = newSeg;
-                        for (Wire.WireSegment seg : ((Wire.WireBranch) hoverXSegment.prev.segment).subSegments) {
-                            wire.insertSegment(prevSeg, seg);
-                            prevSeg = seg;
-                        }
-                        elements.remove(hoverXSegment.prev);
-                        elements.remove(hoverXSegment);
-                        elements.add(newSegRend);
-                    }
-                } else {
-                    // delete segment
-                    hoverXSegment.prev.next = null;
-                    elements.remove(hoverXSegment);
-                    wire.removeSegment(hoverXSegment.segment);
-                }
-                hoverXSegment = null;
-                hoverYSegment = null;
-                return true;
-            }
-        }
-        return super.onKey(keycode, scancode, action, mods);
-    }
-
-    @Override
-    public void onFocusLost(BaseElement nextFocus) {
-        super.onFocusLost(nextFocus);
-//        System.out.println("Focus lost");
-        if (nextFocus instanceof RenderCode) {
-            if (hoverXSegment != null) {
-                Wire.WireSegment next = new Wire.WireSegment(hoverXSegment.segment.x, hoverXSegment.segment.y);
-                wire.insertSegment(hoverXSegment.segment, next);
-                hoverYSegment = new RenderWireSegment(next);
-                hoverYSegment.prev = hoverXSegment;
-                hoverXSegment.next = hoverYSegment;
-                elements.add(hoverYSegment);
-                hoverXSegment = hoverYSegment;
-                ((RenderCode) nextFocus).focusedElement = this;
-            } else if (hoverYSegment != null) {
-                Wire.WireSegment next = new Wire.WireSegment(hoverYSegment.segment.x, hoverYSegment.segment.y);
-                wire.insertSegment(hoverYSegment.segment, next);
-                hoverXSegment = new RenderWireSegment(next);
-                hoverXSegment.prev = hoverYSegment;
-                hoverYSegment.next = hoverXSegment;
-                elements.add(hoverXSegment);
-                hoverYSegment = hoverXSegment;
-                ((RenderCode) nextFocus).focusedElement = this;
-            }
-        } else if (nextFocus instanceof RenderBlock) {
-            // replace segment with endpoint
-            if (hoverXSegment != null) {
-                Wire.WireEndpoint end = new Wire.WireEndpoint(((RenderBlock) nextFocus).block.id, hoverXSegment.segment.x, hoverXSegment.segment.y);
-                wire.insertSegment(hoverXSegment.segment, end);
-                wire.removeSegment(hoverXSegment.segment);
-                hoverXSegment.segment = end;
-                hoverXSegment = null;
-                hoverYSegment = null;
-            } else if (hoverYSegment != null) {
-                Wire.WireEndpoint end = new Wire.WireEndpoint(((RenderBlock) nextFocus).block.id, hoverYSegment.segment.x, hoverYSegment.segment.y);
-                wire.insertSegment(hoverYSegment.segment, end);
-                wire.removeSegment(hoverYSegment.segment);
-                hoverYSegment.segment = end;
-                hoverXSegment = null;
-                hoverYSegment = null;
-            }
-        } else {
-            hoverXSegment = null;
-            hoverYSegment = null;
-        }
-    }
-
     protected class RenderWireSegment extends BaseElement {
         protected static final float LINE_WIDTH = 1f;
         protected static final float BRANCH_RADIUS = .025f;
@@ -381,12 +108,20 @@ public class RenderWire extends ElementContainer {
         public RenderWireSegment next;
         public RenderWireSegment branch;
 
+        protected boolean movingWithMouse = false;
+        protected boolean prevSelected = false;
+
         public RenderWireSegment(Wire.WireSegment segment) {
             this.segment = segment;
         }
 
         @Override
         public void onRender(float mouseX, float mouseY) {
+            if (movingWithMouse) {
+                segment.x = mouseX;
+                segment.y = mouseY;
+            }
+
             if (prev != null) {
 
                 // check if intersects view box
@@ -423,6 +158,151 @@ public class RenderWire extends ElementContainer {
         }
 
         @Override
+        public boolean onKey(int keycode, int scancode, int action, int mods) {
+            if (action == GLFW.GLFW_PRESS) {
+                if (keycode == GLFW.GLFW_KEY_ESCAPE && next == null) {
+                    wire.removeSegment(segment);
+                    if (segment instanceof Wire.WireEndpoint) {
+                        //TODO: work with virtual io
+                        removeEndpointFromBlock();
+                    }
+                    if (prev.next == this) {
+                        prev.next = null;
+                        if (prev.branch != null) {
+                            RenderWireSegment branchSeg = prev.branch;
+                            prev.next = branchSeg;
+                            prev.branch = null;
+                            prev.segment = new Wire.WireSegment(prev.segment.x, prev.segment.y);
+                            while (branchSeg != null) {
+                                if (branchSeg.segment instanceof Wire.WireEndpoint) {
+                                    wire.removeSegment(branchSeg.segment);
+                                }
+                                wire.insertSegment(branchSeg.prev.segment, branchSeg.segment);
+                                branchSeg = branchSeg.next;
+                            }
+                        }
+                    }
+                    if (prev.branch == this) {
+                        prev.branch = null;
+                        Wire.WireSegment nobranch = new Wire.WireSegment(prev.segment.x, prev.segment.y);
+                        wire.insertSegment(prev.segment, nobranch);
+                        wire.removeSegment(prev.segment);
+                        prev.segment = nobranch;
+                    }
+                    elements.remove(this);
+                    wire.removeSegment(segment);
+                    focusedElement = null;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        @Override
+        public boolean onClick(float x, float y, int button) {
+            if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                if (!prevSelected && next == null && branch == null) {
+                    movingWithMouse = true;
+                    // convert to not endpoint
+                    if (segment instanceof Wire.WireEndpoint) {
+                        Wire.WireSegment seg1 = new Wire.WireSegment(segment.x, segment.y);
+                        removeEndpointFromBlock();
+                        wire.insertSegment(segment, seg1);
+                        wire.removeSegment(segment);
+                        segment = seg1;
+                    }
+                } else {
+                    if (prev.branch != this) {
+                        RenderWireSegment seg = new RenderWireSegment(new Wire.WireSegment(segment.x, segment.y));
+                        wire.insertSegment(prev.segment, seg.segment);
+                        seg.prev = prev;
+                        seg.next = this;
+                        this.prev = seg;
+                        elements.add(seg);
+                    } else {
+                        RenderWireSegment seg = new RenderWireSegment(new Wire.WireSegment(segment.x, segment.y));
+                        wire.insertSegment(segment, seg.segment);
+                        wire.removeSegment(segment);
+                        wire.insertSegment(seg.segment, segment);
+                        seg.prev = prev;
+                        seg.next = this;
+                        this.prev = seg;
+                        elements.add(seg);
+                    }
+                }
+                prevSelected = true;
+                return true;
+            } else if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+                if (!prevSelected) {
+                    RenderWireSegment seg;
+                    if (prev.segment.x == segment.x) {
+                        seg = new RenderWireSegment(new Wire.WireBranch(segment.x, y));
+                    } else if (prev.segment.y == segment.y) {
+                        seg = new RenderWireSegment(new Wire.WireBranch(x, segment.y));
+                    } else {
+                        seg = new RenderWireSegment(new Wire.WireBranch(x, y));
+                    }
+                    if (prev.branch != this) {
+                        prev.next = seg;
+                        seg.prev = prev;
+                        seg.next = this;
+                        prev = seg;
+                        wire.insertSegment(prev.segment, seg.segment);
+                    } else {
+                        prev.branch = seg;
+                        seg.prev = prev;
+                        seg.next = this;
+                        prev = seg;
+                        ((Wire.WireBranch) seg.prev.segment).insertSegment(segment, seg.segment);
+                        wire.removeSegment(segment);
+                        wire.insertSegment(seg.segment, segment);
+                    }
+                    RenderWireSegment seg2 = new RenderWireSegment(new Wire.WireSegment(x, y));
+                    ((Wire.WireBranch) seg.segment).insertSegment(null, seg2.segment);
+                    seg2.prev = seg;
+                    seg.branch = seg2;
+                    elements.add(seg2);
+                    elements.add(seg);
+                    focusedElement = seg2;
+                    seg2.prevSelected = true;
+                    seg2.movingWithMouse = true;
+                }
+            }
+            return false;
+        }
+
+        private void removeEndpointFromBlock() {
+            code.code.getBlocks().stream().filter(e -> e.id == ((Wire.WireEndpoint) segment).blockid).findFirst().ifPresent(e -> {
+                e.io.elementMap.values().stream().filter(f -> f.wireid == wire.id && Objects.equals(f.name, ((Wire.WireEndpoint) segment).port)).findFirst().ifPresent(e.io::remove);
+            });
+        }
+
+
+        @Override
+        public boolean onDrag(float x, float y, float dx, float dy, int button) {
+            segment.x += dx;
+            segment.y += dy;
+            return true;
+        }
+
+        @Override
+        public void onFocusLost(BaseElement nextFocus) {
+            prevSelected = false;
+            movingWithMouse = false;
+            // TODO: detect if at angle and insert segment to right-angle
+            if (nextFocus instanceof RenderBlock) {
+                Wire.WireEndpoint end = new Wire.WireEndpoint(((RenderBlock) nextFocus).block.id, segment.x, segment.y, null);
+                wire.insertSegment(segment, end);
+                wire.removeSegment(segment);
+                segment = end;
+            } else if (nextFocus instanceof RenderWire) {
+                //TODO, connect wires?
+            }
+            System.out.println("focus lost");
+            super.onFocusLost(nextFocus);
+        }
+
+        @Override
         public boolean shouldFocus(float mouseX, float mouseY) {
             if (prev == null) {
                 return false;
@@ -441,71 +321,6 @@ public class RenderWire extends ElementContainer {
             x4 += LINE_WIDTH * 2 * code.viewportWidth / code.width;
             y4 += LINE_WIDTH * 2 * code.viewportHeight / code.height;
             return mouseX >= x3 && mouseX <= x4 && mouseY >= y3 && mouseY <= y4;
-        }
-
-        @Override
-        public void onFocus(BaseElement prevFocus) {
-        }
-
-        @Override
-        public boolean onClick(float x, float y, int button) {
-            if (this == hoverXSegment || this == hoverYSegment) {
-                return false;
-            }
-            if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
-                hoverXSegment = null;
-                hoverYSegment = null;
-
-                // insert a branch
-                // snap to wire
-                Wire.WireBranch branch;
-                Wire.WireSegment next;
-                if (prev.segment.x == segment.x) {
-                     branch = new Wire.WireBranch(segment.x, y);
-                    next = new Wire.WireSegment(branch.x, branch.y);
-                } else if (prev.segment.y == segment.y) {
-                    branch = new Wire.WireBranch(x, segment.y);
-                    next = new Wire.WireSegment(branch.x, branch.y);
-                } else {
-                    return false;
-                }
-                RenderWireSegment segRend = new RenderWireSegment(branch);
-                RenderWireSegment nextSeg = new RenderWireSegment(next);
-                if (prev.segment.x == segment.x) {
-                    hoverXSegment = nextSeg;
-                } else if (prev.segment.y == segment.y) {
-                    hoverYSegment = nextSeg;
-                }
-                segRend.prev = prev;
-                segRend.next = this;
-                this.prev.next = segRend;
-                this.prev = segRend;
-                segRend.branch = nextSeg;
-                nextSeg.prev = segRend;
-                elements.add(segRend);
-                elements.add(nextSeg);
-                wire.insertSegment(prev.segment, branch);
-                branch.insertSegment(null, next);
-            } else if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-                hoverXSegment = null;
-                hoverYSegment = null;
-                if (next != null) return true;
-                if (segment instanceof Wire.WireEndpoint) {
-                    // replace endpoint with segment
-                    Wire.WireSegment ns = new Wire.WireSegment(segment.x, segment.y);
-                    wire.insertSegment(segment, ns);
-                    wire.removeSegment(segment);
-                    segment = ns;
-                }
-                if (prev.segment.x == segment.x) {
-                    hoverXSegment = this;
-                    hoverYSegment = this;
-                } else if (prev.segment.y == segment.y) {
-                    hoverXSegment = this;
-                    hoverYSegment = this;
-                }
-            }
-            return true;
         }
 
     }

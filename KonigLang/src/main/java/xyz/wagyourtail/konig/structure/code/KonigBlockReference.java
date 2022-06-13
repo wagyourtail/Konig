@@ -2,6 +2,7 @@ package xyz.wagyourtail.konig.structure.code;
 
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import xyz.wagyourtail.XMLBuilder;
 import xyz.wagyourtail.konig.structure.headers.KonigBlock;
 
 import java.io.IOException;
@@ -70,6 +71,32 @@ public class KonigBlockReference {
                 throw new IOException("Unknown child node: " + child.getNodeName());
             }
         }
+    }
+
+    public XMLBuilder toXML() {
+        XMLBuilder builder = new XMLBuilder(name);
+        builder.addStringOption("blockid", Integer.toString(id));
+        builder.addStringOption("x", Float.toString(x));
+        builder.addStringOption("y", Float.toString(y));
+        builder.addStringOption("scaleX", Float.toString(scaleX));
+        builder.addStringOption("scaleY", Float.toString(scaleY));
+        builder.addStringOption("rotate", Integer.toString(rotation));
+        builder.addStringOption("flipH", Boolean.toString(flipH));
+        builder.addStringOption("flipV", Boolean.toString(flipV));
+        builder.append(io.toXML());
+        for (Map.Entry<String, VirtualIO> entry : virtualIOGroupsMap.entrySet()) {
+            builder.append(entry.getValue().toXML(false, entry.getKey()));
+        }
+        for (Map.Entry<String, VirtualIO> entry : virtualIONameMap.entrySet()) {
+            builder.append(entry.getValue().toXML(true, entry.getKey()));
+        }
+        for (Map.Entry<String, InnerCode> entry : innerCodeMap.entrySet()) {
+            builder.append(entry.getValue().toXML(entry.getKey()));
+        }
+        if (value != null) {
+            builder.append(new XMLBuilder("value").append(value));
+        }
+        return builder;
     }
 
     public KonigBlockReference copy(Code parent) {

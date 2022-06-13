@@ -73,9 +73,11 @@ public abstract class ElementContainer extends BaseElement {
 
     @Override
     public void onFocusLost(BaseElement nextFocus) {
+        super.onFocusLost(nextFocus);
         if (focusedElement != null) {
             focusedElement.onFocusLost(nextFocus);
         }
+        focusedElement = null;
     }
 
     @Override

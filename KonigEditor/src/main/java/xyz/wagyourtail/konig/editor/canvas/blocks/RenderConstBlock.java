@@ -15,18 +15,19 @@ public class RenderConstBlock extends RenderBlock {
 
     public boolean hilighted = false;
 
-
     public RenderConstBlock(KonigBlockReference block, Font font, RenderBlockParent code) {
         super(block, font, code);
     }
 
     @Override
     public void onFocus(BaseElement prevFocus) {
+        super.onFocus(prevFocus);
         hilighted = true;
     }
 
     @Override
     public void onFocusLost(BaseElement nextFocus) {
+        super.onFocusLost(nextFocus);
         hilighted = false;
     }
 

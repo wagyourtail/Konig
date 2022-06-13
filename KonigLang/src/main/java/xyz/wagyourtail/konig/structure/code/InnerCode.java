@@ -1,6 +1,7 @@
 package xyz.wagyourtail.konig.structure.code;
 
 import org.w3c.dom.Node;
+import xyz.wagyourtail.XMLBuilder;
 import xyz.wagyourtail.konig.structure.headers.BlockIO;
 import xyz.wagyourtail.konig.structure.headers.KonigBlock;
 
@@ -64,7 +65,13 @@ public class InnerCode extends Code {
         }
         // block io to reference io
         for (BlockIO.IOElement value : childBlock.io.byName.values()) {
-            input.io.elementMap.put(value.name, new ReferenceIO.IOElement(value.name, -42));
+            if (value instanceof BlockIO.Input) {
+                input.io.elementMap.put(value.name, new ReferenceIO.Input(value.name, -42));
+            } else if (value instanceof BlockIO.Output) {
+                input.io.elementMap.put(value.name, new ReferenceIO.Output(value.name, -42));
+            } else {
+                throw new RuntimeException("Unknown IOElement type: " + value.getClass().getName());
+            }
         }
         blockMap.put(-2, input);
 
@@ -94,10 +101,24 @@ public class InnerCode extends Code {
             }
         }
         for (BlockIO.IOElement value : childBlock.io.byName.values()) {
-            output.io.elementMap.put(value.name, new ReferenceIO.IOElement(value.name, -42));
+            if (value instanceof BlockIO.Input) {
+                output.io.elementMap.put(value.name, new ReferenceIO.Input(value.name, -42));
+            } else if (value instanceof BlockIO.Output) {
+                output.io.elementMap.put(value.name, new ReferenceIO.Output(value.name, -42));
+            } else {
+                throw new RuntimeException("Unknown IOElement type: " + value.getClass().getName());
+            }
         }
         blockMap.put(-1, output);
         return super.jitCompile();
+    }
+
+    public XMLBuilder toXML(String name) {
+        XMLBuilder builder = super.toXML();
+        XMLBuilder newBuilder = new XMLBuilder("innercode");
+        newBuilder.append(builder.children.toArray());
+        newBuilder.addStringOption("name", name);
+        return newBuilder;
     }
 
     public static class InnerParent implements CodeParent {

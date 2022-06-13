@@ -2,11 +2,13 @@ package xyz.wagyourtail.konig.structure.code;
 
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import xyz.wagyourtail.XMLBuilder;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class Wire {
     private final List<WireEndpoint> endpoints = new ArrayList<>();
@@ -56,6 +58,13 @@ public class Wire {
                 }
             }
         }
+    }
+
+    public XMLBuilder toXML() {
+        XMLBuilder builder = new XMLBuilder("wire");
+        builder.addStringOption("wireid", Integer.toString(id));
+        builder.append(segments.stream().map(WireSegment::toXML).collect(Collectors.toList()).toArray());
+        return builder;
     }
 
     public boolean removeSegment(WireSegment segment) {
@@ -120,6 +129,13 @@ public class Wire {
             this.x = x;
             this.y = y;
         }
+
+        public XMLBuilder toXML() {
+            XMLBuilder builder = new XMLBuilder("segment");
+            builder.addStringOption("x", Double.toString(x));
+            builder.addStringOption("y", Double.toString(y));
+            return builder;
+        }
     }
 
     public static class WireEndpoint extends WireSegment {
@@ -136,6 +152,17 @@ public class Wire {
             super(x, y);
             this.blockid = blockid;
         }
+
+        @Override
+        public XMLBuilder toXML() {
+            XMLBuilder builder = new XMLBuilder("end");
+            builder.addStringOption("x", Double.toString(x));
+            builder.addStringOption("y", Double.toString(y));
+            builder.addStringOption("block", Integer.toString(blockid));
+            builder.addStringOption("port", port);
+            return builder;
+        }
+
     }
 
     public static class WireBranch extends WireSegment {
@@ -200,6 +227,16 @@ public class Wire {
             }
             return false;
         }
+
+        @Override
+        public XMLBuilder toXML() {
+            XMLBuilder builder = new XMLBuilder("branch");
+            builder.addStringOption("x", Double.toString(x));
+            builder.addStringOption("y", Double.toString(y));
+            builder.append(subSegments.stream().map(WireSegment::toXML).collect(Collectors.toList()).toArray());
+            return builder;
+        }
+
     }
 
 }

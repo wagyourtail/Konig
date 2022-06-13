@@ -1,6 +1,8 @@
 package xyz.wagyourtail.wagyourgui.elements;
 
 public abstract class BaseElement implements DrawableHelper {
+    private boolean focused = false;
+
     public boolean onClick(float x, float y, int button) {
         return false;
     }
@@ -29,9 +31,17 @@ public abstract class BaseElement implements DrawableHelper {
         return false;
     }
 
-    public void onFocus(BaseElement prevFocus) {}
+    public void onFocus(BaseElement prevFocus) {
+        focused = true;
+    }
 
-    public void onFocusLost(BaseElement nextFocus) {}
+    public void onFocusLost(BaseElement nextFocus) {
+        focused = false;
+    }
+
+    public boolean isFocused() {
+        return focused;
+    }
 
     public abstract void onRender(float mouseX, float mouseY);
 }

@@ -3,7 +3,9 @@ package xyz.wagyourtail.konig.structure.code;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import xyz.wagyourtail.XMLBuilder;
 
+import javax.sound.sampled.Port;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -43,6 +45,19 @@ public class VirtualIO {
                 }
             }
         }
+    }
+
+    public XMLBuilder toXML(boolean forName, String name) {
+        XMLBuilder builder = new XMLBuilder("virtualio");
+        if (forName) {
+            builder.addStringOption("forName", name);
+        } else {
+            builder.addStringOption("forGroup", name);
+        }
+        for (Port port : portMap.values()) {
+            builder.append(port.toXML());
+        }
+        return builder;
     }
 
     @Override
@@ -136,9 +151,24 @@ public class VirtualIO {
             return Objects.hash(direction, id, outer, inner, loopback);
         }
 
+        public XMLBuilder toXML() {
+            XMLBuilder builder = new XMLBuilder("port");
+            builder.addStringOption("direction", direction);
+            builder.addStringOption("id", Integer.toString(id));
+            if (outer != null) {
+                builder.append(outer.toXML());
+            }
+            if (inner != null) {
+                builder.append(inner.toXML());
+            }
+            if (loopback != null) {
+                builder.append(loopback.toXML());
+            }
+            return builder;
+        }
     }
 
-    public static class PortElement {
+    public static abstract class PortElement {
         public final int wireid;
         public final String side;
         public final double offset;
@@ -169,23 +199,50 @@ public class VirtualIO {
             return Objects.hash(wireid, side, offset);
         }
 
+        public abstract XMLBuilder toXML();
+
     }
 
     public static class Outer extends PortElement {
         public Outer(int wireid, String side, double offset) {
             super(wireid, side, offset);
         }
+
+        @Override
+        public XMLBuilder toXML() {
+            return new XMLBuilder("outer")
+                .addStringOption("wireid", Integer.toString(wireid))
+                .addStringOption("side", side)
+                .addStringOption("offset", Double.toString(offset));
+        }
+
     }
 
     public static class Inner extends PortElement {
         public Inner(int wireid, String side, double offset) {
             super(wireid, side, offset);
         }
+
+        @Override
+        public XMLBuilder toXML() {
+            return new XMLBuilder("inner")
+                .addStringOption("wireid", Integer.toString(wireid))
+                .addStringOption("side", side)
+                .addStringOption("offset", Double.toString(offset));
+        }
     }
 
     public static class Loopback extends PortElement {
         public Loopback(int wireid, String side, double offset) {
             super(wireid, side, offset);
+        }
+
+        @Override
+        public XMLBuilder toXML() {
+            return new XMLBuilder("loopback")
+                .addStringOption("wireid", Integer.toString(wireid))
+                .addStringOption("side", side)
+                .addStringOption("offset", Double.toString(offset));
         }
     }
 }

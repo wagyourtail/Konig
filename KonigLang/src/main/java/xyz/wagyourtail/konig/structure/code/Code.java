@@ -2,6 +2,7 @@ package xyz.wagyourtail.konig.structure.code;
 
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import xyz.wagyourtail.XMLBuilder;
 import xyz.wagyourtail.konig.structure.headers.BlockIO;
 import xyz.wagyourtail.konig.structure.headers.KonigBlock;
 
@@ -52,6 +53,18 @@ public class Code {
         return List.copyOf(blockMap.values());
     }
 
+    public void addBlock(KonigBlockReference block) {
+        if (block.id == -1 || blockMap.containsKey(block.id)) {
+            int id = 0;
+            while (blockMap.keySet().contains(id)) {
+                id++;
+            }
+            block.id = id;
+        }
+        block.parent = this;
+        blockMap.put(block.id, block);
+    }
+
     public void parseWires(Node wires) throws IOException {
         NodeList children = wires.getChildNodes();
         for (int i = 0; i < children.getLength(); i++) {
@@ -74,6 +87,21 @@ public class Code {
                 blockMap.put(block.id, block);
             }
         }
+    }
+
+    public XMLBuilder toXML() {
+        XMLBuilder builder = new XMLBuilder("main");
+        XMLBuilder wires = new XMLBuilder("wires");
+        for (Wire wire : wireMap.values()) {
+            wires.append(wire.toXML());
+        }
+        builder.append(wires);
+        XMLBuilder blocks = new XMLBuilder("blocks");
+        for (KonigBlockReference block : blockMap.values()) {
+            blocks.append(block.toXML());
+        }
+        builder.append(blocks);
+        return builder;
     }
 
     @Override

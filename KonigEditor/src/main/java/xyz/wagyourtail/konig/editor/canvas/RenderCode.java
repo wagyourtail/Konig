@@ -3,14 +3,14 @@ package xyz.wagyourtail.konig.editor.canvas;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 import xyz.wagyourtail.konig.structure.code.Code;
+import xyz.wagyourtail.konig.structure.code.KonigBlockReference;
 import xyz.wagyourtail.wagyourgui.Font;
 import xyz.wagyourtail.wagyourgui.elements.BaseElement;
 import xyz.wagyourtail.wagyourgui.elements.DrawableHelper;
 import xyz.wagyourtail.wagyourgui.elements.ElementContainer;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class RenderCode extends ElementContainer implements RenderCodeParent, RenderBlockParent {
     protected final RenderCodeParent parent;
@@ -28,10 +28,11 @@ public class RenderCode extends ElementContainer implements RenderCodeParent, Re
     protected float viewportWidth;
     protected float viewportHeight;
 
+    protected boolean prevFocused = false;
 
 
-    public final List<RenderWire> compileWires = new ArrayList<>();
-    public final List<RenderBlock> compileBlocks = new ArrayList<>();
+    protected final Set<RenderWire> compileWires = new HashSet<>();
+    protected final Set<RenderBlock> compileBlocks = new HashSet<>();
 
     public RenderCode(RenderCodeParent parent, int x, int y, int width, int height, Code code, Font font) {
         this.parent = parent;
@@ -63,7 +64,32 @@ public class RenderCode extends ElementContainer implements RenderCodeParent, Re
     public boolean onClick(float x, float y, int button) {
         float scaledMouseX = (x - this.x) * viewportWidth / width + viewportX;
         float scaledMouseY = (y - this.y) * viewportHeight / height + viewportY;
-        return super.onClick(scaledMouseX, scaledMouseY, button);
+        if (super.onClick(scaledMouseX, scaledMouseY, button)) return true;
+        Optional<RenderBlock> placing = getPlacingBlock();
+        if (prevFocused && placing.isPresent()) {
+            placeBlock(placing.get());
+        }
+        prevFocused = isFocused();
+        return false;
+    }
+
+    public void placeBlock(RenderBlock block) {
+        if (block.getBlock().id == -1) {
+            Set<Integer> set = code.getBlocks().stream().map(e -> e.id).collect(Collectors.toSet());
+            int id = 0;
+            while (set.contains(id)) {
+                id++;
+            }
+            code.addBlock(block.getBlock());
+            elements.add(block);
+            setPlacingBlock(null);
+        }
+    }
+
+    @Override
+    public void onFocusLost(BaseElement nextFocus) {
+        super.onFocusLost(nextFocus);
+        prevFocused = false;
     }
 
     @Override
@@ -139,6 +165,7 @@ public class RenderCode extends ElementContainer implements RenderCodeParent, Re
 
     @Override
     public void onFocus(BaseElement prevFocus) {
+        super.onFocus(prevFocus);
         Optional<RenderBlock> placeBlock = getPlacingBlock();
         if (placeBlock.isPresent()) {
             if (placeBlock.get().code != this) {
@@ -220,6 +247,11 @@ public class RenderCode extends ElementContainer implements RenderCodeParent, Re
     @Override
     public float viewportHeight() {
         return viewportHeight;
+    }
+
+    @Override
+    public Set<RenderWire> getWires() {
+        return compileWires;
     }
 
 }

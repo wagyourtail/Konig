@@ -4,6 +4,7 @@ import org.lwjgl.opengl.GL11;
 import xyz.wagyourtail.konig.Konig;
 import xyz.wagyourtail.konig.editor.canvas.RenderBlock;
 import xyz.wagyourtail.konig.editor.canvas.RenderBlockParent;
+import xyz.wagyourtail.konig.editor.canvas.RenderWire;
 import xyz.wagyourtail.konig.structure.code.Code;
 import xyz.wagyourtail.konig.structure.code.KonigBlockReference;
 import xyz.wagyourtail.konig.structure.headers.KonigBlock;
@@ -188,6 +189,11 @@ public class BlockSelector extends ElementContainer implements RenderBlockParent
     @Override
     public float viewportHeight() {
         return viewportHeight;
+    }
+
+    @Override
+    public Set<RenderWire> getWires() {
+        return null;
     }
 
 }

@@ -1,9 +1,11 @@
 package xyz.wagyourtail.konig.editor.canvas;
 
+import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 import xyz.wagyourtail.MathHelper;
 import xyz.wagyourtail.konig.editor.canvas.blocks.RenderConstBlock;
 import xyz.wagyourtail.konig.structure.code.KonigBlockReference;
+import xyz.wagyourtail.konig.structure.code.ReferenceIO;
 import xyz.wagyourtail.konig.structure.code.VirtualIO;
 import xyz.wagyourtail.konig.structure.code.Wire;
 import xyz.wagyourtail.konig.structure.headers.BlockIO;
@@ -51,6 +53,18 @@ public class RenderBlock extends ElementContainer {
         this.code = code;
         this.blockSpec = block.attemptToGetBlockSpec();
         initIO();
+    }
+
+    @Override
+    public boolean onDrag(float x, float y, float dx, float dy, int button) {
+        if (focusedElement instanceof RenderCode) return super.onDrag(x, y, dx, dy, button);
+        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+            // move block, resolve wire endpoints, move them too, adding a right angle if necessary
+            for (RenderWire wire : code.getWires()) {
+
+            }
+        }
+        return true;
     }
 
     public KonigBlock getBlockSpec() {
@@ -161,6 +175,7 @@ public class RenderBlock extends ElementContainer {
 
     @Override
     public void onFocus(BaseElement prevFocus) {
+        super.onFocus(prevFocus);
         prev = prevFocus;
     }
 
@@ -293,14 +308,27 @@ public class RenderBlock extends ElementContainer {
 
         @Override
         public void onFocus(BaseElement prevFocus) {
+            super.onFocus(prevFocus);
             if (prev instanceof RenderWire) {
                 RenderWire p = (RenderWire) prev;
                 for (Wire.WireEndpoint end : p.wire.getEndpoints()) {
                     if (end.blockid == block.id) {
                         if (end.port == null) {
                             // check position in hitbox
-                            if (end.x >= x - PORT_RADIUS && end.x <= x + PORT_RADIUS && end.y >= y - PORT_RADIUS && end.y <= y + PORT_RADIUS) {
-                                end.port = element.name;
+                            if (end.x >= block.x + x - PORT_RADIUS && end.x <= block.x + x + PORT_RADIUS && end.y >= block.y + y - PORT_RADIUS && end.y <= block.y + y + PORT_RADIUS) {
+                                ReferenceIO.IOElement io = null;
+                                if (element instanceof BlockIO.Input) {
+                                    end.port = element.name;
+                                    io = new ReferenceIO.Input(element.name, p.wire.id);
+                                    block.io.inputMap.put(element.name, (ReferenceIO.Input) io);
+                                } else if (element instanceof BlockIO.Output) {
+                                    end.port = element.name;
+                                    io = new ReferenceIO.Output(element.name, p.wire.id);
+                                    block.io.outputMap.put(element.name, (ReferenceIO.Output) io);
+                                }
+                                if (io != null) {
+                                    block.io.elementMap.put(element.name, io);
+                                }
                                 return;
                             }
                         }
