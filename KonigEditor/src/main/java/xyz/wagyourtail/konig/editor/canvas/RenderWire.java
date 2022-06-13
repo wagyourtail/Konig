@@ -118,6 +118,8 @@ public class RenderWire extends ElementContainer {
 
         @Override
         public void onRender(float mouseX, float mouseY) {
+            boolean onBlock = code.compileBlocks.stream().anyMatch(e -> e.shouldFocus(mouseX, mouseY));
+
             if (movingWithMouse) {
                 if (RenderCode.SNAP_TO_GRID) {
                     segment.x = mouseX - mouseX % RenderCode.GRID_SIZE;
@@ -311,6 +313,9 @@ public class RenderWire extends ElementContainer {
         public boolean shouldFocus(float mouseX, float mouseY) {
             if (prev == null) {
                 return false;
+            }
+            if (movingWithMouse) {
+                return true;
             }
             // create a tight box around the line
             float x1 = (float) prev.segment.x;

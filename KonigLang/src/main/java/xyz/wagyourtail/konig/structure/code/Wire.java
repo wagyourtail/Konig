@@ -102,6 +102,13 @@ public class Wire {
         }
     }
 
+    public void addSegment(WireSegment segment) {
+        segments.add(segment);
+        if (segment instanceof WireEndpoint) {
+            endpoints.add((WireEndpoint) segment);
+        }
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -146,11 +153,6 @@ public class Wire {
             super(x, y);
             this.blockid = blockid;
             this.port = port;
-        }
-
-        public WireEndpoint(int blockid, double x, double y) {
-            super(x, y);
-            this.blockid = blockid;
         }
 
         @Override

@@ -214,6 +214,10 @@ public class RenderCode extends ElementContainer implements RenderCodeParent, Re
             if (block.code == this) {
                 block.block.x = scaledMouseX - block.block.scaleX / 2;
                 block.block.y = scaledMouseY - block.block.scaleY / 2;
+                if (SNAP_TO_GRID) {
+                    block.block.x = block.block.x - block.block.x % GRID_SIZE;
+                    block.block.y = block.block.y - block.block.y % GRID_SIZE;
+                }
                 block.onRender(scaledMouseX, scaledMouseY);
             }
         }

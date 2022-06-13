@@ -21,13 +21,12 @@ class WireTest {
         Wire w = new Wire();
         String xml = """
             <wire wireid="0">
-                <end x="0" y="0" block="0" port="out1"/>
-                <branch x=".5" y=".5">
-                    <end x="0" y="1" block="3" port="in1"/>
+                <end x="0.0" y="0.0" block="0" port="out1"/>
+                <branch x="0.5" y="0.5">
+                    <end x="0.0" y="1.0" block="3" port="in1"/>
                 </branch>
-                <end x="1" y="1" block="2" port="in2"/>
-            </wire>
-        """;
+                <end x="1.0" y="1.0" block="2" port="in2"/>
+            </wire>""";
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder = factory.newDocumentBuilder();
         InputStream stream = new ByteArrayInputStream(xml.getBytes());
@@ -39,21 +38,22 @@ class WireTest {
 
         Wire w2 = new Wire();
         Wire.WireEndpoint e1 = new Wire.WireEndpoint(0, 0, 0, "out1");
-        w2.getEndpoints().add(e1);
-        w2.getSegments().add(e1);
+        w2.addSegment(e1);
 
         Wire.WireBranch b = new Wire.WireBranch(0.5, 0.5);
         Wire.WireEndpoint e2 = new Wire.WireEndpoint(3, 0, 1, "in1");
         b.endpoint = e2;
-        b.subSegments.add(e2);
-        w2.getSegments().add(b);
-        w2.getEndpoints().add(e2);
+        w2.addSegment(b);
+        Wire.WireSegment tmp = new Wire.WireSegment(0, 0);
+        b.insertSegment(null, tmp);
+        w2.insertSegment(tmp, e2);
+        w2.removeSegment(tmp);
 
         Wire.WireEndpoint e3 = new Wire.WireEndpoint(2, 1, 1, "in2");
-        w2.getEndpoints().add(e3);
-        w2.getSegments().add(e3);
+        w2.addSegment(e3);
 
-        assertEquals(w, w2);
+        assertEquals(xml, w.toXML().toString());
+        assertEquals(w.toXML().toString(), w2.toXML().toString());
     }
 
 }

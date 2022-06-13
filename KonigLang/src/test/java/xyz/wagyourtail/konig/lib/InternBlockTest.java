@@ -55,6 +55,6 @@ class InternBlockTest {
                     @Block.Output(name = "out", type = "number", side = BlockIO.Side.RIGHT, justify = BlockIO.Justify.CENTER)
             }
     )
-    private void acos(double input) {}
+    public void acos(double input) {}
 
 }
