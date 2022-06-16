@@ -123,7 +123,6 @@ public class Konig {
         headers.parseClass(Generic.class, "generic");
         headers.parseClass(Flow.class, "flow");
         headers.parseClass(Boolean.class, "boolean");
-        //TODO: finish
 
         return headers;
     }

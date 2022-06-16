@@ -283,6 +283,29 @@ public class RenderBlock extends ElementContainer {
         return true;
     }
 
+    public List<BaseElement> getHoveredElementsPreTranslatedMouse(float mouseX, float mouseY) {
+        List<BaseElement> hoveredElements = new ArrayList<>();
+        for (BaseElement element : elements) {
+            if (element.shouldFocus(mouseX, mouseY)) {
+                hoveredElements.add(element);
+            }
+        }
+        return hoveredElements;
+    }
+
+    public List<BaseElement> getHoveredElements(float mouseX, float mouseY) {
+        mouseX -= block.x;
+        mouseY -= block.y;
+        List<BaseElement> hoveredElements = new ArrayList<>();
+        for (BaseElement element : elements) {
+            if (element.shouldFocus(mouseX, mouseY)) {
+                hoveredElements.add(element);
+            }
+        }
+        return hoveredElements;
+    }
+
+
     @FunctionalInterface
     public interface RenderBlockCreator {
         RenderBlock create(KonigBlockReference block, Font font, RenderBlockParent code);
@@ -290,7 +313,7 @@ public class RenderBlock extends ElementContainer {
 
     public class IOPlug extends BaseElement {
         private static final float PORT_RADIUS = .05f;
-        private final BlockIO.IOElement element;
+        public final BlockIO.IOElement element;
 
         private final float x;
         private final float y;

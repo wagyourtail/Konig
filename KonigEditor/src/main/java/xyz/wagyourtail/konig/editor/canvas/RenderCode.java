@@ -182,6 +182,36 @@ public class RenderCode extends ElementContainer implements RenderCodeParent, Re
         }
     }
 
+    public List<BaseElement> getHoveredElementsPreTranslatedMouse(float mouseX, float mouseY) {
+        List<BaseElement> hoveredElements = new ArrayList<>();
+        for (BaseElement element : elements) {
+            if (element.shouldFocus(mouseX, mouseY)) {
+                hoveredElements.add(element);
+            }
+        }
+        return hoveredElements;
+    }
+
+    public List<BaseElement> getHoveredElements(float mouseX, float mouseY) {
+        mouseX = (mouseX - x) * viewportWidth / width + viewportX;
+        mouseY = (mouseY - y) * viewportHeight / height + viewportY;
+        List<BaseElement> hoveredElements = new ArrayList<>();
+        for (BaseElement element : elements) {
+            if (element.shouldFocus(mouseX, mouseY)) {
+                hoveredElements.add(element);
+            }
+        }
+        return hoveredElements;
+    }
+
+    public float translateMouseX(float mouseX) {
+        return (mouseX - x) * viewportWidth / width + viewportX;
+    }
+
+    public float translateMouseY(float mouseY) {
+        return (mouseY - y) * viewportHeight / height + viewportY;
+    }
+
     @Override
     public void onRender(float mouseX, float mouseY) {
         // render stuff withing view from code

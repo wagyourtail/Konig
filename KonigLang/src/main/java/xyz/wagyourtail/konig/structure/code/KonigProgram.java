@@ -92,7 +92,6 @@ public class KonigProgram implements KonigFile, Code.CodeParent {
 
     @Override
     public KonigBlock getBlockByName(String name) {
-        //TODO: stdlib and stuff gets
         return headers.getBlockByName(name);
     }
 

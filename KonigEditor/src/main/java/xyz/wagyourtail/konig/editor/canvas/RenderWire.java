@@ -3,7 +3,10 @@ package xyz.wagyourtail.konig.editor.canvas;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 import xyz.wagyourtail.MathHelper;
+import xyz.wagyourtail.konig.structure.code.KonigBlockReference;
 import xyz.wagyourtail.konig.structure.code.Wire;
+import xyz.wagyourtail.konig.structure.headers.BlockIO;
+import xyz.wagyourtail.konig.structure.headers.KonigBlock;
 import xyz.wagyourtail.wagyourgui.Font;
 import xyz.wagyourtail.wagyourgui.GLBuilder;
 import xyz.wagyourtail.wagyourgui.elements.BaseElement;
@@ -20,6 +23,7 @@ public class RenderWire extends ElementContainer {
     public final RenderCode code;
     public final Wire wire;
     public final Font font;
+
     protected RenderWire(Wire wire, Font font, RenderCode code) {
         this.font = font;
         this.code = code;
@@ -101,6 +105,23 @@ public class RenderWire extends ElementContainer {
         }
     }
 
+    @Override
+    public void onFocusLost(BaseElement nextFocus) {
+        bakeCorners();
+        super.onFocusLost(nextFocus);
+    }
+
+    public void bakeCorners() {
+        for (BaseElement segment : List.copyOf(elements)) {
+            if (segment instanceof RenderWireSegment) {
+                RenderWireSegment seg = (RenderWireSegment) segment;
+                if (seg.prevCorner != null) {
+                    seg.bakeCorner();
+                }
+            }
+        }
+    }
+
     protected class RenderWireSegment extends BaseElement {
         protected static final float LINE_WIDTH = 1f;
         protected static final float BRANCH_RADIUS = .025f;
@@ -108,6 +129,8 @@ public class RenderWire extends ElementContainer {
         public RenderWireSegment prev;
         public RenderWireSegment next;
         public RenderWireSegment branch;
+
+        protected Wire.WireSegment prevCorner = null;
 
         protected boolean movingWithMouse = false;
         protected boolean prevSelected = false;
@@ -118,7 +141,6 @@ public class RenderWire extends ElementContainer {
 
         @Override
         public void onRender(float mouseX, float mouseY) {
-            boolean onBlock = code.compileBlocks.stream().anyMatch(e -> e.shouldFocus(mouseX, mouseY));
 
             if (movingWithMouse) {
                 if (RenderCode.SNAP_TO_GRID) {
@@ -130,44 +152,202 @@ public class RenderWire extends ElementContainer {
                 }
             }
 
-            if (prev != null) {
+            // check if corner segment is needed and not present
+            if (prevCorner == null && prev != null && segment.x != prev.segment.x && segment.y != prev.segment.y) {
+                // check if allowed to bend at beginning of current segment
+                if (prev.prev != null) {
+                    // place initial corner segment at right angle to previous segment
+                    if (prev.segment.x == prev.prev.segment.x) {
+                        prevCorner = new Wire.WireSegment(segment.x, prev.segment.y);
+                    } else {
+                        prevCorner = new Wire.WireSegment(prev.segment.x, segment.y);
+                    }
+                } else {
+                    // check if prev is endpoint
+                    if (prev.segment instanceof Wire.WireEndpoint) {
+                        // get which side of block io is on
+                        Wire.WireEndpoint endpoint = (Wire.WireEndpoint) prev.segment;
+                        KonigBlockReference block = code.code.getBlockMap().get(endpoint.blockid);
+                        KonigBlock b = block.attemptToGetBlockSpec();
+                        if (block != null && b != null) {
+                            BlockIO.IOElement io = b.io.byName.get(endpoint.port);
+                            if (io != null) {
+                                if (io.side == BlockIO.Side.LEFT || io.side == BlockIO.Side.RIGHT) {
+                                    prevCorner = new Wire.WireSegment(segment.x, prev.segment.y);
+                                } else {
+                                    prevCorner = new Wire.WireSegment(prev.segment.x, segment.y);
+                                }
+                            } else {
+                                prevCorner = new Wire.WireSegment(segment.x, prev.segment.y);
+                            }
+                        } else {
+                            prevCorner = new Wire.WireSegment(segment.x, prev.segment.y);
+                        }
+                    } else {
+                        throw new RuntimeException("prev segment is not endpoint, but prev.prev is null, this is currently not supported");
+                    }
+                }
+            } else if (prevCorner != null) {
+                // move corner to match coord
+                if (prevCorner.x == prev.segment.x) {
+                    prevCorner.y = segment.y;
+                } else {
+                    prevCorner.x = segment.x;
+                }
+                // check if corner is still needed
+                if (segment.x == prev.segment.x || segment.y == prev.segment.y) {
+                    prevCorner = null;
+                }
+            }
 
-                // check if intersects view box
-                AtomicReference<MathHelper.LineSegment> ls = new AtomicReference<>(new MathHelper.LineSegment(
-                    (float) prev.segment.x,
-                    (float) prev.segment.y,
-                    (float) segment.x,
-                    (float) segment.y
-                ));
-                if (!MathHelper.clipLine(ls, new MathHelper.Rectangle(code.viewportX, code.viewportY, code.viewportX + code.viewportWidth, code.viewportY + code.viewportHeight))) {
-                    return;
+            Optional<RenderBlock> block = (Optional) code.getHoveredElementsPreTranslatedMouse(mouseX, mouseY)
+                .stream()
+                .filter(e -> e instanceof RenderBlock)
+                .findFirst();
+            if (block.isPresent()) {
+                RenderBlock b = block.get();
+                Optional<BaseElement> plug = b.getHoveredElements(mouseX, mouseY).stream().findFirst();
+                if (plug.isPresent() && prevCorner != null) {
+                    BaseElement p = plug.get();
+                    if (plug.get() instanceof RenderBlock.IOPlug) {
+                        RenderBlock.IOPlug plugRend = (RenderBlock.IOPlug) plug.get();
+                        // check if allowed to have corner at beginning
+                        if (prev != null && !(prev.segment instanceof Wire.WireEndpoint)) {
+                            if (plugRend.element.side == BlockIO.Side.LEFT ||
+                                plugRend.element.side == BlockIO.Side.RIGHT) {
+                                prevCorner.x = prev.segment.x;
+                                prevCorner.y = segment.y;
+                            } else {
+                                prevCorner.x = segment.x;
+                                prevCorner.y = prev.segment.y;
+                            }
+                        }
+                    } else if (plug.get() instanceof RenderBlock.VirtualIOPort) {
+                        //TODO
+                    }
+                } else {
+                    // check if corner intersects with block
+                    if (prevCorner != null) {
+                        if (prevCorner.x >= b.block.x && prevCorner.y >= b.block.y &&
+                            prevCorner.x <= b.block.x + b.block.scaleX &&
+                            prevCorner.y <= b.block.y + b.block.scaleY) {
+                            // move corner segment to other end if possible
+                            if (prev != null && !(prev.segment instanceof Wire.WireEndpoint)) {
+                                if (prevCorner.x == prev.segment.x) {
+                                    // check if block would still be in bounds
+                                    if (segment.x >= b.block.x && prev.segment.y >= b.block.y &&
+                                        segment.x <= b.block.x + b.block.scaleX &&
+                                        prev.segment.y <= b.block.y + b.block.scaleY) {
+                                        // move corner segment to other end
+                                        prevCorner.y = prev.segment.y;
+                                        prevCorner.x = segment.x;
+                                    }
+                                } else {
+                                    // check if block would still be in bounds
+                                    if (segment.y >= b.block.y && prev.segment.x >= b.block.x &&
+                                        segment.y <= b.block.y + b.block.scaleY &&
+                                        prev.segment.x <= b.block.x + b.block.scaleX) {
+                                        // move corner segment to other end
+                                        prevCorner.x = prev.segment.x;
+                                        prevCorner.y = segment.y;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (prev != null) {
+                AtomicReference<MathHelper.LineSegment>[] renderSegs;
+                if (prevCorner != null) {
+                    renderSegs = new AtomicReference[] {
+                        new AtomicReference(new MathHelper.LineSegment((float) prev.segment.x,
+                            (float) prev.segment.y, (float) prevCorner.x, (float) prevCorner.y
+                        )),
+                        new AtomicReference(new MathHelper.LineSegment((float) prevCorner.x,
+                            (float) prevCorner.y, (float) segment.x, (float) segment.y
+                        ))
+                    };
+                } else {
+                    renderSegs = new AtomicReference[] {
+                        new AtomicReference(new MathHelper.LineSegment((float) prev.segment.x,
+                            (float) prev.segment.y, (float) segment.x, (float) segment.y
+                        ))
+                    };
                 }
 
-                // draw line
-                MathHelper.LineSegment segment1 = ls.get();
+                for (int i = 0; i < renderSegs.length; i++) {
+                    assert renderSegs[i] != null;
+                    if (!MathHelper.clipLine(
+                        renderSegs[i],
+                        new MathHelper.Rectangle(
+                            code.viewportX,
+                            code.viewportY,
+                            code.viewportX + code.viewportWidth,
+                            code.viewportY + code.viewportHeight
+                        )
+                    )) {
+                        renderSegs[i] = null;
+                    }
+                }
 
                 GL11.glLineWidth(LINE_WIDTH * 2);
-                GLBuilder.getBuilder().begin(GL11.GL_LINES)
-                    .color(0xFF000000)
-                    .vertex(segment1.x1(), segment1.y1())
-                    .vertex(segment1.x2(), segment1.y2())
-                    .end();
+                GLBuilder builder = GLBuilder.getBuilder();
+                builder.begin(GL11.GL_LINE_STRIP)
+                    .color(0xFF000000);
 
-                if (branch != null && segment1.x2() == segment.x && segment1.y2() == segment.y) {
+                if (renderSegs[0] != null) {
+                    builder.vertex(renderSegs[0].get().x1(), renderSegs[0].get().y1());
+                }
+                for (int i = 0; i < renderSegs.length; i++) {
+                    if (renderSegs[i] != null) {
+                        builder.vertex(renderSegs[i].get().x2(), renderSegs[i].get().y2());
+                    }
+                }
+
+                builder.end();
+
+                if (branch != null && renderSegs[renderSegs.length - 1].get().x2() == segment.x && renderSegs[renderSegs.length - 1].get().y2() == segment.y) {
                     DrawableHelper.rect(
-                        segment1.x2() - BRANCH_RADIUS,
-                        segment1.y2() - BRANCH_RADIUS,
-                        segment1.x2() + BRANCH_RADIUS,
-                        segment1.y2() + BRANCH_RADIUS,
+                        renderSegs[renderSegs.length - 1].get().x2() - BRANCH_RADIUS,
+                        renderSegs[renderSegs.length - 1].get().y2() - BRANCH_RADIUS,
+                        renderSegs[renderSegs.length - 1].get().x2() + BRANCH_RADIUS,
+                        renderSegs[renderSegs.length - 1].get().y2() + BRANCH_RADIUS,
                         0xFF000000
                     );
                 }
             }
         }
 
+        public synchronized void bakeCorner() {
+            if (prevCorner != null) {
+                if (prev.branch == this) {
+                    wire.insertSegment(segment, prevCorner);
+                    wire.removeSegment(segment);
+                    wire.insertSegment(prevCorner, segment);
+                    RenderWireSegment seg = new RenderWireSegment(prevCorner);
+                    prev.branch = seg;
+                    seg.next = this;
+                    seg.prev = prev;
+                    prev = seg;
+                    elements.add(seg);
+                } else {
+                    wire.insertSegment(prev.segment, prevCorner);
+                    RenderWireSegment seg = new RenderWireSegment(prevCorner);
+                    prev.next = seg;
+                    seg.prev = prev;
+                    seg.next = this;
+                    prev = seg;
+                    elements.add(seg);
+                }
+            }
+            prevCorner = null;
+        }
+
         @Override
         public boolean onKey(int keycode, int scancode, int action, int mods) {
-            if (action == GLFW.GLFW_PRESS) {
+            if (action == GLFW.GLFW_PRESS && movingWithMouse) {
                 if (keycode == GLFW.GLFW_KEY_ESCAPE && next == null) {
                     wire.removeSegment(segment);
                     if (segment instanceof Wire.WireEndpoint) {
@@ -199,6 +379,7 @@ public class RenderWire extends ElementContainer {
                     elements.remove(this);
                     wire.removeSegment(segment);
                     focusedElement = null;
+                    bakeCorners();
                     return true;
                 }
             }
@@ -219,6 +400,7 @@ public class RenderWire extends ElementContainer {
                         segment = seg1;
                     }
                 } else {
+                    bakeCorner();
                     if (prev.branch != this) {
                         RenderWireSegment seg = new RenderWireSegment(new Wire.WireSegment(segment.x, segment.y));
                         wire.insertSegment(prev.segment, seg.segment);
@@ -281,7 +463,8 @@ public class RenderWire extends ElementContainer {
         private void removeEndpointFromBlock(int blockid) {
             //TODO: work with virtual io
             Optional.ofNullable(code.code.getBlockMap().get(blockid)).ifPresent(e -> {
-                e.io.elementMap.values().stream().filter(f -> f.wireid == wire.id && Objects.equals(f.name, ((Wire.WireEndpoint) segment).port)).findFirst().ifPresent(e.io::remove);
+                e.io.elementMap.values().stream().filter(f -> f.wireid == wire.id &&
+                    Objects.equals(f.name, ((Wire.WireEndpoint) segment).port)).findFirst().ifPresent(e.io::remove);
             });
         }
 
@@ -299,7 +482,12 @@ public class RenderWire extends ElementContainer {
             movingWithMouse = false;
             // TODO: detect if at angle and insert segment to right-angle
             if (nextFocus instanceof RenderBlock) {
-                Wire.WireEndpoint end = new Wire.WireEndpoint(((RenderBlock) nextFocus).block.id, segment.x, segment.y, null);
+                Wire.WireEndpoint end = new Wire.WireEndpoint(
+                    ((RenderBlock) nextFocus).block.id,
+                    segment.x,
+                    segment.y,
+                    null
+                );
                 wire.insertSegment(segment, end);
                 wire.removeSegment(segment);
                 segment = end;
