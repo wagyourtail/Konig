@@ -4,6 +4,7 @@ import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 import xyz.wagyourtail.konig.structure.code.Code;
 import xyz.wagyourtail.konig.structure.code.KonigBlockReference;
+import xyz.wagyourtail.konig.structure.code.Wire;
 import xyz.wagyourtail.wagyourgui.Font;
 import xyz.wagyourtail.wagyourgui.elements.BaseElement;
 import xyz.wagyourtail.wagyourgui.elements.DrawableHelper;
@@ -15,6 +16,9 @@ import java.util.stream.Collectors;
 public class RenderCode extends ElementContainer implements RenderCodeParent, RenderBlockParent {
     public static final boolean SNAP_TO_GRID = true;
     public static final float GRID_SIZE = .1f;
+
+    public static final float SMALL_VALUE = .01f;
+
     protected final RenderCodeParent parent;
     protected final Code code;
     protected final Font font;
@@ -94,26 +98,56 @@ public class RenderCode extends ElementContainer implements RenderCodeParent, Re
         prevFocused = false;
     }
 
+    private float ddX = 0;
+    private float ddY = 0;
+
     @Override
     public boolean onDrag(float x, float y, float dx, float dy, int button) {
         float scaledMouseX = (x - this.x) * viewportWidth / width + viewportX;
         float scaledMouseY = (y - this.y) * viewportHeight / height + viewportY;
         float scaledMouseDX = dx * viewportWidth / width;
         float scaledMouseDY = dy * viewportHeight / height;
-        if (super.onDrag(scaledMouseX, scaledMouseY, scaledMouseDX, scaledMouseDY, button)) {
+        ddX += scaledMouseDX;
+        ddY += scaledMouseDY;
+        if (SNAP_TO_GRID) {
+            // snap to grid
+            if (Math.abs(ddX) >= GRID_SIZE || Math.abs(ddY) >= GRID_SIZE) {
+                float nDDx;
+                float nDDy;
+                if (Math.abs(ddX) >= GRID_SIZE) {
+                    nDDx = (float) (Math.signum(ddX) * Math.floor(Math.abs(ddX) / GRID_SIZE) * GRID_SIZE);
+                    ddX = ddX % GRID_SIZE;
+                } else {
+                    nDDx = 0;
+                }
+                if (Math.abs(ddY) >= GRID_SIZE) {
+                    nDDy = (float) (Math.signum(ddY) * (Math.floor(Math.abs(ddY) / GRID_SIZE) * GRID_SIZE));
+                    ddY = ddY % GRID_SIZE;
+                } else {
+                    nDDy = 0;
+                }
+                if (super.onDrag(scaledMouseX, scaledMouseY, nDDx, nDDy, button)) {
+                    return true;
+                }
+            }
+        } else if (super.onDrag(scaledMouseX, scaledMouseY, scaledMouseDX, scaledMouseDY, button)) {
             return true;
         }
-        // drag viewport
-        if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
-            viewportX -= scaledMouseDX;
-            viewportY -= scaledMouseDY;
-            return true;
+        if (focusedElement != null) {
+            // drag viewport
+            if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+                viewportX -= scaledMouseDX;
+                viewportY -= scaledMouseDY;
+                return true;
+            }
         }
         return false;
     }
 
     @Override
     public boolean onRelease(float x, float y, int button) {
+        ddX = 0;
+        ddY = 0;
         float scaledMouseX = (x - this.x) * viewportWidth / width + viewportX;
         float scaledMouseY = (y - this.y) * viewportHeight / height + viewportY;
         return super.onRelease(scaledMouseX, scaledMouseY, button);
@@ -245,8 +279,8 @@ public class RenderCode extends ElementContainer implements RenderCodeParent, Re
                 block.block.x = scaledMouseX - block.block.scaleX / 2;
                 block.block.y = scaledMouseY - block.block.scaleY / 2;
                 if (SNAP_TO_GRID) {
-                    block.block.x = block.block.x - block.block.x % GRID_SIZE;
-                    block.block.y = block.block.y - block.block.y % GRID_SIZE;
+                    block.block.x = (float) (Math.floor(block.block.x / GRID_SIZE) * GRID_SIZE);
+                    block.block.y = (float) (Math.floor(block.block.y / GRID_SIZE) * GRID_SIZE);
                 }
                 block.onRender(scaledMouseX, scaledMouseY);
             }
@@ -288,6 +322,24 @@ public class RenderCode extends ElementContainer implements RenderCodeParent, Re
     @Override
     public Set<RenderWire> getWires() {
         return compileWires;
+    }
+
+    @Override
+    public RenderWire addWireForPort(double x, double y, int blockid, String port) {
+        // create new wire
+        Wire wire = new Wire();
+        wire.id = -1;
+        wire.addSegment(new Wire.WireEndpoint(blockid, x, y, port));
+        wire.addSegment(new Wire.WireSegment(x, y));
+        // add wire
+        List<RenderWire> w = RenderWire.compile(List.of(wire), font, this);
+        compileWires.addAll(w);
+        elements.addAll(0, w);
+        focusedElement.onFocusLost(null);
+        focusedElement = w.get(0);
+        focusedElement.onFocus(null);
+        w.get(0).elements.get(1).onClick(0, 0, GLFW.GLFW_MOUSE_BUTTON_LEFT);
+        return w.get(0);
     }
 
 }

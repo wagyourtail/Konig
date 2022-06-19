@@ -144,12 +144,21 @@ public class RenderWire extends ElementContainer {
 
             if (movingWithMouse) {
                 if (RenderCode.SNAP_TO_GRID) {
-                    segment.x = mouseX - mouseX % RenderCode.GRID_SIZE;
-                    segment.y = mouseY - mouseY % RenderCode.GRID_SIZE;
+                    segment.x = Math.floor(mouseX / RenderCode.GRID_SIZE) * RenderCode.GRID_SIZE;
+                    segment.y = Math.floor(mouseY / RenderCode.GRID_SIZE) * RenderCode.GRID_SIZE;
                 } else {
                     segment.x = mouseX;
                     segment.y = mouseY;
                 }
+            }
+
+            if (prev != null && next != null && !isFocused() && !prev.isFocused() && !next.isFocused() && branch == null && (Math.abs(prev.segment.x - next.segment.x) < RenderCode.SMALL_VALUE || Math.abs(prev.segment.y - next.segment.y) < RenderCode.SMALL_VALUE)) {
+                // delete current
+                wire.removeSegment(segment);
+                prev.next = next;
+                next.prev = prev;
+                elements.remove(this);
+                return;
             }
 
             // check if corner segment is needed and not present
@@ -308,7 +317,7 @@ public class RenderWire extends ElementContainer {
 
                 builder.end();
 
-                if (branch != null && renderSegs[renderSegs.length - 1].get().x2() == segment.x && renderSegs[renderSegs.length - 1].get().y2() == segment.y) {
+                if (branch != null && renderSegs[renderSegs.length - 1].get().x2() == (float) segment.x && renderSegs[renderSegs.length - 1].get().y2() == (float) segment.y) {
                     DrawableHelper.rect(
                         renderSegs[renderSegs.length - 1].get().x2() - BRANCH_RADIUS,
                         renderSegs[renderSegs.length - 1].get().y2() - BRANCH_RADIUS,
@@ -322,33 +331,56 @@ public class RenderWire extends ElementContainer {
 
         public synchronized void bakeCorner() {
             if (prevCorner != null) {
-                if (prev.branch == this) {
-                    wire.insertSegment(segment, prevCorner);
-                    wire.removeSegment(segment);
-                    wire.insertSegment(prevCorner, segment);
-                    RenderWireSegment seg = new RenderWireSegment(prevCorner);
-                    prev.branch = seg;
-                    seg.next = this;
-                    seg.prev = prev;
-                    prev = seg;
-                    elements.add(seg);
-                } else {
-                    wire.insertSegment(prev.segment, prevCorner);
-                    RenderWireSegment seg = new RenderWireSegment(prevCorner);
-                    prev.next = seg;
-                    seg.prev = prev;
-                    seg.next = this;
-                    prev = seg;
-                    elements.add(seg);
-                }
+                insertBefore(prevCorner);
             }
             prevCorner = null;
+        }
+
+        private void insertBefore(Wire.WireSegment segment) {
+            if (prev == null) {
+                wire.insertSegment(this.segment, segment);
+                wire.removeSegment(this.segment);
+                wire.insertSegment(segment, this.segment);
+                RenderWireSegment newPrev = new RenderWireSegment(segment);
+                newPrev.prev = prev;
+                newPrev.next = this;
+                prev.next = newPrev;
+                prev = newPrev;
+                elements.add(prev);
+            } else if (prev.branch == this) {
+                wire.insertSegment(this.segment, segment);
+                wire.removeSegment(this.segment);
+                wire.insertSegment(segment, this.segment);
+                RenderWireSegment newPrev = new RenderWireSegment(segment);
+                newPrev.prev = prev;
+                newPrev.next = this;
+                prev.branch = newPrev;
+                prev = newPrev;
+                elements.add(prev);
+            } else {
+                wire.insertSegment(prev.segment, segment);
+                RenderWireSegment newPrev = new RenderWireSegment(segment);
+                newPrev.prev = prev;
+                newPrev.next = this;
+                prev.next = newPrev;
+                prev = newPrev;
+                elements.add(prev);
+            }
         }
 
         @Override
         public boolean onKey(int keycode, int scancode, int action, int mods) {
             if (action == GLFW.GLFW_PRESS && movingWithMouse) {
                 if (keycode == GLFW.GLFW_KEY_ESCAPE && next == null) {
+                    if (prev.prev == null) {
+                        // delete wire
+                        code.elements.remove(RenderWire.this);
+                        code.code.removeWire(wire);
+                        if (prev.segment instanceof Wire.WireEndpoint) {
+                            prev.removeEndpointFromBlock(((Wire.WireEndpoint) prev.segment).blockid);
+                        }
+                        return true;
+                    }
                     wire.removeSegment(segment);
                     if (segment instanceof Wire.WireEndpoint) {
                         removeEndpointFromBlock(((Wire.WireEndpoint) segment).blockid);
@@ -379,7 +411,8 @@ public class RenderWire extends ElementContainer {
                     elements.remove(this);
                     wire.removeSegment(segment);
                     focusedElement = null;
-                    bakeCorners();
+                    prevCorner = null;
+                    onFocusLost(null);
                     return true;
                 }
             }
@@ -399,60 +432,32 @@ public class RenderWire extends ElementContainer {
                         wire.removeSegment(segment);
                         segment = seg1;
                     }
-                } else {
+                    prevSelected = true;
+                } else if (prevSelected) {
                     bakeCorner();
-                    if (prev.branch != this) {
-                        RenderWireSegment seg = new RenderWireSegment(new Wire.WireSegment(segment.x, segment.y));
-                        wire.insertSegment(prev.segment, seg.segment);
-                        seg.prev = prev;
-                        seg.next = this;
-                        this.prev = seg;
-                        elements.add(seg);
-                    } else {
-                        RenderWireSegment seg = new RenderWireSegment(new Wire.WireSegment(segment.x, segment.y));
-                        wire.insertSegment(segment, seg.segment);
-                        wire.removeSegment(segment);
-                        wire.insertSegment(seg.segment, segment);
-                        seg.prev = prev;
-                        seg.next = this;
-                        this.prev = seg;
-                        elements.add(seg);
-                    }
+                    insertBefore(new Wire.WireSegment(segment.x, segment.y));
                 }
-                prevSelected = true;
                 return true;
             } else if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
                 if (!prevSelected) {
-                    RenderWireSegment seg;
+                    Wire.WireSegment seg;
                     if (prev.segment.x == segment.x) {
-                        seg = new RenderWireSegment(new Wire.WireBranch(segment.x, y));
+                        seg = new Wire.WireBranch(segment.x, y);
                     } else if (prev.segment.y == segment.y) {
-                        seg = new RenderWireSegment(new Wire.WireBranch(x, segment.y));
+                        seg = new Wire.WireBranch(x, segment.y);
                     } else {
-                        seg = new RenderWireSegment(new Wire.WireBranch(x, y));
+                        seg = new Wire.WireBranch(x, y);
                     }
-                    if (prev.branch != this) {
-                        wire.insertSegment(prev.segment, seg.segment);
-                        prev.next = seg;
-                        seg.prev = prev;
-                        seg.next = this;
-                        prev = seg;
-                    } else {
-                        wire.insertSegment(segment, seg.segment);
-                        wire.removeSegment(segment);
-                        wire.insertSegment(seg.segment, segment);
-                        prev.branch = seg;
-                        seg.prev = prev;
-                        seg.next = this;
-                        prev = seg;
-                    }
+                    insertBefore(seg);
+                    x = (float) (Math.floor(x / RenderCode.GRID_SIZE) * RenderCode.GRID_SIZE);
+                    y = (float) (Math.floor(y / RenderCode.GRID_SIZE) * RenderCode.GRID_SIZE);
                     RenderWireSegment seg2 = new RenderWireSegment(new Wire.WireSegment(x, y));
-                    ((Wire.WireBranch) seg.segment).insertSegment(null, seg2.segment);
-                    seg2.prev = seg;
-                    seg.branch = seg2;
+                    ((Wire.WireBranch) prev.segment).insertSegment(null, seg2.segment);
+                    seg2.prev = prev;
+                    prev.branch = seg2;
                     elements.add(seg2);
-                    elements.add(seg);
                     focusedElement = seg2;
+                    seg2.onFocus(null);
                     seg2.prevSelected = true;
                     seg2.movingWithMouse = true;
                 }
@@ -471,8 +476,43 @@ public class RenderWire extends ElementContainer {
 
         @Override
         public boolean onDrag(float x, float y, float dx, float dy, int button) {
-            segment.x += dx;
-            segment.y += dy;
+            if (!movingWithMouse) {
+                if (prev != null) {
+                    if (segment.x == prev.segment.x) {
+                        segment.y += dy;
+                        if (next != null && !next.isFocused() && !(next.segment instanceof Wire.WireEndpoint)) {
+                            next.segment.y += dy;
+                            segment.x += dx;
+                        }
+                        if (!prev.isFocused() && !(prev.segment instanceof Wire.WireEndpoint)) {
+                            prev.segment.x += dx;
+                        }
+                    } else if (segment.y == prev.segment.y) {
+                        segment.x += dx;
+                        if (next != null && !next.isFocused() && !(next.segment instanceof Wire.WireEndpoint)) {
+                            next.segment.x += dx;
+                            segment.y += dy;
+                        }
+                        if (!prev.isFocused() && !(prev.segment instanceof Wire.WireEndpoint)) {
+                            prev.segment.y += dy;
+                        }
+                    }
+                } else if (next != null) {
+                    if (segment.x == next.segment.x) {
+                        segment.y += dy;
+                        if (!next.isFocused() && !(next.segment instanceof Wire.WireEndpoint)) {
+                            next.segment.y += dy;
+                            segment.x += dx;
+                        }
+                    } else if (segment.y == next.segment.y) {
+                        segment.x += dx;
+                        if (!next.isFocused() && !(next.segment instanceof Wire.WireEndpoint)) {
+                            next.segment.x += dx;
+                            segment.y += dy;
+                        }
+                    }
+                }
+            }
             return true;
         }
 

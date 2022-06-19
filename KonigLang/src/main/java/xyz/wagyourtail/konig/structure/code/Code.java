@@ -69,6 +69,21 @@ public class Code {
         blockMap.put(block.id, block);
     }
 
+    public void addWire(Wire wire) {
+        if (wire.id == -1 || wireMap.containsKey(wire.id)) {
+            int id = 0;
+            while (wireMap.keySet().contains(id)) {
+                id++;
+            }
+            wire.id = id;
+        }
+        wireMap.put(wire.id, wire);
+    }
+
+    public void removeWire(Wire wire) {
+        wireMap.remove(wire.id);
+    }
+
     public void parseWires(Node wires) throws IOException {
         NodeList children = wires.getChildNodes();
         for (int i = 0; i < children.getLength(); i++) {

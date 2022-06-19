@@ -366,7 +366,21 @@ public class RenderBlock extends ElementContainer {
 
         @Override
         public boolean onClick(float x, float y, int button) {
-            System.out.println("clicked on " + element);
+            // check if wire plugged in
+            if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                if (block.io.elementMap.get(element.name) == null) {
+                    RenderWire w = code.addWireForPort(block.x + this.x, block.y + this.y, block.id, element.name);
+                    if (element instanceof BlockIO.Input) {
+                        ReferenceIO.Input i = new ReferenceIO.Input(element.name, w.wire.id);
+                        block.io.inputMap.put(element.name, i);
+                        block.io.elementMap.put(element.name, i);
+                    } else if (element instanceof BlockIO.Output) {
+                        ReferenceIO.Output o = new ReferenceIO.Output(element.name, w.wire.id);
+                        block.io.outputMap.put(element.name, o);
+                        block.io.elementMap.put(element.name, o);
+                    }
+                }
+            }
             return true;
         }
 

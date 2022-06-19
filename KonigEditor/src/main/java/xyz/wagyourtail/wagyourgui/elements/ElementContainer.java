@@ -10,7 +10,7 @@ public abstract class ElementContainer extends BaseElement {
 
     @Override
     public boolean onClick(float x, float y, int button) {
-        for (BaseElement element : elements) {
+        for (BaseElement element : List.copyOf(elements)) {
             if (element.shouldFocus(x, y) && focusedElement != element) {
                 BaseElement old = focusedElement;
                 focusedElement = element;
@@ -82,7 +82,7 @@ public abstract class ElementContainer extends BaseElement {
 
     @Override
     public void onRender(float mouseX, float mouseY) {
-        for (BaseElement element : elements) {
+        for (BaseElement element : List.copyOf(elements)) {
             element.onRender(mouseX, mouseY);
         }
     }

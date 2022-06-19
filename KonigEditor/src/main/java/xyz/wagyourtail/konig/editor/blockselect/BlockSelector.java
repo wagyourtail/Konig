@@ -196,4 +196,9 @@ public class BlockSelector extends ElementContainer implements RenderBlockParent
         return null;
     }
 
+    @Override
+    public RenderWire addWireForPort(double x, double y, int blockid, String port) {
+        return null;
+    }
+
 }
