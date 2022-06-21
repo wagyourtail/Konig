@@ -34,8 +34,6 @@ public class RenderCode extends ElementContainer implements RenderCodeParent, Re
     protected float viewportWidth;
     protected float viewportHeight;
 
-    protected boolean prevFocused = false;
-
 
     protected final Set<RenderWire> compileWires = new HashSet<>();
     protected final Set<RenderBlock> compileBlocks = new HashSet<>();
@@ -72,10 +70,7 @@ public class RenderCode extends ElementContainer implements RenderCodeParent, Re
         float scaledMouseY = (y - this.y) * viewportHeight / height + viewportY;
         if (super.onClick(scaledMouseX, scaledMouseY, button)) return true;
         Optional<RenderBlock> placing = getPlacingBlock();
-        if (prevFocused && placing.isPresent()) {
-            placeBlock(placing.get());
-        }
-        prevFocused = isFocused();
+        placing.ifPresent(this::placeBlock);
         return false;
     }
 
@@ -90,12 +85,6 @@ public class RenderCode extends ElementContainer implements RenderCodeParent, Re
             elements.add(block);
             setPlacingBlock(null);
         }
-    }
-
-    @Override
-    public void onFocusLost(BaseElement nextFocus) {
-        super.onFocusLost(nextFocus);
-        prevFocused = false;
     }
 
     private float ddX = 0;
@@ -252,6 +241,13 @@ public class RenderCode extends ElementContainer implements RenderCodeParent, Re
         // scale canvas to view
         GL11.glPushMatrix();
         GL11.glLineWidth(2.5f);
+
+        // test if mouse hovering
+        if (mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height) {
+            if (!isFocused()) {
+                parent.focusCode(this);
+            }
+        }
 
         //  render bg
         DrawableHelper.rect(x, y, x + width, y + height, 0xFFFFFFFF);
