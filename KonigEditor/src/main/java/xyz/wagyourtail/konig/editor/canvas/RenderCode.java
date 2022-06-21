@@ -133,7 +133,7 @@ public class RenderCode extends ElementContainer implements RenderCodeParent, Re
         } else if (super.onDrag(scaledMouseX, scaledMouseY, scaledMouseDX, scaledMouseDY, button)) {
             return true;
         }
-        if (focusedElement != null) {
+        if (focusedElement == null) {
             // drag viewport
             if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
                 viewportX -= scaledMouseDX;
@@ -207,10 +207,10 @@ public class RenderCode extends ElementContainer implements RenderCodeParent, Re
             if (placeBlock.get().code != this) {
                 if (focusedElement instanceof RenderBlock) {
                     if (!((RenderBlock) focusedElement).getBlockSpec().hollow()) {
-                        setPlacingBlock(new RenderBlock(placeBlock.get().getBlock(), font, this));
+                        setPlacingBlock(RenderBlock.compile(placeBlock.get().getBlock(), font, this));
                     }
                 } else {
-                    setPlacingBlock(new RenderBlock(placeBlock.get().getBlock(), font, this));
+                    setPlacingBlock(RenderBlock.compile(placeBlock.get().getBlock(), font, this));
                 }
             }
         }
@@ -300,6 +300,18 @@ public class RenderCode extends ElementContainer implements RenderCodeParent, Re
     }
 
     @Override
+    public void focusCode(BaseElement code) {
+        if (elements.contains(code) && focusedElement != code) {
+            BaseElement prevFocus = focusedElement;
+            if (focusedElement != null) {
+                focusedElement.onFocusLost(code);
+            }
+            focusedElement = code;
+            focusedElement.onFocus(prevFocus);
+        }
+    }
+
+    @Override
     public float viewportX() {
         return viewportX;
     }
@@ -332,6 +344,7 @@ public class RenderCode extends ElementContainer implements RenderCodeParent, Re
         wire.addSegment(new Wire.WireEndpoint(blockid, x, y, port));
         wire.addSegment(new Wire.WireSegment(x, y));
         // add wire
+        code.addWire(wire);
         List<RenderWire> w = RenderWire.compile(List.of(wire), font, this);
         compileWires.addAll(w);
         elements.addAll(0, w);

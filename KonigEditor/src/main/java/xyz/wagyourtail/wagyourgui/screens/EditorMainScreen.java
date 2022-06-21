@@ -6,6 +6,7 @@ import xyz.wagyourtail.konig.editor.blockselect.BlockSelector;
 import xyz.wagyourtail.konig.editor.canvas.RenderBlock;
 import xyz.wagyourtail.konig.editor.canvas.RenderCode;
 import xyz.wagyourtail.konig.editor.canvas.RenderCodeParent;
+import xyz.wagyourtail.wagyourgui.elements.BaseElement;
 import xyz.wagyourtail.wagyourgui.elements.Button;
 import xyz.wagyourtail.wagyourgui.elements.DrawableHelper;
 import xyz.wagyourtail.wagyourgui.elements.HorizontalScrollBar;
@@ -57,7 +58,7 @@ public class EditorMainScreen extends BaseScreen implements RenderCodeParent {
 
             elements.add(new BlockSelector(0, window.getHeight() - 200, window.getWidth(), 200, session.font, (block) -> {
                 if (block != null) {
-                    setPlacingBlock(new RenderBlock(block, session.font, null));
+                    setPlacingBlock(RenderBlock.compile(block, session.font, null));
                 } else {
                     setPlacingBlock(null);
                 }
@@ -75,6 +76,18 @@ public class EditorMainScreen extends BaseScreen implements RenderCodeParent {
     @Override
     public void setPlacingBlock(RenderBlock block) {
         this.placeBlock = block;
+    }
+
+    @Override
+    public void focusCode(BaseElement code) {
+        if (elements.contains(code) && focusedElement != code) {
+            BaseElement prevFocus = focusedElement;
+            if (focusedElement != null) {
+                focusedElement.onFocusLost(code);
+            }
+            focusedElement = code;
+            focusedElement.onFocus(prevFocus);
+        }
     }
 
 }

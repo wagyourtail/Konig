@@ -86,7 +86,7 @@ public class BlockSelector extends ElementContainer implements RenderBlockParent
             ref.rotation = 0;
             ref.name = block.name;
             ref.id = -1;
-            elements.add(new RenderBlock(ref, font, this));
+            elements.add(RenderBlock.compile(ref, font, this));
             x += 1.5f;
         }
 

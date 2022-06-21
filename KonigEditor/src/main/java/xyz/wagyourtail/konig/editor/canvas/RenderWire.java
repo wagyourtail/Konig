@@ -161,53 +161,7 @@ public class RenderWire extends ElementContainer {
                 return;
             }
 
-            // check if corner segment is needed and not present
-            if (prevCorner == null && prev != null && segment.x != prev.segment.x && segment.y != prev.segment.y) {
-                // check if allowed to bend at beginning of current segment
-                if (prev.prev != null) {
-                    // place initial corner segment at right angle to previous segment
-                    if (prev.segment.x == prev.prev.segment.x) {
-                        prevCorner = new Wire.WireSegment(segment.x, prev.segment.y);
-                    } else {
-                        prevCorner = new Wire.WireSegment(prev.segment.x, segment.y);
-                    }
-                } else {
-                    // check if prev is endpoint
-                    if (prev.segment instanceof Wire.WireEndpoint) {
-                        // get which side of block io is on
-                        Wire.WireEndpoint endpoint = (Wire.WireEndpoint) prev.segment;
-                        KonigBlockReference block = code.code.getBlockMap().get(endpoint.blockid);
-                        KonigBlock b = block.attemptToGetBlockSpec();
-                        if (block != null && b != null) {
-                            BlockIO.IOElement io = b.io.byName.get(endpoint.port);
-                            if (io != null) {
-                                if (io.side == BlockIO.Side.LEFT || io.side == BlockIO.Side.RIGHT) {
-                                    prevCorner = new Wire.WireSegment(segment.x, prev.segment.y);
-                                } else {
-                                    prevCorner = new Wire.WireSegment(prev.segment.x, segment.y);
-                                }
-                            } else {
-                                prevCorner = new Wire.WireSegment(segment.x, prev.segment.y);
-                            }
-                        } else {
-                            prevCorner = new Wire.WireSegment(segment.x, prev.segment.y);
-                        }
-                    } else {
-                        throw new RuntimeException("prev segment is not endpoint, but prev.prev is null, this is currently not supported");
-                    }
-                }
-            } else if (prevCorner != null) {
-                // move corner to match coord
-                if (prevCorner.x == prev.segment.x) {
-                    prevCorner.y = segment.y;
-                } else {
-                    prevCorner.x = segment.x;
-                }
-                // check if corner is still needed
-                if (segment.x == prev.segment.x || segment.y == prev.segment.y) {
-                    prevCorner = null;
-                }
-            }
+            testCorner();
 
             Optional<RenderBlock> block = (Optional) code.getHoveredElementsPreTranslatedMouse(mouseX, mouseY)
                 .stream()
@@ -242,7 +196,7 @@ public class RenderWire extends ElementContainer {
                             prevCorner.y <= b.block.y + b.block.scaleY) {
                             // move corner segment to other end if possible
                             if (prev != null && !(prev.segment instanceof Wire.WireEndpoint)) {
-                                if (prevCorner.x == prev.segment.x) {
+                                if (Math.abs(prevCorner.x - prev.segment.x) < RenderCode.SMALL_VALUE) {
                                     // check if block would still be in bounds
                                     if (segment.x >= b.block.x && prev.segment.y >= b.block.y &&
                                         segment.x <= b.block.x + b.block.scaleX &&
@@ -441,9 +395,9 @@ public class RenderWire extends ElementContainer {
             } else if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
                 if (!prevSelected) {
                     Wire.WireSegment seg;
-                    if (prev.segment.x == segment.x) {
+                    if (Math.abs(prev.segment.x - segment.x) < RenderCode.SMALL_VALUE) {
                         seg = new Wire.WireBranch(segment.x, y);
-                    } else if (prev.segment.y == segment.y) {
+                    } else if (Math.abs(prev.segment.y - segment.y) < RenderCode.SMALL_VALUE) {
                         seg = new Wire.WireBranch(x, segment.y);
                     } else {
                         seg = new Wire.WireBranch(x, y);
@@ -478,43 +432,97 @@ public class RenderWire extends ElementContainer {
         public boolean onDrag(float x, float y, float dx, float dy, int button) {
             if (!movingWithMouse) {
                 if (prev != null) {
-                    if (segment.x == prev.segment.x) {
+                    if (Math.abs(segment.x - prev.segment.x) < RenderCode.SMALL_VALUE) {
                         segment.y += dy;
+                        segment.x += dx;
                         if (next != null && !next.isFocused() && !(next.segment instanceof Wire.WireEndpoint)) {
                             next.segment.y += dy;
-                            segment.x += dx;
                         }
                         if (!prev.isFocused() && !(prev.segment instanceof Wire.WireEndpoint)) {
                             prev.segment.x += dx;
                         }
-                    } else if (segment.y == prev.segment.y) {
+                    } else if (Math.abs(segment.y - prev.segment.y) < RenderCode.SMALL_VALUE) {
                         segment.x += dx;
+                        segment.y += dy;
                         if (next != null && !next.isFocused() && !(next.segment instanceof Wire.WireEndpoint)) {
                             next.segment.x += dx;
-                            segment.y += dy;
                         }
                         if (!prev.isFocused() && !(prev.segment instanceof Wire.WireEndpoint)) {
                             prev.segment.y += dy;
                         }
                     }
                 } else if (next != null) {
-                    if (segment.x == next.segment.x) {
+                    if (Math.abs(segment.x - next.segment.x) < RenderCode.SMALL_VALUE) {
+                        segment.x += dx;
                         segment.y += dy;
                         if (!next.isFocused() && !(next.segment instanceof Wire.WireEndpoint)) {
                             next.segment.y += dy;
-                            segment.x += dx;
                         }
-                    } else if (segment.y == next.segment.y) {
+                    } else if (Math.abs(segment.y - next.segment.y) < RenderCode.SMALL_VALUE) {
                         segment.x += dx;
+                        segment.y += dy;
                         if (!next.isFocused() && !(next.segment instanceof Wire.WireEndpoint)) {
                             next.segment.x += dx;
-                            segment.y += dy;
                         }
                     }
                 }
             }
+            testCorner();
+            bakeCorner();
             return true;
         }
+
+
+        public void testCorner() {
+            // check if corner segment is needed and not present
+            if (prevCorner == null && prev != null && segment.x != prev.segment.x && segment.y != prev.segment.y) {
+                // check if allowed to bend at beginning of current segment
+                if (prev.prev != null) {
+                    // place initial corner segment at right angle to previous segment
+                    if (Math.abs(prev.segment.x - prev.prev.segment.x) < RenderCode.SMALL_VALUE) {
+                        prevCorner = new Wire.WireSegment(segment.x, prev.segment.y);
+                    } else {
+                        prevCorner = new Wire.WireSegment(prev.segment.x, segment.y);
+                    }
+                } else {
+                    // check if prev is endpoint
+                    if (prev.segment instanceof Wire.WireEndpoint) {
+                        // get which side of block io is on
+                        Wire.WireEndpoint endpoint = (Wire.WireEndpoint) prev.segment;
+                        KonigBlockReference block = code.code.getBlockMap().get(endpoint.blockid);
+                        KonigBlock b = block.attemptToGetBlockSpec();
+                        if (block != null && b != null) {
+                            BlockIO.IOElement io = b.io.byName.get(endpoint.port);
+                            if (io != null) {
+                                if (io.side == BlockIO.Side.LEFT || io.side == BlockIO.Side.RIGHT) {
+                                    prevCorner = new Wire.WireSegment(prev.segment.x, segment.y);
+                                } else {
+                                    prevCorner = new Wire.WireSegment(segment.x, prev.segment.y);
+                                }
+                            } else {
+                                prevCorner = new Wire.WireSegment(segment.x, prev.segment.y);
+                            }
+                        } else {
+                            prevCorner = new Wire.WireSegment(segment.x, prev.segment.y);
+                        }
+                    } else {
+                        throw new RuntimeException("prev segment is not endpoint, but prev.prev is null, this is currently not supported");
+                    }
+                }
+            } else if (prevCorner != null) {
+                // move corner to match coord
+                if (Math.abs(prevCorner.x - prev.segment.x) < RenderCode.SMALL_VALUE) {
+                    prevCorner.y = segment.y;
+                } else {
+                    prevCorner.x = segment.x;
+                }
+                // check if corner is still needed
+                if (Math.abs(segment.x - prev.segment.x) < RenderCode.SMALL_VALUE || Math.abs(segment.y - prev.segment.y) < RenderCode.SMALL_VALUE) {
+                    prevCorner = null;
+                }
+            }
+        }
+
 
         @Override
         public void onFocusLost(BaseElement nextFocus) {

@@ -20,6 +20,7 @@ import xyz.wagyourtail.wagyourgui.elements.ElementContainer;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 public class RenderBlock extends ElementContainer {
 
@@ -42,12 +43,16 @@ public class RenderBlock extends ElementContainer {
     public static List<RenderBlock> compile(List<KonigBlockReference> blocks, Font font, RenderBlockParent code) {
         List<RenderBlock> renderBlocks = new ArrayList<>();
         for (KonigBlockReference block : blocks) {
-            renderBlocks.add(special_cases.getOrDefault(block.name, RenderBlock::new).create(block, font, code));
+            renderBlocks.add(compile(block, font, code));
         }
         return renderBlocks;
     }
 
-    public RenderBlock(KonigBlockReference block, Font font, RenderBlockParent code) {
+    public static RenderBlock compile(KonigBlockReference block, Font font, RenderBlockParent code) {
+        return special_cases.getOrDefault(block.name, RenderBlock::new).create(block, font, code);
+    }
+
+    protected RenderBlock(KonigBlockReference block, Font font, RenderBlockParent code) {
         this.block = block;
         this.font = font;
         this.code = code;
@@ -58,10 +63,22 @@ public class RenderBlock extends ElementContainer {
     @Override
     public boolean onDrag(float x, float y, float dx, float dy, int button) {
         if (focusedElement instanceof RenderCode) return super.onDrag(x, y, dx, dy, button);
+        Set<Integer> wires = block.io.elementMap.values().stream().map(e -> e.wireid).collect(Collectors.toSet());
         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-            // move block, resolve wire endpoints, move them too, adding a right angle if necessary
+            // move block, resolve wire endpoints, move them too
+            block.x += dx;
+            block.y += dy;
             for (RenderWire wire : code.getWires()) {
-
+                if (wires.contains(wire.wire.id)) {
+                    for (BaseElement segment : List.copyOf(wire.elements)) {
+                        if (((RenderWire.RenderWireSegment) segment).segment instanceof Wire.WireEndpoint) {
+                            Wire.WireEndpoint endpoint = (Wire.WireEndpoint) ((RenderWire.RenderWireSegment) segment).segment;
+                            if (endpoint.blockid == block.id) {
+                                segment.onDrag(x, y, dx, dy, button);
+                            }
+                        }
+                    }
+                }
             }
         }
         return true;
@@ -361,13 +378,7 @@ public class RenderBlock extends ElementContainer {
                         }
                     }
                 }
-            }
-        }
-
-        @Override
-        public boolean onClick(float x, float y, int button) {
-            // check if wire plugged in
-            if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+            } else {
                 if (block.io.elementMap.get(element.name) == null) {
                     RenderWire w = code.addWireForPort(block.x + this.x, block.y + this.y, block.id, element.name);
                     if (element instanceof BlockIO.Input) {
@@ -381,6 +392,10 @@ public class RenderBlock extends ElementContainer {
                     }
                 }
             }
+        }
+
+        @Override
+        public boolean onClick(float x, float y, int button) {
             return true;
         }
 

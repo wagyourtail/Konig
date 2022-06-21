@@ -28,7 +28,7 @@ public class KonigBlockReference {
     public final Map<String, VirtualIO> virtualIONameMap = new HashMap<>();
     public final Map<String, InnerCode> innerCodeMap = new HashMap<>();
 
-    public String value;
+    public String value = "";
 
     public KonigBlockReference(Code parent) {
         this.parent = parent;
