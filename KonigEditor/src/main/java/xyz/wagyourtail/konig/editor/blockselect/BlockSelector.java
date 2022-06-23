@@ -201,4 +201,9 @@ public class BlockSelector extends ElementContainer implements RenderBlockParent
         return null;
     }
 
+    @Override
+    public void removeBlock(RenderBlock block) {
+
+    }
+
 }

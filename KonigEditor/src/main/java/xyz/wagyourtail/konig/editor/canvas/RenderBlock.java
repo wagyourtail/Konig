@@ -314,6 +314,27 @@ public class RenderBlock extends ElementContainer {
         return true;
     }
 
+    @Override
+    public boolean onKey(int keycode, int scancode, int action, int mods) {
+        if (super.onKey(keycode, scancode, action, mods)) {
+            return true;
+        }
+        if (action == GLFW.GLFW_PRESS)
+            if (keycode == GLFW.GLFW_KEY_DELETE) {
+                block.parent.removeBlock(block);
+                for (RenderWire wire : code.getWires()) {
+                    for (Wire.WireEndpoint end : wire.wire.getEndpoints()) {
+                        if (end.blockid == block.id) {
+                            wire.cancelEndpoint(end);
+                        }
+                    }
+                }
+                code.removeBlock(this);
+                return true;
+            }
+        return false;
+    }
+
     public List<BaseElement> getHoveredElementsPreTranslatedMouse(float mouseX, float mouseY) {
         List<BaseElement> hoveredElements = new ArrayList<>();
         for (BaseElement element : elements) {

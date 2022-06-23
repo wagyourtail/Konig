@@ -142,6 +142,13 @@ public class RenderWire extends ElementContainer {
         @Override
         public void onRender(float mouseX, float mouseY) {
 
+            if (wire.getEndpoints().isEmpty()) {
+                // delete wire
+                code.elements.remove(RenderWire.this);
+                code.focusedElement = null;
+                code.code.removeWire(wire);
+            }
+
             if (movingWithMouse) {
                 if (RenderCode.SNAP_TO_GRID) {
                     segment.x = Math.floor(mouseX / RenderCode.GRID_SIZE) * RenderCode.GRID_SIZE;

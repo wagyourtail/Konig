@@ -54,7 +54,7 @@ public class RenderConstBlock extends RenderBlock {
                 }
             default:
         }
-        return true;
+        return super.onKey(keycode, scancode, action, mods);
     }
 
     @Override

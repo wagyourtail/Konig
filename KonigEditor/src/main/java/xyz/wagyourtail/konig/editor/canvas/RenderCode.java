@@ -353,4 +353,12 @@ public class RenderCode extends ElementContainer implements RenderCodeParent, Re
         return w.get(0);
     }
 
+    @Override
+    public void removeBlock(RenderBlock block) {
+        if (focusedElement == block) {
+            focusedElement = null;
+        }
+        elements.remove(block);
+    }
+
 }

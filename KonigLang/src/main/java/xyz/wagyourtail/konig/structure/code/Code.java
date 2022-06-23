@@ -69,6 +69,10 @@ public class Code {
         blockMap.put(block.id, block);
     }
 
+    public void removeBlock(KonigBlockReference block) {
+        blockMap.remove(block.id);
+    }
+
     public void addWire(Wire wire) {
         if (wire.id == -1 || wireMap.containsKey(wire.id)) {
             int id = 0;
