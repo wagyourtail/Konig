@@ -266,6 +266,18 @@ public class RenderBlock extends ElementContainer {
             );
         }
 
+        if (isFocused()) {
+            GL11.glLineWidth(RenderWire.RenderWireSegment.LINE_WIDTH * 2);
+            GLBuilder.getBuilder().begin(GL11.GL_LINE_STRIP)
+                .color(0xFF00FFFF)
+                .vertex(rect.x1(), rect.y1())
+                .vertex(rect.x2(), rect.y1())
+                .vertex(rect.x2(), rect.y2())
+                .vertex(rect.x1(), rect.y2())
+                .vertex(rect.x1(), rect.y1())
+                .end();
+        }
+
         // check if rect is trimmed
         if (rect.x1() != block.x || rect.y1() != block.y || rect.x2() != block.x + block.scaleX || rect.y2() != block.y + block.scaleY) {
             renderSubElements(mouseX, mouseY);

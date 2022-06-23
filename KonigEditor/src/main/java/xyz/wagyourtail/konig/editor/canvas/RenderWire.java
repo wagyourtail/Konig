@@ -122,8 +122,8 @@ public class RenderWire extends ElementContainer {
         }
     }
 
-    protected class RenderWireSegment extends BaseElement {
-        protected static final float LINE_WIDTH = 1f;
+    public class RenderWireSegment extends BaseElement {
+        public static final float LINE_WIDTH = 1f;
         protected static final float BRANCH_RADIUS = .025f;
         Wire.WireSegment segment;
         public RenderWireSegment prev;
@@ -255,11 +255,26 @@ public class RenderWire extends ElementContainer {
                     }
                 }
 
+                if (isFocused() && !movingWithMouse) {
+                    // hilight segment
+                    GL11.glLineWidth(LINE_WIDTH * 4);
+                    builder.begin(GL11.GL_LINE_STRIP)
+                        .color(0xFF00FFFF);
+                    if (renderSegs[0] != null) {
+                        builder.vertex(renderSegs[0].get().x1(), renderSegs[0].get().y1());
+                    }
+                    for (int i = 0; i < renderSegs.length; i++) {
+                        if (renderSegs[i] != null) {
+                            builder.vertex(renderSegs[i].get().x2(), renderSegs[i].get().y2());
+                        }
+                    }
+                    builder.end();
+                }
+
                 GL11.glLineWidth(LINE_WIDTH * 2);
                 GLBuilder builder = GLBuilder.getBuilder();
                 builder.begin(GL11.GL_LINE_STRIP)
                     .color(0xFF000000);
-
                 if (renderSegs[0] != null) {
                     builder.vertex(renderSegs[0].get().x1(), renderSegs[0].get().y1());
                 }
@@ -268,7 +283,6 @@ public class RenderWire extends ElementContainer {
                         builder.vertex(renderSegs[i].get().x2(), renderSegs[i].get().y2());
                     }
                 }
-
                 builder.end();
 
                 if (branch != null && renderSegs[renderSegs.length - 1].get().x2() == (float) segment.x && renderSegs[renderSegs.length - 1].get().y2() == (float) segment.y) {
@@ -452,24 +466,26 @@ public class RenderWire extends ElementContainer {
                             prev.segment.y += dy;
                         }
                     }
+                    testCorner();
+                    bakeCorner();
                 } else if (next != null) {
                     if (Math.abs(segment.x - next.segment.x) < RenderCode.SMALL_VALUE) {
                         segment.x += dx;
                         segment.y += dy;
                         if (!next.isFocused() && !(next.segment instanceof Wire.WireEndpoint)) {
-                            next.segment.y += dy;
+                            next.segment.x += dx;
                         }
                     } else if (Math.abs(segment.y - next.segment.y) < RenderCode.SMALL_VALUE) {
                         segment.x += dx;
                         segment.y += dy;
                         if (!next.isFocused() && !(next.segment instanceof Wire.WireEndpoint)) {
-                            next.segment.x += dx;
+                            next.segment.y += dy;
                         }
                     }
+                    next.testCorner();
+                    next.bakeCorner();
                 }
             }
-            testCorner();
-            bakeCorner();
             return true;
         }
 

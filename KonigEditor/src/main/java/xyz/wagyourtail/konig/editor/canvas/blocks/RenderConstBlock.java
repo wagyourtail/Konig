@@ -1,12 +1,15 @@
 package xyz.wagyourtail.konig.editor.canvas.blocks;
 
 import org.lwjgl.glfw.GLFW;
+import org.lwjgl.opengl.GL11;
 import xyz.wagyourtail.MathHelper;
 import xyz.wagyourtail.konig.editor.canvas.RenderBlock;
 import xyz.wagyourtail.konig.editor.canvas.RenderBlockParent;
 import xyz.wagyourtail.konig.editor.canvas.RenderCode;
+import xyz.wagyourtail.konig.editor.canvas.RenderWire;
 import xyz.wagyourtail.konig.structure.code.KonigBlockReference;
 import xyz.wagyourtail.wagyourgui.Font;
+import xyz.wagyourtail.wagyourgui.GLBuilder;
 import xyz.wagyourtail.wagyourgui.elements.BaseElement;
 import xyz.wagyourtail.wagyourgui.elements.DrawableHelper;
 
@@ -103,6 +106,20 @@ public class RenderConstBlock extends RenderBlock {
                 rect.y1() + (rect.y2() - rect.y1()) / 2 + FONT_SCALE / 2,
                 0x4F00FFFF
             );
+        }
+
+
+
+        if (isFocused()) {
+            GL11.glLineWidth(RenderWire.RenderWireSegment.LINE_WIDTH * 2);
+            GLBuilder.getBuilder().begin(GL11.GL_LINE_STRIP)
+                .color(0xFF00FFFF)
+                .vertex(rect.x1(), rect.y1())
+                .vertex(rect.x2(), rect.y1())
+                .vertex(rect.x2(), rect.y2())
+                .vertex(rect.x1(), rect.y2())
+                .vertex(rect.x1(), rect.y1())
+                .end();
         }
 //
 //        // real font height to height
