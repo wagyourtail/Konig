@@ -347,6 +347,8 @@ public class RenderCode extends ElementContainer implements RenderCodeParent, Re
         focusedElement.onFocusLost(null);
         focusedElement = w.get(0);
         focusedElement.onFocus(null);
+        w.get(0).focusedElement = w.get(0).elements.get(1);
+        w.get(0).focusedElement.onFocus(null);
         w.get(0).elements.get(1).onClick(0, 0, GLFW.GLFW_MOUSE_BUTTON_LEFT);
         return w.get(0);
     }

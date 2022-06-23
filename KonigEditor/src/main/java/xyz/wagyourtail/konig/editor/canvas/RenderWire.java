@@ -329,6 +329,7 @@ public class RenderWire extends ElementContainer {
                     if (prev.prev == null) {
                         // delete wire
                         code.elements.remove(RenderWire.this);
+                        code.focusedElement = null;
                         code.code.removeWire(wire);
                         if (prev.segment instanceof Wire.WireEndpoint) {
                             prev.removeEndpointFromBlock(((Wire.WireEndpoint) prev.segment).blockid);

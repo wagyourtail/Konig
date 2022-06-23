@@ -174,8 +174,10 @@ public class RenderBlock extends ElementContainer {
 
     @Override
     public boolean shouldFocus(float mouseX, float mouseY) {
+        float scaledMouseX = mouseX - block.x;
+        float scaledMouseY = mouseY - block.y;
         for (BaseElement element : elements) {
-            if (element.shouldFocus(mouseX, mouseY)) {
+            if (element.shouldFocus(scaledMouseX, scaledMouseY)) {
                 return true;
             }
         }
@@ -349,9 +351,14 @@ public class RenderBlock extends ElementContainer {
         @Override
         public void onFocus(BaseElement prevFocus) {
             super.onFocus(prevFocus);
-            // check if already plugged in
+        }
+
+        @Override
+        public boolean onClick(float x, float y, int button) {
+            System.out.println("clicked " + element.name);
             if (block.io.elementMap.get(element.name) != null) {
-                return;
+                prev = null;
+                return true;
             }
             if (prev instanceof RenderWire) {
                 RenderWire p = (RenderWire) prev;
@@ -373,7 +380,8 @@ public class RenderBlock extends ElementContainer {
                                 if (io != null) {
                                     block.io.elementMap.put(element.name, io);
                                 }
-                                return;
+                                prev = null;
+                                return true;
                             }
                         }
                     }
@@ -392,10 +400,7 @@ public class RenderBlock extends ElementContainer {
                     }
                 }
             }
-        }
-
-        @Override
-        public boolean onClick(float x, float y, int button) {
+            prev = null;
             return true;
         }
 
