@@ -445,31 +445,60 @@ public class RenderBlock extends ElementContainer {
                 GL11.glDisable(GL11.GL_TEXTURE_2D);
                 GL11.glEnable(GL11.GL_COLOR);
                 GLBuilder builder = GLBuilder.getBuilder().begin(GL11.GL_TRIANGLES).color(0xFF000000);
-                switch (element.side) {
-                    case TOP:
-                        builder.vertex(x, y - PORT_RADIUS)
-                            .vertex(x + PORT_RADIUS, y - PORT_RADIUS)
-                            .vertex(x - PORT_RADIUS, y - PORT_RADIUS)
-                            .end();
-                        break;
-                    case BOTTOM:
-                        builder.vertex(x, y - PORT_RADIUS)
-                            .vertex(x + PORT_RADIUS, y + PORT_RADIUS)
-                            .vertex(x - PORT_RADIUS, y + PORT_RADIUS)
-                            .end();
-                        break;
-                    case LEFT:
-                        builder.vertex(x - PORT_RADIUS, y)
-                            .vertex(x + PORT_RADIUS, y - PORT_RADIUS)
-                            .vertex(x + PORT_RADIUS, y + PORT_RADIUS)
-                            .end();
-                        break;
-                    case RIGHT:
-                        builder.vertex(x + PORT_RADIUS, y)
-                            .vertex(x - PORT_RADIUS, y - PORT_RADIUS)
-                            .vertex(x - PORT_RADIUS, y + PORT_RADIUS)
-                            .end();
-                        break;
+                if (element instanceof BlockIO.Output) {
+                    switch (element.side) {
+                        case TOP:
+                            builder.vertex(x, y + PORT_RADIUS)
+                                .vertex(x + PORT_RADIUS, y - PORT_RADIUS)
+                                .vertex(x - PORT_RADIUS, y - PORT_RADIUS)
+                                .end();
+                            break;
+                        case BOTTOM:
+                            builder.vertex(x, y - PORT_RADIUS)
+                                .vertex(x + PORT_RADIUS, y + PORT_RADIUS)
+                                .vertex(x - PORT_RADIUS, y + PORT_RADIUS)
+                                .end();
+                            break;
+                        case LEFT:
+                            builder.vertex(x - PORT_RADIUS, y)
+                                .vertex(x + PORT_RADIUS, y - PORT_RADIUS)
+                                .vertex(x + PORT_RADIUS, y + PORT_RADIUS)
+                                .end();
+                            break;
+                        case RIGHT:
+                            builder.vertex(x + PORT_RADIUS, y)
+                                .vertex(x - PORT_RADIUS, y - PORT_RADIUS)
+                                .vertex(x - PORT_RADIUS, y + PORT_RADIUS)
+                                .end();
+                            break;
+                    }
+                } else if (element instanceof BlockIO.Input) {
+                    switch (element.side) {
+                        case TOP:
+                            builder.vertex(x, y - PORT_RADIUS)
+                                .vertex(x + PORT_RADIUS, y + PORT_RADIUS)
+                                .vertex(x - PORT_RADIUS, y + PORT_RADIUS)
+                                .end();
+                            break;
+                        case BOTTOM:
+                            builder.vertex(x, y + PORT_RADIUS)
+                                .vertex(x + PORT_RADIUS, y - PORT_RADIUS)
+                                .vertex(x - PORT_RADIUS, y - PORT_RADIUS)
+                                .end();
+                            break;
+                        case LEFT:
+                            builder.vertex(x + PORT_RADIUS, y)
+                                .vertex(x - PORT_RADIUS, y + PORT_RADIUS)
+                                .vertex(x - PORT_RADIUS, y - PORT_RADIUS)
+                                .end();
+                            break;
+                        case RIGHT:
+                            builder.vertex(x - PORT_RADIUS, y)
+                                .vertex(x + PORT_RADIUS, y + PORT_RADIUS)
+                                .vertex(x + PORT_RADIUS, y - PORT_RADIUS)
+                                .end();
+                            break;
+                    }
                 }
             } else {
                 DrawableHelper.rect(
