@@ -94,10 +94,13 @@ public class GLFWSession implements ResizeListener, MouseListener, KeyListener {
         window.setupFramebuffer();
         long timeNanos = System.nanoTime();
         int frameCount = 0;
+
         while (!glfwWindowShouldClose(window.handle)) {
             ++frameCount;
             if (frameCount % 10 == 0) {
                 fps = frameCount * 1000000000L / (System.nanoTime() - timeNanos);
+                timeNanos = System.nanoTime();
+                frameCount = 0;
             }
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             GL14.glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
@@ -169,9 +172,10 @@ public class GLFWSession implements ResizeListener, MouseListener, KeyListener {
     public void onMousePos(double x, double y) {
         for (int i = 0; i < 6; ++i) {
             if (glfwGetMouseButton(window.handle, i) == GLFW_PRESS) {
-                screen.onMousePos((float) x, (float) y, i);
+                screen.onMouseDrag((float) x, (float) y, i);
             }
         }
+        screen.onMousePos((float) x, (float) y);
     }
 
     @Override

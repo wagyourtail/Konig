@@ -27,6 +27,12 @@ public abstract class BaseElement implements DrawableHelper {
         return false;
     }
 
+    public boolean isMouseOver(float x, float y) { return false; }
+
+    public void onHover(float x, float y) {}
+
+    public void onHoverLost() {}
+
     public boolean shouldFocus(float mouseX, float mouseY) {
         return false;
     }

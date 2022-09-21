@@ -11,6 +11,7 @@ public abstract class BaseScreen extends BaseElement {
     public final GLFWSession session;
     public final Set<BaseElement> elements = new LinkedHashSet<>();
     public BaseElement focusedElement = null;
+    public BaseElement hoveredElement = null;
 
     public BaseScreen(GLFWSession session) {
         this.session = session;
@@ -24,12 +25,25 @@ public abstract class BaseScreen extends BaseElement {
     private final float[] sX = new float[6];
     private final float[] sY = new float[6];
 
-    public void onMousePos(float x, float y, int button) {
+    public void onMouseDrag(float x, float y, int button) {
         if (button < 6) {
             onDrag(x, y, x - sX[button], y - sY[button], button);
             sX[button] = x;
             sY[button] = y;
         }
+    }
+
+    public void onMousePos(float x, float y) {
+        for (BaseElement element : elements) {
+            if (element.isMouseOver(x, y)) {
+                if (hoveredElement != null && hoveredElement != element) hoveredElement.onHoverLost();
+                element.onHover(x, y);
+                hoveredElement = element;
+                return;
+            }
+        }
+        if (hoveredElement != null) hoveredElement.onHoverLost();
+        hoveredElement = null;
     }
 
     public void onMouseButton(float x, float y, int button, int action, int mods) {
