@@ -12,6 +12,7 @@ import xyz.wagyourtail.wagyourgui.GLBuilder;
 import xyz.wagyourtail.wagyourgui.elements.BaseElement;
 import xyz.wagyourtail.wagyourgui.elements.DrawableHelper;
 import xyz.wagyourtail.wagyourgui.elements.ElementContainer;
+import xyz.wagyourtail.wagyourgui.glfw.Cursors;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +30,21 @@ public class RenderWire extends ElementContainer {
         this.code = code;
         this.wire = wire;
         compileWire(wire);
+    }
+
+    @Override
+    public boolean isMouseOver(float x, float y) {
+        return shouldFocus(x, y);
+    }
+
+    @Override
+    public void onHover(float x, float y) {
+        code.getWindow().setCursor(Cursors.CROSSHAIR);
+    }
+
+    @Override
+    public void onHoverLost() {
+        code.getWindow().setCursor(Cursors.ARROW);
     }
 
     @Override
@@ -137,6 +153,11 @@ public class RenderWire extends ElementContainer {
 
         public RenderWireSegment(Wire.WireSegment segment) {
             this.segment = segment;
+        }
+
+        @Override
+        public boolean isMouseOver(float x, float y) {
+            return shouldFocus(x, y);
         }
 
         @Override

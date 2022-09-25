@@ -16,6 +16,7 @@ import xyz.wagyourtail.wagyourgui.Texture;
 import xyz.wagyourtail.wagyourgui.elements.BaseElement;
 import xyz.wagyourtail.wagyourgui.elements.DrawableHelper;
 import xyz.wagyourtail.wagyourgui.elements.ElementContainer;
+import xyz.wagyourtail.wagyourgui.glfw.Cursors;
 
 import java.io.IOException;
 import java.util.*;
@@ -38,6 +39,9 @@ public class RenderBlock extends ElementContainer {
 
     protected final KonigBlockReference block;
     protected final KonigBlock blockSpec;
+
+    public boolean allowResize = true;
+    protected ClickLoction clickingFrom;
 
 
     public static List<RenderBlock> compile(List<KonigBlockReference> blocks, Font font, RenderBlockParent code) {
@@ -63,25 +67,99 @@ public class RenderBlock extends ElementContainer {
     @Override
     public boolean onDrag(float x, float y, float dx, float dy, int button) {
         if (focusedElement instanceof RenderCode) return super.onDrag(x, y, dx, dy, button);
-        Set<Integer> wires = block.io.elementMap.values().stream().map(e -> e.wireid).collect(Collectors.toSet());
         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-            // move block, resolve wire endpoints, move them too
-            block.x += dx;
-            block.y += dy;
-            for (RenderWire wire : code.getWires()) {
-                if (wires.contains(wire.wire.id)) {
-                    for (BaseElement segment : List.copyOf(wire.elements)) {
-                        if (((RenderWire.RenderWireSegment) segment).segment instanceof Wire.WireEndpoint) {
-                            Wire.WireEndpoint endpoint = (Wire.WireEndpoint) ((RenderWire.RenderWireSegment) segment).segment;
-                            if (endpoint.blockid == block.id) {
-                                segment.onDrag(x, y, dx, dy, button);
+            if (clickingFrom != ClickLoction.CENTER && allowResize) {
+                onResize(x, y, dx, dy);
+            } else {
+                onMove(x, y, dx, dy);
+            }
+        }
+        return true;
+    }
+
+    public void onResize(float x, float y, float dx, float dy) {
+        for (ClickLoction d : clickingFrom.destructure()) {
+            switch (d) {
+                case TOP:
+                    if (block.scaleY - dy < 1) {
+                        return;
+                    }
+                    block.y += dy;
+                    block.scaleY -= dy;
+                    break;
+                case BOTTOM:
+                    if (block.scaleY + dy < 1) {
+                        return;
+                    }
+                    block.scaleY += dy;
+                    break;
+                case LEFT:
+                    if (block.scaleX - dx < 1) {
+                        return;
+                    }
+                    block.x += dx;
+                    block.scaleX -= dx;
+                    break;
+                case RIGHT:
+                    if (block.scaleX + dx < 1) {
+                        return;
+                    }
+                    block.scaleX += dx;
+                    break;
+                default:
+            }
+        }
+
+        Set<BaseElement> before = Set.copyOf(elements);
+        elements.clear();
+        initIO();
+        Map<BlockIO.IOElement, IOPlug> oldPlugs = new HashMap<>();
+        for (BaseElement e : before) {
+            if (e instanceof IOPlug plug) {
+                oldPlugs.put(plug.element, plug);
+            }
+        }
+
+        for (BaseElement e : elements) {
+            if (e instanceof IOPlug plug) {
+                IOPlug old = oldPlugs.get(plug.element);
+                if (old != null) {
+                    int wire = block.io.elementMap.get(plug.element.name).wireid;
+                    if (wire != -1) {
+                        RenderWire rw = code.getWires().stream().filter(a -> a.wire.id == wire).findFirst().orElse(null);
+                        if (rw != null) {
+                            for (BaseElement segment : List.copyOf(rw.elements)) {
+                                if (((RenderWire.RenderWireSegment) segment).segment instanceof Wire.WireEndpoint endpoint) {
+                                    if (endpoint.blockid == block.id && endpoint.port.equals(plug.element.name)) {
+                                        segment.onDrag(x, y, ((IOPlug) e).x - old.x, ((IOPlug) e).y - old.y, GLFW.GLFW_MOUSE_BUTTON_LEFT);
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
         }
-        return true;
+
+    }
+
+    public void onMove(float x, float y, float dx, float dy) {
+        Set<Integer> wires = block.io.elementMap.values().stream().map(e -> e.wireid).collect(Collectors.toSet());
+        // move block, resolve wire endpoints, move them too
+        block.x += dx;
+        block.y += dy;
+        for (RenderWire wire : code.getWires()) {
+            if (wires.contains(wire.wire.id)) {
+                for (BaseElement segment : List.copyOf(wire.elements)) {
+                    if (((RenderWire.RenderWireSegment) segment).segment instanceof Wire.WireEndpoint) {
+                        Wire.WireEndpoint endpoint = (Wire.WireEndpoint) ((RenderWire.RenderWireSegment) segment).segment;
+                        if (endpoint.blockid == block.id) {
+                            segment.onDrag(x, y, dx, dy, GLFW.GLFW_MOUSE_BUTTON_LEFT);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     public KonigBlock getBlockSpec() {
@@ -90,6 +168,47 @@ public class RenderBlock extends ElementContainer {
 
     public KonigBlockReference getBlock() {
         return block;
+    }
+
+    @Override
+    public void onHover(float x, float y) {
+        super.onHover(x - block.x, y - block.y);
+        if (hoveredElement != null || !allowResize) return;
+
+        ClickLoction loc = getLocation(x, y);
+        switch (loc) {
+            case LEFT:
+            case RIGHT:
+                code.getWindow().setCursor(Cursors.HRESIZE);
+                break;
+            case TOP:
+            case BOTTOM:
+                code.getWindow().setCursor(Cursors.VRESIZE);
+                break;
+            case TOP_LEFT:
+            case BOTTOM_RIGHT:
+                code.getWindow().setCursor(Cursors.RESIZE_NWSE);
+                break;
+            case TOP_RIGHT:
+            case BOTTOM_LEFT:
+                code.getWindow().setCursor(Cursors.RESIZE_NESW);
+                break;
+            default:
+                code.getWindow().setCursor(Cursors.HAND);
+                break;
+        }
+    }
+
+    @Override
+    public boolean isMouseOver(float x, float y) {
+        if (super.isMouseOver(x - block.x, y - block.y)) return true;
+        return x >= block.x && x <= block.x + block.scaleX && y >= block.y && y <= block.y + block.scaleY;
+    }
+
+    @Override
+    public void onHoverLost() {
+        super.onHoverLost();
+        code.getWindow().setCursor(Cursors.ARROW);
     }
 
     protected void initIO() {
@@ -310,7 +429,16 @@ public class RenderBlock extends ElementContainer {
                     }
                 }
             }
+            prev = null;
+            return true;
         }
+        clickingFrom = getLocation(x, y);
+        return true;
+    }
+
+    @Override
+    public boolean onRelease(float x, float y, int button) {
+        super.onRelease(x - block.x, y - block.y, button);
         return true;
     }
 
@@ -374,6 +502,21 @@ public class RenderBlock extends ElementContainer {
             this.element = element;
             this.x = x;
             this.y = y;
+        }
+
+        @Override
+        public void onHover(float x, float y) {
+            code.getWindow().setCursor(Cursors.CROSSHAIR);
+        }
+
+        @Override
+        public void onHoverLost() {
+            code.getWindow().setCursor(Cursors.ARROW);
+        }
+
+        @Override
+        public boolean isMouseOver(float x, float y) {
+            return shouldFocus(x, y);
         }
 
         @Override
@@ -556,5 +699,80 @@ public class RenderBlock extends ElementContainer {
         }
     }
 
+    public ClickLoction getLocation(float x, float y) {
+        ClickLoction xL;
+        ClickLoction yL;
+        if (x - this.block.x < .1f) {
+            xL = ClickLoction.LEFT;
+        } else if (x - (this.block.x + this.block.scaleX) > -.1f) {
+            xL = ClickLoction.RIGHT;
+        } else {
+            xL = ClickLoction.CENTER;
+        }
 
+        if (y - this.block.y < .1f) {
+            yL = ClickLoction.TOP;
+        } else if (y - (this.block.y + this.block.scaleY) > -.1f) {
+            yL = ClickLoction.BOTTOM;
+        } else {
+            yL = ClickLoction.CENTER;
+        }
+
+        return xL.combine(yL);
+    }
+
+    public enum ClickLoction {
+        LEFT,
+        RIGHT,
+        TOP,
+        BOTTOM,
+        TOP_LEFT,
+        TOP_RIGHT,
+        BOTTOM_LEFT,
+        BOTTOM_RIGHT,
+        CENTER
+        ;
+
+        public ClickLoction combine(ClickLoction other) {
+            switch (other) {
+                case TOP:
+                    switch (this) {
+                        case LEFT:
+                            return TOP_LEFT;
+                        case RIGHT:
+                            return TOP_RIGHT;
+                        default:
+                            return TOP;
+                    }
+                case BOTTOM:
+                    switch (this) {
+                        case LEFT:
+                            return BOTTOM_LEFT;
+                        case RIGHT:
+                            return BOTTOM_RIGHT;
+                        default:
+                            return BOTTOM;
+                    }
+                case CENTER:
+                    return this;
+                default:
+                    return other;
+            }
+        }
+
+        public ClickLoction[] destructure() {
+            switch (this) {
+                case TOP_LEFT:
+                    return new ClickLoction[] {TOP, LEFT};
+                case TOP_RIGHT:
+                    return new ClickLoction[] {TOP, RIGHT};
+                case BOTTOM_LEFT:
+                    return new ClickLoction[] {BOTTOM, LEFT};
+                case BOTTOM_RIGHT:
+                    return new ClickLoction[] {BOTTOM, RIGHT};
+                default:
+                    return new ClickLoction[] {this};
+            }
+        }
+    }
 }

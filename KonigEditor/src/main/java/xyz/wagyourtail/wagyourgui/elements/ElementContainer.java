@@ -6,6 +6,7 @@ import java.util.List;
 public abstract class ElementContainer extends BaseElement {
     public final List<BaseElement> elements = new ArrayList<>();
     public BaseElement focusedElement = null;
+    public BaseElement hoveredElement = null;
 
 
     @Override
@@ -84,6 +85,38 @@ public abstract class ElementContainer extends BaseElement {
     public void onRender(float mouseX, float mouseY) {
         for (BaseElement element : List.copyOf(elements)) {
             element.onRender(mouseX, mouseY);
+        }
+    }
+
+    @Override
+    public boolean isMouseOver(float x, float y) {
+        for (BaseElement element : List.copyOf(elements)) {
+            if (element.isMouseOver(x, y)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public void onHover(float x, float y) {
+        for (BaseElement element : elements) {
+            if (element.isMouseOver(x, y)) {
+                if (hoveredElement != null && hoveredElement != element) hoveredElement.onHoverLost();
+                element.onHover(x, y);
+                hoveredElement = element;
+                return;
+            }
+        }
+        if (hoveredElement != null) hoveredElement.onHoverLost();
+        hoveredElement = null;
+    }
+
+    @Override
+    public void onHoverLost() {
+        if (hoveredElement != null) {
+            hoveredElement.onHoverLost();
+            hoveredElement = null;
         }
     }
 

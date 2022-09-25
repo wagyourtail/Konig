@@ -83,6 +83,7 @@ public class GLFWSession implements ResizeListener, MouseListener, KeyListener {
 
     public void setScreen(BaseScreen screen) {
         this.screen = screen;
+        screen.onWindowResize(window);
     }
 
     public void loop() {
@@ -112,8 +113,6 @@ public class GLFWSession implements ResizeListener, MouseListener, KeyListener {
 
             glTranslatef(-1, 1, 0f);
             glScalef(2f / window.getWidth(), -2f / window.getHeight(), 1f);
-
-
 
 //            glEnable(GL_BLEND);
 //            glEnable(GL_POLYGON_SMOOTH);

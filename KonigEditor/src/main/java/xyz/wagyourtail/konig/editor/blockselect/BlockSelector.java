@@ -10,6 +10,7 @@ import xyz.wagyourtail.konig.structure.code.KonigBlockReference;
 import xyz.wagyourtail.konig.structure.headers.KonigBlock;
 import xyz.wagyourtail.wagyourgui.Font;
 import xyz.wagyourtail.wagyourgui.elements.*;
+import xyz.wagyourtail.wagyourgui.glfw.Window;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 
 public class BlockSelector extends ElementContainer implements RenderBlockParent {
     private final Font font;
+    private final Window window;
 
     private float x;
     private float y;
@@ -36,7 +38,7 @@ public class BlockSelector extends ElementContainer implements RenderBlockParent
 
     private Consumer<KonigBlockReference> onSelect;
 
-    public BlockSelector(float x, float y, float width, float height, Font font, Consumer<KonigBlockReference> onSelect) {
+    public BlockSelector(float x, float y, float width, float height, Font font, Window window, Consumer<KonigBlockReference> onSelect) {
         this.x = x;
         this.y = y;
         this.width = width;
@@ -44,6 +46,7 @@ public class BlockSelector extends ElementContainer implements RenderBlockParent
         this.height = height;
         this.onSelect = onSelect;
         this.font = font;
+        this.window = window;
         init();
     }
 
@@ -86,7 +89,9 @@ public class BlockSelector extends ElementContainer implements RenderBlockParent
             ref.rotation = 0;
             ref.name = block.name;
             ref.id = -1;
-            elements.add(RenderBlock.compile(ref, font, this));
+            RenderBlock rb = RenderBlock.compile(ref, font, this);
+            rb.allowResize = false;
+            elements.add(rb);
             x += 1.5f;
         }
 
@@ -204,6 +209,16 @@ public class BlockSelector extends ElementContainer implements RenderBlockParent
     @Override
     public void removeBlock(RenderBlock block) {
 
+    }
+
+    @Override
+    public Window getWindow() {
+        return window;
+    }
+
+    @Override
+    public void onHover(float x, float y) {
+        // modify hover behavior
     }
 
 }

@@ -226,6 +226,46 @@ public class Font {
         }
     }
 
+    public String trimToWidth(String text, float width) {
+        // get width of initial string
+        float width0 = getWidth(text);
+        if (width0 <= width) {
+            return text;
+        }
+        // estimate based on ratio
+        int estimate = (int) (width / width0 * text.length());
+        // get width of estimated string
+        String textEst = text.substring(0, estimate);
+        float widthEst = getWidth(textEst);
+        // test size
+        if (widthEst > width) {
+            // trim
+            int i = estimate - 1;
+            while (i > 0) {
+                textEst = text.substring(0, i);
+                widthEst = getWidth(textEst);
+                if (widthEst <= width) {
+                    break;
+                }
+                i--;
+            }
+        } else {
+            // add to reach
+            int i = estimate + 1;
+            while (i < text.length()) {
+                String newEst = text.substring(0, i);
+                widthEst = getWidth(textEst);
+                if (widthEst > width) {
+                    break;
+                }
+                // use std::move to avoid copying
+                textEst = newEst;
+                i++;
+            }
+        }
+        return textEst;
+    }
+
     private static int getCP(String text, int to, int i, IntBuffer cpOut) {
         char c1 = text.charAt(i);
         if (Character.isHighSurrogate(c1) && i + 1 < to) {

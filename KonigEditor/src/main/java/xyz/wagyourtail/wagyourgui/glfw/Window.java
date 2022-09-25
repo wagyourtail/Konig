@@ -121,4 +121,8 @@ public class Window {
     public long getHandle() {
         return handle;
     }
+
+    public void setCursor(long cursor) {
+        glfwSetCursor(handle, cursor);
+    }
 }

@@ -124,6 +124,11 @@ public class Button extends BaseElement {
     }
 
     @Override
+    public boolean isMouseOver(float x, float y) {
+        return x >= this.x && x <= this.x + width && y >= this.y && y <= this.y + height;
+    }
+
+    @Override
     public void onRender(float mouseX, float mouseY) {
         boolean hover = mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height;
 

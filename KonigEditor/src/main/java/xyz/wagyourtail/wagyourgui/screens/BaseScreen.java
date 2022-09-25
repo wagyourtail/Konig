@@ -132,4 +132,5 @@ public abstract class BaseScreen extends BaseElement {
     }
 
     public abstract void init(Window window);
+
 }

@@ -44,6 +44,10 @@ public class HorizontalScrollBar extends BaseElement {
     }
 
     @Override
+    public boolean isMouseOver(float x, float y) {
+        return x >= this.x && x <= this.x + width && y >= this.y && y <= this.y + height;
+    }
+    @Override
     public boolean onDrag(float x, float y, float dx, float dy, int button) {
         // move scrollbar scroll to click position
         float scrollbarWidth = getScrollbarWidth() / 2;

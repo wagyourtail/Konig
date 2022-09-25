@@ -9,6 +9,7 @@ import xyz.wagyourtail.wagyourgui.Font;
 import xyz.wagyourtail.wagyourgui.elements.BaseElement;
 import xyz.wagyourtail.wagyourgui.elements.DrawableHelper;
 import xyz.wagyourtail.wagyourgui.elements.ElementContainer;
+import xyz.wagyourtail.wagyourgui.glfw.Window;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -22,6 +23,7 @@ public class RenderCode extends ElementContainer implements RenderCodeParent, Re
     protected final RenderCodeParent parent;
     protected final Code code;
     protected final Font font;
+    protected final Window window;
 
     protected final float x;
     protected final float y;
@@ -38,7 +40,7 @@ public class RenderCode extends ElementContainer implements RenderCodeParent, Re
     protected final Set<RenderWire> compileWires = new HashSet<>();
     protected final Set<RenderBlock> compileBlocks = new HashSet<>();
 
-    public RenderCode(RenderCodeParent parent, int x, int y, int width, int height, Code code, Font font) {
+    public RenderCode(RenderCodeParent parent, int x, int y, int width, int height, Code code, Font font, Window window) {
         this.parent = parent;
         this.x = x;
         this.y = y;
@@ -47,7 +49,7 @@ public class RenderCode extends ElementContainer implements RenderCodeParent, Re
 
         this.code = code;
         this.font = font;
-
+        this.window = window;
 
         this.viewportX = -1;
         this.viewportY = -1;
@@ -62,6 +64,24 @@ public class RenderCode extends ElementContainer implements RenderCodeParent, Re
             this.viewportHeight = 10;
         }
         compileCode();
+    }
+
+    @Override
+    public boolean isMouseOver(float x, float y) {
+        if (x >= this.x && x <= this.x + this.width && y >= this.y && y <= this.y + this.height) {
+            float scaledMouseX = (x - this.x) * viewportWidth / width + viewportX;
+            float scaledMouseY = (y - this.y) * viewportHeight / height + viewportY;
+            super.isMouseOver(scaledMouseX, scaledMouseY);
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public void onHover(float x, float y) {
+        float scaledMouseX = (x - this.x) * viewportWidth / width + viewportX;
+        float scaledMouseY = (y - this.y) * viewportHeight / height + viewportY;
+        super.onHover(scaledMouseX, scaledMouseY);
     }
 
     @Override
@@ -359,6 +379,11 @@ public class RenderCode extends ElementContainer implements RenderCodeParent, Re
             focusedElement = null;
         }
         elements.remove(block);
+    }
+
+    @Override
+    public Window getWindow() {
+        return window;
     }
 
 }

@@ -1,5 +1,7 @@
 package xyz.wagyourtail.konig.editor.canvas;
 
+import xyz.wagyourtail.wagyourgui.glfw.Window;
+
 import java.util.Set;
 
 public interface RenderBlockParent {
@@ -10,4 +12,6 @@ public interface RenderBlockParent {
     Set<RenderWire> getWires();
     RenderWire addWireForPort(double x, double y, int blockid, String port);
     void removeBlock(RenderBlock block);
+
+    Window getWindow();
 }
