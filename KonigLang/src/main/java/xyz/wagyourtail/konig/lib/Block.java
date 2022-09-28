@@ -35,10 +35,10 @@ public @interface Block {
         int index() default -1;
         String name();
         String group() default "";
-        double paddingTop() default .2;
-        double paddingBottom() default .2;
-        double paddingLeft() default .2;
-        double paddingRight() default .2;
+        double paddingTop() default .1;
+        double paddingBottom() default .1;
+        double paddingLeft() default .1;
+        double paddingRight() default .1;
         Input[] inputs();
         Output[] outputs();
     }

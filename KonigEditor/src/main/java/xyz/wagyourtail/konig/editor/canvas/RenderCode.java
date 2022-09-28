@@ -9,6 +9,7 @@ import xyz.wagyourtail.wagyourgui.Font;
 import xyz.wagyourtail.wagyourgui.elements.BaseElement;
 import xyz.wagyourtail.wagyourgui.elements.DrawableHelper;
 import xyz.wagyourtail.wagyourgui.elements.ElementContainer;
+import xyz.wagyourtail.wagyourgui.glfw.Cursors;
 import xyz.wagyourtail.wagyourgui.glfw.Window;
 
 import java.util.*;
@@ -36,11 +37,14 @@ public class RenderCode extends ElementContainer implements RenderCodeParent, Re
     protected float viewportWidth;
     protected float viewportHeight;
 
+    protected boolean allowViewportDrag = true;
+    protected boolean allowViewportZoom = true;
+    protected boolean renderBorder = true;
 
     protected final Set<RenderWire> compileWires = new HashSet<>();
     protected final Set<RenderBlock> compileBlocks = new HashSet<>();
 
-    public RenderCode(RenderCodeParent parent, int x, int y, int width, int height, Code code, Font font, Window window) {
+    public RenderCode(RenderCodeParent parent, float x, float y, float width, float height, Code code, Font font, Window window) {
         this.parent = parent;
         this.x = x;
         this.y = y;
@@ -79,6 +83,7 @@ public class RenderCode extends ElementContainer implements RenderCodeParent, Re
 
     @Override
     public void onHover(float x, float y) {
+        window.setCursor(Cursors.ARROW);
         float scaledMouseX = (x - this.x) * viewportWidth / width + viewportX;
         float scaledMouseY = (y - this.y) * viewportHeight / height + viewportY;
         super.onHover(scaledMouseX, scaledMouseY);
@@ -142,7 +147,7 @@ public class RenderCode extends ElementContainer implements RenderCodeParent, Re
         } else if (super.onDrag(scaledMouseX, scaledMouseY, scaledMouseDX, scaledMouseDY, button)) {
             return true;
         }
-        if (focusedElement == null) {
+        if (focusedElement == null && allowViewportDrag) {
             // drag viewport
             if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
                 viewportX -= scaledMouseDX;
@@ -170,27 +175,30 @@ public class RenderCode extends ElementContainer implements RenderCodeParent, Re
             return true;
         }
         // zoom viewport, about mouse position
-        float viewportHeightBefore = viewportHeight;
-        float viewportWidthBefore = viewportWidth;
-        if (dy > 0) {
-            viewportHeight *= 1.1f;
-            viewportWidth *= 1.1f;
-        } else {
-            viewportHeight *= 0.9f;
-            viewportWidth *= 0.9f;
+        if (allowViewportZoom) {
+            float viewportHeightBefore = viewportHeight;
+            float viewportWidthBefore = viewportWidth;
+            if (dy > 0) {
+                viewportHeight *= 1.1f;
+                viewportWidth *= 1.1f;
+            } else {
+                viewportHeight *= 0.9f;
+                viewportWidth *= 0.9f;
+            }
+            float viewportHeightDiff = viewportHeight - viewportHeightBefore;
+            float viewportWidthDiff = viewportWidth - viewportWidthBefore;
+            float mouseRatioX = (scaledMouseX - viewportX) / viewportWidthBefore;
+            float mouseRatioY = (scaledMouseY - viewportY) / viewportHeightBefore;
+            if (dy > 0) {
+                viewportX -= viewportWidthDiff / 2 * (1 - mouseRatioX);
+                viewportY -= viewportHeightDiff / 2 * (1 - mouseRatioY);
+            } else {
+                viewportX -= viewportWidthDiff / 2 * mouseRatioX;
+                viewportY -= viewportHeightDiff / 2 * mouseRatioY;
+            }
+            return true;
         }
-        float viewportHeightDiff = viewportHeight - viewportHeightBefore;
-        float viewportWidthDiff = viewportWidth - viewportWidthBefore;
-        float mouseRatioX = (scaledMouseX - viewportX) / viewportWidthBefore;
-        float mouseRatioY = (scaledMouseY - viewportY) / viewportHeightBefore;
-        if (dy > 0) {
-            viewportX -= viewportWidthDiff / 2 * (1 - mouseRatioX);
-            viewportY -= viewportHeightDiff / 2 * (1 - mouseRatioY);
-        } else {
-            viewportX -= viewportWidthDiff / 2 * mouseRatioX;
-            viewportY -= viewportHeightDiff / 2 * mouseRatioY;
-        }
-        return true;
+        return false;
     }
 
     @Override
@@ -273,10 +281,12 @@ public class RenderCode extends ElementContainer implements RenderCodeParent, Re
         DrawableHelper.rect(x, y, x + width, y + height, 0xFFFFFFFF);
 
         // render border
-        DrawableHelper.rect(x, y, x + 1, y + height, 0xFF000000);
-        DrawableHelper.rect(x + width - 1, y, x + width, y + height, 0xFF000000);
-        DrawableHelper.rect(x, y, x + width, y + 1, 0xFF000000);
-        DrawableHelper.rect(x, y + height - 1, x + width, y + height, 0xFF000000);
+        if (renderBorder) {
+            DrawableHelper.rect(x, y, x + 1, y + height, 0xFF000000);
+            DrawableHelper.rect(x + width - 1, y, x + width, y + height, 0xFF000000);
+            DrawableHelper.rect(x, y, x + width, y + 1, 0xFF000000);
+            DrawableHelper.rect(x, y + height - 1, x + width, y + height, 0xFF000000);
+        }
 
         // render code
         GL11.glTranslatef(x, y, 0);

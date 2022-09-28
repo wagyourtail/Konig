@@ -4,6 +4,7 @@ import org.lwjgl.opengl.GL11;
 import xyz.wagyourtail.konig.Konig;
 import xyz.wagyourtail.konig.editor.canvas.RenderBlock;
 import xyz.wagyourtail.konig.editor.canvas.RenderBlockParent;
+import xyz.wagyourtail.konig.editor.canvas.RenderCodeParent;
 import xyz.wagyourtail.konig.editor.canvas.RenderWire;
 import xyz.wagyourtail.konig.structure.code.Code;
 import xyz.wagyourtail.konig.structure.code.KonigBlockReference;
@@ -14,11 +15,12 @@ import xyz.wagyourtail.wagyourgui.glfw.Window;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-public class BlockSelector extends ElementContainer implements RenderBlockParent {
+public class BlockSelector extends ElementContainer implements RenderBlockParent, RenderCodeParent {
     private final Font font;
     private final Window window;
 
@@ -219,6 +221,21 @@ public class BlockSelector extends ElementContainer implements RenderBlockParent
     @Override
     public void onHover(float x, float y) {
         // modify hover behavior
+    }
+
+    @Override
+    public Optional<RenderBlock> getPlacingBlock() {
+        return Optional.empty();
+    }
+
+    @Override
+    public void setPlacingBlock(RenderBlock block) {
+
+    }
+
+    @Override
+    public void focusCode(BaseElement code) {
+
     }
 
 }

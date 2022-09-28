@@ -8,10 +8,7 @@ import xyz.wagyourtail.konig.structure.code.KonigBlockReference;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ForkJoinPool;
 import java.util.function.BiFunction;
@@ -19,8 +16,8 @@ import java.util.function.Function;
 
 public abstract class KonigBlock {
     public final BlockIO io = new BlockIO();
-    public final Map<String, Map<String, Hollow>> hollowsByGroupName = new HashMap<>();
-    public final Map<String, Hollow> hollowsByName = new HashMap<>();
+    public final Map<String, Map<String, Hollow>> hollowsByGroupName = new LinkedHashMap<>();
+    public final Map<String, Hollow> hollowsByName = new LinkedHashMap<>();
     public final Map<String, BlockIO.Generic> generics = new HashMap<>();
     public String name;
     public String group;
@@ -109,6 +106,38 @@ public abstract class KonigBlock {
             builder.append(generic.toXML());
         }
         return builder;
+    }
+
+    public float getMinWidth() {
+        float top = 0;
+        float bottom = 0;
+        for (BlockIO.Justify justify : BlockIO.Justify.values()) {
+            int sT = io.elements.getOrDefault(BlockIO.Side.TOP, Map.of()).getOrDefault(justify, List.of()).size();
+            int sB = io.elements.getOrDefault(BlockIO.Side.BOTTOM, Map.of()).getOrDefault(justify, List.of()).size();
+            if (sT > 0) {
+                top += .2 * sT;
+            }
+            if (sB > 0) {
+                bottom += .2 * sB;
+            }
+        }
+        return Math.max(1, Math.max(top, bottom));
+    }
+
+    public float getMinHeight() {
+        float left = 0;
+        float right = 0;
+        for (BlockIO.Justify justify : BlockIO.Justify.values()) {
+            int sL = io.elements.getOrDefault(BlockIO.Side.LEFT, Map.of()).getOrDefault(justify, List.of()).size();
+            int sR = io.elements.getOrDefault(BlockIO.Side.RIGHT, Map.of()).getOrDefault(justify, List.of()).size();
+            if (sL > 0) {
+                left += .2 * sL;
+            }
+            if (sR > 0) {
+                right += .2 * sR;
+            }
+        }
+        return Math.max(1, Math.max(left, right));
     }
 
     @Override

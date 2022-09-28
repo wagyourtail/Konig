@@ -4,6 +4,7 @@ import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 import xyz.wagyourtail.MathHelper;
 import xyz.wagyourtail.konig.editor.canvas.blocks.RenderConstBlock;
+import xyz.wagyourtail.konig.editor.canvas.blocks.RenderInnerCodeBlock;
 import xyz.wagyourtail.konig.structure.code.KonigBlockReference;
 import xyz.wagyourtail.konig.structure.code.ReferenceIO;
 import xyz.wagyourtail.konig.structure.code.VirtualIO;
@@ -53,7 +54,14 @@ public class RenderBlock extends ElementContainer {
     }
 
     public static RenderBlock compile(KonigBlockReference block, Font font, RenderBlockParent code) {
-        return special_cases.getOrDefault(block.name, RenderBlock::new).create(block, font, code);
+        RenderBlockCreator creator = special_cases.get(block.name);
+        if (creator == null && block.attemptToGetBlockSpec().hollow()) {
+            return new RenderInnerCodeBlock(block, font, code);
+        }
+        if (creator == null) {
+            creator = RenderBlock::new;
+        }
+        return creator.create(block, font, code);
     }
 
     protected RenderBlock(KonigBlockReference block, Font font, RenderBlockParent code) {
@@ -66,47 +74,56 @@ public class RenderBlock extends ElementContainer {
 
     @Override
     public boolean onDrag(float x, float y, float dx, float dy, int button) {
-        if (focusedElement instanceof RenderCode) return super.onDrag(x, y, dx, dy, button);
+        if (focusedElement instanceof RenderCode && super.onDrag(x - block.x, y - block.y, dx, dy, button)) return true;
         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
             if (clickingFrom != ClickLoction.CENTER && allowResize) {
                 onResize(x, y, dx, dy);
+                return true;
             } else {
                 onMove(x, y, dx, dy);
+                return true;
             }
         }
-        return true;
+        return false;
     }
 
     public void onResize(float x, float y, float dx, float dy) {
+        boolean invertX = false;
+        boolean invertY = false;
         for (ClickLoction d : clickingFrom.destructure()) {
             switch (d) {
                 case TOP:
-                    if (block.scaleY - dy < 1) {
+                    if (block.scaleY - dy < blockSpec.getMinHeight()) {
                         return;
                     }
+                    invertY = true;
                     block.y += dy;
                     block.scaleY -= dy;
                     break;
                 case BOTTOM:
-                    if (block.scaleY + dy < 1) {
+                    if (block.scaleY + dy < blockSpec.getMinHeight()) {
                         return;
                     }
+                    invertY = false;
                     block.scaleY += dy;
                     break;
                 case LEFT:
-                    if (block.scaleX - dx < 1) {
+                    if (block.scaleX - dx < blockSpec.getMinWidth()) {
                         return;
                     }
+                    invertX = true;
                     block.x += dx;
                     block.scaleX -= dx;
                     break;
                 case RIGHT:
-                    if (block.scaleX + dx < 1) {
+                    if (block.scaleX + dx < blockSpec.getMinWidth()) {
                         return;
                     }
+                    invertX = false;
                     block.scaleX += dx;
                     break;
                 default:
+                    return;
             }
         }
 
@@ -124,14 +141,20 @@ public class RenderBlock extends ElementContainer {
             if (e instanceof IOPlug plug) {
                 IOPlug old = oldPlugs.get(plug.element);
                 if (old != null) {
-                    int wire = block.io.elementMap.get(plug.element.name).wireid;
-                    if (wire != -1) {
-                        RenderWire rw = code.getWires().stream().filter(a -> a.wire.id == wire).findFirst().orElse(null);
-                        if (rw != null) {
-                            for (BaseElement segment : List.copyOf(rw.elements)) {
-                                if (((RenderWire.RenderWireSegment) segment).segment instanceof Wire.WireEndpoint endpoint) {
-                                    if (endpoint.blockid == block.id && endpoint.port.equals(plug.element.name)) {
-                                        segment.onDrag(x, y, ((IOPlug) e).x - old.x, ((IOPlug) e).y - old.y, GLFW.GLFW_MOUSE_BUTTON_LEFT);
+                    if (block.io.elementMap.containsKey(plug.element.name)) {
+                        int wire = block.io.elementMap.get(plug.element.name).wireid;
+                        if (wire != -1) {
+                            RenderWire rw = code.getWires().stream().filter(a -> a.wire.id == wire).findFirst().orElse(null);
+                            if (rw != null) {
+                                for (BaseElement segment : List.copyOf(rw.elements)) {
+                                    if (((RenderWire.RenderWireSegment) segment).segment instanceof Wire.WireEndpoint endpoint) {
+                                        if (endpoint.blockid == block.id && endpoint.port.equals(plug.element.name)) {
+                                            float ddx = ((IOPlug) e).x - old.x;
+                                            float ddy = ((IOPlug) e).y - old.y;
+                                            if (invertX) ddx = -ddx;
+                                            if (invertY) ddy = -ddy;
+                                            segment.onDrag(x, y, ddx, ddy, GLFW.GLFW_MOUSE_BUTTON_LEFT);
+                                        }
                                     }
                                 }
                             }
@@ -293,10 +316,8 @@ public class RenderBlock extends ElementContainer {
 
     @Override
     public boolean shouldFocus(float mouseX, float mouseY) {
-        float scaledMouseX = mouseX - block.x;
-        float scaledMouseY = mouseY - block.y;
         for (BaseElement element : elements) {
-            if (element.shouldFocus(scaledMouseX, scaledMouseY)) {
+            if (element.shouldFocus(mouseX - block.x, mouseY - block.y)) {
                 return true;
             }
         }
@@ -307,7 +328,7 @@ public class RenderBlock extends ElementContainer {
         // translate to block position
         GL11.glPushMatrix();
         GL11.glTranslatef(block.x, block.y, 0);
-        super.onRender(mouseX, mouseY);
+        super.onRender(mouseX - block.x, mouseY - block.y);
         GL11.glPopMatrix();
     }
 
@@ -489,6 +510,11 @@ public class RenderBlock extends ElementContainer {
     @FunctionalInterface
     public interface RenderBlockCreator {
         RenderBlock create(KonigBlockReference block, Font font, RenderBlockParent code);
+    }
+
+    @FunctionalInterface
+    public interface HollowRenderBlockCreator<T extends RenderBlockParent & RenderCodeParent> {
+        RenderBlock create(KonigBlockReference block, Font font, T code);
     }
 
     public class IOPlug extends BaseElement {

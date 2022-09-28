@@ -3,6 +3,7 @@ package xyz.wagyourtail.konig.structure.code;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import xyz.wagyourtail.XMLBuilder;
+import xyz.wagyourtail.konig.structure.headers.BlockIO;
 import xyz.wagyourtail.konig.structure.headers.KonigBlock;
 
 import java.io.IOException;
