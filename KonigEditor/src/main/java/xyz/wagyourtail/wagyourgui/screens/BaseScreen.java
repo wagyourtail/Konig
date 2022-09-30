@@ -4,17 +4,21 @@ import xyz.wagyourtail.wagyourgui.elements.BaseElement;
 import xyz.wagyourtail.wagyourgui.glfw.GLFWSession;
 import xyz.wagyourtail.wagyourgui.glfw.Window;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
 
 public abstract class BaseScreen extends BaseElement {
     public final GLFWSession session;
-    public final Set<BaseElement> elements = new LinkedHashSet<>();
+    public final Deque<BaseElement> elements = new ArrayDeque<>();
     public BaseElement focusedElement = null;
     public BaseElement hoveredElement = null;
 
     public BaseScreen(GLFWSession session) {
         this.session = session;
+    }
+
+    public <T extends BaseElement> T addElement(T element) {
+        elements.add(element);
+        return element;
     }
 
     public void onWindowResize(Window window) {
@@ -63,14 +67,17 @@ public abstract class BaseScreen extends BaseElement {
 
     @Override
     public boolean onClick(float x, float y, int button) {
-        for (BaseElement e : elements) {
-            if (e.shouldFocus(x, y) && focusedElement != e) {
-                BaseElement old = focusedElement;
-                focusedElement = e;
-                if (old != null) {
-                    old.onFocusLost(e);
+        for (BaseElement element : List.copyOf(elements)) {
+            if (element.shouldFocus(x, y)) {
+                if (focusedElement != element) {
+                    BaseElement old = focusedElement;
+                    focusedElement = element;
+                    if (old != null) {
+                        old.onFocusLost(element);
+                    }
+                    focusedElement.onFocus(old);
                 }
-                focusedElement.onFocus(old);
+                break;
             }
         }
         if (focusedElement != null && !focusedElement.shouldFocus(x, y)) {
@@ -126,7 +133,9 @@ public abstract class BaseScreen extends BaseElement {
 
     @Override
     public void onRender(float mouseX, float mouseY) {
-        for (BaseElement e : elements) {
+        Iterator<BaseElement> it = elements.descendingIterator();
+        while (it.hasNext()) {
+            BaseElement e = it.next();
             e.onRender(mouseX, mouseY);
         }
     }

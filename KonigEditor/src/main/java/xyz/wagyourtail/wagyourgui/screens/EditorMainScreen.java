@@ -45,7 +45,7 @@ public class EditorMainScreen extends BaseScreen implements RenderCodeParent {
             KonigProgram f = (KonigProgram) Konig.deserialize(hello_world);
             elements.add(new RenderCode(
                 this,
-                0, 20, window.getWidth(), window.getHeight() - 200, f.code, session.font, session.window));
+                0, 20, window.getWidth(), window.getHeight() - 220, f.code, session.font, session.window));
 
 
             elements.add(new Button(0, 0, 100, 20, session.font, "Run", 0, 0x7FFFFFFF, 0xFFFFFFFF, 0xFF000000, (btn) -> {

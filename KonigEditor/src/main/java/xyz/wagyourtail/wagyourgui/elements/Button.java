@@ -139,11 +139,13 @@ public class Button extends BaseElement {
         DrawableHelper.rect(x + 1, y, x + width - 1, y + 1, borderColor);
         DrawableHelper.rect(x + 1, y + height - 1, x + width - 1 , y + height, borderColor);
 
-        float w = font.getWidth(text);
-        if (w < width - 4) {
-            DrawableHelper.drawCenteredString(font, text, x + width / 2, y + height / 2 - font.FONT_HEIGHT / 2f, hover ? hoverTextColor : textColor);
+        float scale = height - height / 2;
+
+        float w = DrawableHelper.getScaledWidth(font, text, scale);
+        if (w <= DrawableHelper.getScalingFactor(font, scale) * width) {
+            DrawableHelper.drawCenteredStringAtScale(font, text, x + width / 2, y + height / 2 - scale / 2, scale, hover ? hoverTextColor : textColor);
         } else {
-            DrawableHelper.drawTrimmedString(font, text, x + 2, y + height / 2 - font.FONT_HEIGHT / 2f, width - 4, hover ? hoverTextColor : textColor);
+            DrawableHelper.drawTrimmedStringAtScale(font, text, x, y + height / 2 - scale / 2, width, scale, hover ? hoverTextColor : textColor);
         }
 
 

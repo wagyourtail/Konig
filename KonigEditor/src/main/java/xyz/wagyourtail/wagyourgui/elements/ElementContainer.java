@@ -1,24 +1,34 @@
 package xyz.wagyourtail.wagyourgui.elements;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public abstract class ElementContainer extends BaseElement {
-    public final List<BaseElement> elements = new ArrayList<>();
+    public final Deque<BaseElement> elements = new ArrayDeque<>();
     public BaseElement focusedElement = null;
     public BaseElement hoveredElement = null;
 
 
     @Override
+    public boolean shouldFocus(float mouseX, float mouseY) {
+        for (BaseElement element : List.copyOf(elements)) {
+            if (element.shouldFocus(mouseX, mouseY)) return true;
+        }
+        return false;
+    }
+
+    @Override
     public boolean onClick(float x, float y, int button) {
         for (BaseElement element : List.copyOf(elements)) {
-            if (element.shouldFocus(x, y) && focusedElement != element) {
-                BaseElement old = focusedElement;
-                focusedElement = element;
-                if (old != null) {
-                    old.onFocusLost(element);
+            if (element.shouldFocus(x, y)) {
+                if (focusedElement != element) {
+                    BaseElement old = focusedElement;
+                    focusedElement = element;
+                    if (old != null) {
+                        old.onFocusLost(element);
+                    }
+                    focusedElement.onFocus(old);
                 }
-                focusedElement.onFocus(old);
+                break;
             }
         }
         if (focusedElement != null && !focusedElement.shouldFocus(x, y)) {
@@ -83,8 +93,9 @@ public abstract class ElementContainer extends BaseElement {
 
     @Override
     public void onRender(float mouseX, float mouseY) {
-        for (BaseElement element : List.copyOf(elements)) {
-            element.onRender(mouseX, mouseY);
+        Iterator<BaseElement> it = elements.descendingIterator();
+        while (it.hasNext()) {
+            it.next().onRender(mouseX, mouseY);
         }
     }
 

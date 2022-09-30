@@ -20,13 +20,13 @@ public class Selector extends ElementContainer {
 
     public float buttonHeight;
 
-    public Selector(float x, float y, float w, float h, float bh, Font font, String text, int color, int hoverColor, int textColor, int hoverTextColor, int borderColor, Consumer<Selector> onSelect) {
+    public Selector(float x, float y, float w, float h, float bh, Font font, String text, int color, int hoverColor, int textColor, int hoverTextColor, Consumer<Selector> onSelect) {
         this.x = x;
         this.y = y;
         this.width = w;
         this.height = h;
         this.buttonHeight = bh;
-        dropDown = new Button(0, 0, w, bh, font, text, color, hoverColor, textColor, hoverTextColor, borderColor, (btn) -> openDropDown());
+        dropDown = new Button(x, y, w, bh, font, text, color, hoverColor, textColor, hoverTextColor, 0, (btn) -> openDropDown());
         elements.add(dropDown);
         selected = text;
         this.font = font;
@@ -34,8 +34,8 @@ public class Selector extends ElementContainer {
         options = new ArrayList<>();
     }
 
-    public Selector(float x, float y, float w, float h, float bh, Font font, String text, int color, int hoverColor, int textColor, int borderColor, Consumer<Selector> onSelect) {
-        this(x, y, w, h, bh, font, text, color, hoverColor, textColor, textColor, borderColor, onSelect);
+    public Selector(float x, float y, float w, float h, float bh, Font font, String text, int color, int hoverColor, int textColor, Consumer<Selector> onSelect) {
+        this(x, y, w, h, bh, font, text, color, hoverColor, textColor, textColor, onSelect);
     }
 
     public void setOptions(List<String> options) {
@@ -52,11 +52,14 @@ public class Selector extends ElementContainer {
     }
 
     public void openDropDown() {
-        for (int i = 0; i < options.size(); i++) {
-            String option = options.get(i);
-            if (option.equals(selected)) continue;
+        int i = 0;
+        for (String option : options) {
+            if (option.equals(selected)) {
+                continue;
+            }
+            ++i;
             // TODO: add scrollbar if longer than height
-            Button btn = new Button(0, (i + 1) * buttonHeight, width, height, font, option, dropDown.color, dropDown.hoverColor, dropDown.textColor, dropDown.hoverTextColor, dropDown.borderColor, (btn2) -> {
+            Button btn = new Button(x, y + i * buttonHeight, width, buttonHeight, font, option, dropDown.color, dropDown.hoverColor, dropDown.textColor, dropDown.hoverTextColor, dropDown.borderColor, (btn2) -> {
                 selected = option;
                 dropDown.setText(option);
                 onSelect.accept(this);
@@ -66,6 +69,12 @@ public class Selector extends ElementContainer {
         }
     }
 
+    @Override
+    public void onFocusLost(BaseElement nextFocus) {
+        super.onFocusLost(nextFocus);
+        closeDropDown();
+    }
+
     public void closeDropDown() {
         elements.removeIf((btn) -> btn != dropDown);
     }
@@ -73,4 +82,10 @@ public class Selector extends ElementContainer {
     public String getSelected() {
         return selected;
     }
+
+    @Override
+    public void onRender(float mouseX, float mouseY) {
+        super.onRender(mouseX, mouseY);
+    }
+
 }

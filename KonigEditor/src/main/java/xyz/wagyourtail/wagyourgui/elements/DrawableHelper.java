@@ -73,12 +73,11 @@ public interface DrawableHelper {
 
     static void drawCenteredStringAtScale(Font font, String text, float x, float y, float scale, int color) {
         builder.color(color);
-        float scaledWidth = font.getWidth(text) * scale;
         GL11.glEnable(GL11.GL_TEXTURE_2D);
         GL11.glPushMatrix();
-        GL11.glTranslatef(x - scaledWidth / 2, y, 0);
-        GL11.glScalef(1 / scale, 1 / scale, 1f);
-        font.drawString(text, -scaledWidth / 2, 0);
+        GL11.glTranslatef(x, y, 0);
+        GL11.glScalef(scale / font.FONT_HEIGHT, scale / font.FONT_HEIGHT, 1f);
+        font.drawString(text, -font.getWidth(text) / 2, 0);
         GL11.glPopMatrix();
     }
 
@@ -131,5 +130,9 @@ public interface DrawableHelper {
 
     static float getScaledWidth(Font font, String text, float scale) {
         return font.getWidth(text) * (font.FONT_HEIGHT / scale);
+    }
+
+    static float getScalingFactor(Font font, float scale) {
+        return (font.FONT_HEIGHT / scale);
     }
 }

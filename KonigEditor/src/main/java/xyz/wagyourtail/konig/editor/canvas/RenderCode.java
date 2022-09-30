@@ -371,16 +371,21 @@ public class RenderCode extends ElementContainer implements RenderCodeParent, Re
         wire.addSegment(new Wire.WireSegment(x, y));
         // add wire
         code.addWire(wire);
-        List<RenderWire> w = RenderWire.compile(List.of(wire), font, this);
-        compileWires.addAll(w);
-        elements.addAll(0, w);
+        RenderWire w = RenderWire.compile(List.of(wire), font, this).get(0);
+        compileWires.add(w);
+        elements.addFirst(w);
         focusedElement.onFocusLost(null);
-        focusedElement = w.get(0);
+        focusedElement = w;
         focusedElement.onFocus(null);
-        w.get(0).focusedElement = w.get(0).elements.get(1);
-        w.get(0).focusedElement.onFocus(null);
-        w.get(0).elements.get(1).onClick(0, 0, GLFW.GLFW_MOUSE_BUTTON_LEFT);
-        return w.get(0);
+
+        Iterator<BaseElement> it = w.elements.iterator();
+        it.next();
+        BaseElement wc = it.next();
+
+        w.focusedElement = wc;
+        w.focusedElement.onFocus(null);
+        wc.onClick(0, 0, GLFW.GLFW_MOUSE_BUTTON_LEFT);
+        return w;
     }
 
     @Override

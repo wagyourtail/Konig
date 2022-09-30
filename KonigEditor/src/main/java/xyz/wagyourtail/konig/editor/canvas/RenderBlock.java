@@ -4,7 +4,7 @@ import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 import xyz.wagyourtail.MathHelper;
 import xyz.wagyourtail.konig.editor.canvas.blocks.RenderConstBlock;
-import xyz.wagyourtail.konig.editor.canvas.blocks.RenderInnerCodeBlock;
+import xyz.wagyourtail.konig.editor.canvas.blocks.RenderHollowBlock;
 import xyz.wagyourtail.konig.structure.code.KonigBlockReference;
 import xyz.wagyourtail.konig.structure.code.ReferenceIO;
 import xyz.wagyourtail.konig.structure.code.VirtualIO;
@@ -56,7 +56,7 @@ public class RenderBlock extends ElementContainer {
     public static RenderBlock compile(KonigBlockReference block, Font font, RenderBlockParent code) {
         RenderBlockCreator creator = special_cases.get(block.name);
         if (creator == null && block.attemptToGetBlockSpec().hollow()) {
-            return new RenderInnerCodeBlock(block, font, code);
+            return new RenderHollowBlock(block, font, code);
         }
         if (creator == null) {
             creator = RenderBlock::new;
