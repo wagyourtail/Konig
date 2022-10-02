@@ -61,7 +61,15 @@ public class Math {
         if (a instanceof Number) {
             return ((Number)a).doubleValue() * ((Number)b).doubleValue();
         } else {
-            return a.toString() + b.toString();
+            if (b instanceof Number) {
+                String s = "";
+                for (int i = 0; i < ((Number)b).intValue(); i++) {
+                    s += a.toString();
+                }
+                return s;
+            } else {
+                throw new IllegalArgumentException("Cannot multiply strings.");
+            }
         }
     }
 
@@ -79,7 +87,18 @@ public class Math {
         if (a instanceof Number) {
             return ((Number)a).doubleValue() / ((Number)b).doubleValue();
         } else {
-            return a.toString() + b.toString();
+            if (b instanceof Number) {
+                int size = ((Number)b).intValue();
+                int arrSize = a.toString().length() / size;
+                if (a.toString().length() % size != 0) arrSize++;
+                String[] arr = new String[arrSize];
+                for (int i = 0; i < arrSize; i++) {
+                    arr[i] = a.toString().substring(i * size, java.lang.Math.min((i + 1) * size, a.toString().length()));
+                }
+                return arr;
+            } else {
+                return a.toString().split(b.toString());
+            }
         }
     }
 
@@ -94,7 +113,11 @@ public class Math {
         }
     )
     public static double mod(double a, double b) {
-        return a % b;
+        double r = a % b;
+        if (r < 0) {
+            r += b;
+        }
+        return r;
     }
 
     @Block(

@@ -12,6 +12,7 @@ import xyz.wagyourtail.wagyourgui.elements.ElementContainer;
 import xyz.wagyourtail.wagyourgui.glfw.Cursors;
 import xyz.wagyourtail.wagyourgui.glfw.Window;
 
+import java.io.StringReader;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -288,13 +289,28 @@ public class RenderCode extends ElementContainer implements RenderCodeParent, Re
             DrawableHelper.rect(x, y + height - 1, x + width, y + height, 0xFF000000);
         }
 
+        float scaledMouseX = (mouseX - x) * viewportWidth / width + viewportX;
+        float scaledMouseY = (mouseY - y) * viewportHeight / height + viewportY;
+
+        // render viewport text
+        String viewportText = "";
+        if (allowViewportDrag) {
+            viewportText += String.format(" %.1f %.1f", scaledMouseX, scaledMouseY);
+        }
+        if (allowViewportZoom) {
+            viewportText += String.format(" %.0f%%", width / viewportWidth);
+        }
+        viewportText += " ";
+        float viewportTextWidth = DrawableHelper.getScaledWidth(font, viewportText, 8);
+        if (viewportTextWidth < width / 2) {
+            DrawableHelper.drawStringAtScale(font, viewportText, x + width - viewportTextWidth, y + height -
+                12, 8, 0xFF000000);
+        }
+
         // render code
         GL11.glTranslatef(x, y, 0);
         GL11.glScalef(width / viewportWidth, height / viewportHeight, 1);
         GL11.glTranslatef(-viewportX, -viewportY, 0);
-
-        float scaledMouseX = (mouseX - x) * viewportWidth / width + viewportX;
-        float scaledMouseY = (mouseY - y) * viewportHeight / height + viewportY;
 
         super.onRender(scaledMouseX, scaledMouseY);
 

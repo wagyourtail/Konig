@@ -129,7 +129,7 @@ public interface DrawableHelper {
     }
 
     static float getScaledWidth(Font font, String text, float scale) {
-        return font.getWidth(text) * (font.FONT_HEIGHT / scale);
+        return font.getWidth(text) * (scale / font.FONT_HEIGHT);
     }
 
     static float getScalingFactor(Font font, float scale) {

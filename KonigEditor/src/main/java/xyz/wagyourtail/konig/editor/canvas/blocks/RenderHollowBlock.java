@@ -130,7 +130,6 @@ public class RenderHollowBlock<T extends RenderBlockParent & RenderCodeParent> e
                 return;
             }
             focusedElement = code;
-            focusedElement.onFocus(prevFocus);
         }
     }
 
