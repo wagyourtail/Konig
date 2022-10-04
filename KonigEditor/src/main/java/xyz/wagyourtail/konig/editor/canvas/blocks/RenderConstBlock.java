@@ -111,7 +111,7 @@ public class RenderConstBlock extends RenderBlock {
 
 
         if (isFocused()) {
-            GL11.glLineWidth(RenderWire.RenderWireSegment.LINE_WIDTH * 2);
+            GL11.glLineWidth(code.getWireWidth() * 2);
             GLBuilder.getBuilder().begin(GL11.GL_LINE_STRIP)
                 .color(0xFF00FFFF)
                 .vertex(rect.x1(), rect.y1())

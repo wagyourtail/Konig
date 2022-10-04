@@ -9,6 +9,12 @@ public interface RenderBlockParent {
     float viewportY();
     float viewportWidth();
     float viewportHeight();
+
+    float getWireWidth();
+
+    float width();
+    float height();
+
     Set<RenderWire> getWires();
     RenderWire addWireForPort(double x, double y, int blockid, String port);
     void removeBlock(RenderBlock block);

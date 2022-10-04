@@ -19,7 +19,6 @@ import java.util.stream.Collectors;
 public class RenderCode extends ElementContainer implements RenderCodeParent, RenderBlockParent {
     public static final boolean SNAP_TO_GRID = true;
     public static final float GRID_SIZE = .1f;
-
     public static final float SMALL_VALUE = .01f;
 
     protected final RenderCodeParent parent;
@@ -31,7 +30,6 @@ public class RenderCode extends ElementContainer implements RenderCodeParent, Re
     protected final float y;
     protected final float width;
     protected final float height;
-
 
     protected float viewportX;
     protected float viewportY;
@@ -226,10 +224,16 @@ public class RenderCode extends ElementContainer implements RenderCodeParent, Re
                 if (focusedElement instanceof RenderBlock) {
                     if (!((RenderBlock) focusedElement).getBlockSpec().hollow()) {
                         setPlacingBlock(RenderBlock.compile(placeBlock.get().getBlock(), font, this));
+//                        System.out.println("Placing block: " + placeBlock.get().getBlock() + " " + this.getClass().getName());
+                    } else {
+//                        System.out.println("focused block is hollow");
                     }
                 } else {
                     setPlacingBlock(RenderBlock.compile(placeBlock.get().getBlock(), font, this));
+//                    System.out.println("Placing block: " + placeBlock.get().getBlock() + " " + this.getClass().getName());
                 }
+            } else {
+//                System.out.println("Code is already this");
             }
         }
     }
@@ -256,6 +260,11 @@ public class RenderCode extends ElementContainer implements RenderCodeParent, Re
         return hoveredElements;
     }
 
+    @Override
+    public float getWireWidth() {
+        return 1f;
+    }
+
     public float translateMouseX(float mouseX) {
         return (mouseX - x) * viewportWidth / width + viewportX;
     }
@@ -273,7 +282,7 @@ public class RenderCode extends ElementContainer implements RenderCodeParent, Re
 
         // test if mouse hovering
         if (mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height) {
-            if (!isFocused()) {
+            if (getPlacingBlock().isPresent()) {
                 parent.focusCode(this);
             }
         }
@@ -371,6 +380,16 @@ public class RenderCode extends ElementContainer implements RenderCodeParent, Re
     @Override
     public float viewportHeight() {
         return viewportHeight;
+    }
+
+    @Override
+    public float width() {
+        return width;
+    }
+
+    @Override
+    public float height() {
+        return height;
     }
 
     @Override

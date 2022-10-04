@@ -139,7 +139,6 @@ public class RenderWire extends ElementContainer {
     }
 
     public class RenderWireSegment extends BaseElement {
-        public static final float LINE_WIDTH = 1f;
         protected static final float BRANCH_RADIUS = .025f;
         Wire.WireSegment segment;
         public RenderWireSegment prev;
@@ -285,7 +284,7 @@ public class RenderWire extends ElementContainer {
 
                 if (isFocused() && !movingWithMouse) {
                     // hilight segment
-                    GL11.glLineWidth(LINE_WIDTH * 4);
+                    GL11.glLineWidth(code.getWireWidth() * 4);
                     builder.begin(GL11.GL_LINE_STRIP)
                         .color(0xFF00FFFF);
                     if (renderSegs[0] != null) {
@@ -299,7 +298,7 @@ public class RenderWire extends ElementContainer {
                     builder.end();
                 }
 
-                GL11.glLineWidth(LINE_WIDTH * 2);
+                GL11.glLineWidth(code.getWireWidth() * 2);
                 GLBuilder builder = GLBuilder.getBuilder();
                 builder.begin(GL11.GL_LINE_STRIP)
                     .color(0xFF000000);
@@ -607,10 +606,11 @@ public class RenderWire extends ElementContainer {
             float y3 = Math.min(y1, y2);
             float x4 = Math.max(x1, x2);
             float y4 = Math.max(y1, y2);
-            x3 -= LINE_WIDTH * 2 * code.viewportWidth / code.width;
-            y3 -= LINE_WIDTH * 2 * code.viewportHeight / code.height;
-            x4 += LINE_WIDTH * 2 * code.viewportWidth / code.width;
-            y4 += LINE_WIDTH * 2 * code.viewportHeight / code.height;
+            float lineW = code.getWireWidth();
+            x3 -= lineW * 2 * code.viewportWidth / code.width;
+            y3 -= lineW * 2 * code.viewportHeight / code.height;
+            x4 += lineW * 2 * code.viewportWidth / code.width;
+            y4 += lineW * 2 * code.viewportHeight / code.height;
             return mouseX >= x3 && mouseX <= x4 && mouseY >= y3 && mouseY <= y4;
         }
 

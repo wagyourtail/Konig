@@ -199,6 +199,20 @@ public class BlockSelector extends ElementContainer implements RenderBlockParent
     }
 
     @Override
+    public float getWireWidth() {
+        return 1f;
+    }
+
+    @Override
+    public float width() {
+        return width;
+    }
+
+    @Override
+    public float height() {
+        return height;
+    }
+    @Override
     public Set<RenderWire> getWires() {
         return null;
     }

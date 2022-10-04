@@ -42,7 +42,7 @@ public class RenderBlock extends ElementContainer {
     protected final KonigBlock blockSpec;
 
     public boolean allowResize = true;
-    protected ClickLoction clickingFrom;
+    protected ClickLoction clickingFrom = ClickLoction.CENTER;
 
 
     public static List<RenderBlock> compile(List<KonigBlockReference> blocks, Font font, RenderBlockParent code) {
@@ -74,7 +74,7 @@ public class RenderBlock extends ElementContainer {
 
     @Override
     public boolean onDrag(float x, float y, float dx, float dy, int button) {
-        if (focusedElement instanceof RenderCode && super.onDrag(x - block.x, y - block.y, dx, dy, button)) return true;
+        if (focusedElement instanceof RenderHollowBlock.HollowContainer && super.onDrag(x - block.x, y - block.y, dx, dy, button)) return true;
         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
             if (clickingFrom != ClickLoction.CENTER && allowResize) {
                 onResize(x, y, dx, dy);
@@ -282,7 +282,7 @@ public class RenderBlock extends ElementContainer {
         elements.add(new IOPlug(x, y, io));
     }
 
-    private float getJustifyPos(BlockIO.Justify justify, int index, int countOnJustify, float blockScale) {
+    public static float getJustifyPos(BlockIO.Justify justify, int index, int countOnJustify, float blockScale) {
         switch (justify) {
             case LEFT:
                 return  .1f + index * .2f;
@@ -407,7 +407,7 @@ public class RenderBlock extends ElementContainer {
         }
 
         if (isFocused()) {
-            GL11.glLineWidth(RenderWire.RenderWireSegment.LINE_WIDTH * 2);
+            GL11.glLineWidth(code.getWireWidth() * 2);
             GLBuilder.getBuilder().begin(GL11.GL_LINE_STRIP)
                 .color(0xFF00FFFF)
                 .vertex(rect.x1(), rect.y1())
