@@ -282,9 +282,12 @@ public class RenderWire extends ElementContainer {
                     }
                 }
 
+                GL11.glEnable(GL11.GL_COLOR);
+                GL11.glDisable(GL11.GL_TEXTURE_2D);
+
                 if (isFocused() && !movingWithMouse) {
                     // hilight segment
-                    GL11.glLineWidth(code.getWireWidth() * 4);
+                    GL11.glLineWidth(4f);
                     builder.begin(GL11.GL_LINE_STRIP)
                         .color(0xFF00FFFF);
                     if (renderSegs[0] != null) {
@@ -298,7 +301,7 @@ public class RenderWire extends ElementContainer {
                     builder.end();
                 }
 
-                GL11.glLineWidth(code.getWireWidth() * 2);
+                GL11.glLineWidth(2f);
                 GLBuilder builder = GLBuilder.getBuilder();
                 builder.begin(GL11.GL_LINE_STRIP)
                     .color(0xFF000000);

@@ -106,7 +106,7 @@ public class RenderCode extends ElementContainer implements RenderCodeParent, Re
                 id++;
             }
             code.addBlock(block.getBlock());
-            elements.add(block);
+            elements.addFirst(block);
             setPlacingBlock(null);
         }
     }
@@ -211,8 +211,8 @@ public class RenderCode extends ElementContainer implements RenderCodeParent, Re
         elements.clear();
         compileWires.addAll(RenderWire.compile(code.getWires(), font, this));
         compileBlocks.addAll(RenderBlock.compile(code.getBlocks(), font, this));
-        elements.addAll(compileWires);
         elements.addAll(compileBlocks);
+        elements.addAll(compileWires);
     }
 
     @Override
@@ -408,7 +408,7 @@ public class RenderCode extends ElementContainer implements RenderCodeParent, Re
         code.addWire(wire);
         RenderWire w = RenderWire.compile(List.of(wire), font, this).get(0);
         compileWires.add(w);
-        elements.addFirst(w);
+        elements.addLast(w);
         focusedElement.onFocusLost(null);
         focusedElement = w;
         focusedElement.onFocus(null);
