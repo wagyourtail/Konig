@@ -210,9 +210,18 @@ the minimum inner size of a hollow section is 1x1 units
 there is also an option to have the hollow sections on-top of eachother with a selection for switching between them.
 in order to get them to show up like that, is to add a `group="name"` attribute to the hollow block.
 
+with those, there is the option to have a dynamic number of hollow blocks stacked using the 
+`<dynamichollow>` tag, but those arn't allowed to use the `name` attribute, or share a group with another hollow block. 
+
+those are specified like so:
+```xml
+<dynamichollow group="name" paddingTop="0" paddingLeft="0" paddingRight="0" paddingBottom="0">
+</dynamichollow>
+```
+
 the type can be number, string, or boolean.
 
-inside the "hollow" tag, there is a `<innercode>` tag, inner io will be specified for interacting with the "parent block".
+inside the "hollow" or "dynamic hollow" tag, there is a `<innercode>` tag, inner io will be specified for interacting with the "parent block".
 
 These blocks can also directly interact with their inner code using input/outputs defined within the hollow tag.
 this will act similarly to normal io, styling etc, but will be used to connect the inner code to the outer block.

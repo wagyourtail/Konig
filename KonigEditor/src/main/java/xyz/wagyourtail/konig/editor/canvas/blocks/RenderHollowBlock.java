@@ -1,9 +1,6 @@
 package xyz.wagyourtail.konig.editor.canvas.blocks;
 
-import xyz.wagyourtail.konig.editor.canvas.RenderBlock;
-import xyz.wagyourtail.konig.editor.canvas.RenderBlockParent;
-import xyz.wagyourtail.konig.editor.canvas.RenderCode;
-import xyz.wagyourtail.konig.editor.canvas.RenderCodeParent;
+import xyz.wagyourtail.konig.editor.canvas.*;
 import xyz.wagyourtail.konig.structure.code.Code;
 import xyz.wagyourtail.konig.structure.code.InnerCode;
 import xyz.wagyourtail.konig.structure.code.KonigBlockReference;
@@ -212,8 +209,14 @@ public class RenderHollowBlock<T extends RenderBlockParent & RenderCodeParent> e
 
             @Override
             public boolean onClick(float x, float y, int button) {
-                return super.onClick(x, y, button);
-                // todo
+                System.out.println("clicked " + element.name);
+
+                if (prev instanceof RenderWire) {
+
+                }
+
+                prev = null;
+                return true;
             }
 
             @Override

@@ -2,7 +2,6 @@ package xyz.wagyourtail.konig.structure.code;
 
 import org.w3c.dom.Node;
 import xyz.wagyourtail.XMLBuilder;
-import xyz.wagyourtail.konig.structure.headers.BlockIO;
 import xyz.wagyourtail.konig.structure.headers.KonigBlock;
 
 import java.io.IOException;
@@ -14,6 +13,7 @@ import java.util.function.BiFunction;
 public class InnerCode extends Code {
     public String name;
     public KonigBlockReference outer;
+    public final ReferenceIO io = new ReferenceIO();
     public InnerCode(KonigBlockReference block) {
         super(new InnerParent());
         outer = block;
@@ -24,7 +24,15 @@ public class InnerCode extends Code {
         name = node.getAttributes().getNamedItem("name").getNodeValue();
         super.parseXML(node);
 
-        ((InnerParent) parent).applyBlock(outer, name);
+    }
+
+    @Override
+    public boolean parseChild(Node node) throws IOException {
+        if (node.getNodeName().equals("io")) {
+            io.parseXML(node);
+            return true;
+        }
+        return super.parseChild(node);
     }
 
     @Override
@@ -63,14 +71,8 @@ public class InnerCode extends Code {
             }
         }
         // block io to reference io
-        for (BlockIO.IOElement value : childBlock.io.byName.values()) {
-            if (value instanceof BlockIO.Input) {
-                input.io.elementMap.put(value.name, new ReferenceIO.Input(value.name, -42));
-            } else if (value instanceof BlockIO.Output) {
-                input.io.elementMap.put(value.name, new ReferenceIO.Output(value.name, -42));
-            } else {
-                throw new RuntimeException("Unknown IOElement type: " + value.getClass().getName());
-            }
+        for (ReferenceIO.Output out : io.outputMap.values()) {
+            input.io.elementMap.put(out.name, out);
         }
         blockMap.put(-2, input);
 
@@ -99,14 +101,9 @@ public class InnerCode extends Code {
                     newVal.portMap.put(port.id, port);
             }
         }
-        for (BlockIO.IOElement value : childBlock.io.byName.values()) {
-            if (value instanceof BlockIO.Input) {
-                output.io.elementMap.put(value.name, new ReferenceIO.Input(value.name, -42));
-            } else if (value instanceof BlockIO.Output) {
-                output.io.elementMap.put(value.name, new ReferenceIO.Output(value.name, -42));
-            } else {
-                throw new RuntimeException("Unknown IOElement type: " + value.getClass().getName());
-            }
+        // block io to reference io
+        for (ReferenceIO.Input in : io.inputMap.values()) {
+            output.io.elementMap.put(in.name, in);
         }
         blockMap.put(-1, output);
         return super.jitCompile();

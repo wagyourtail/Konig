@@ -35,6 +35,9 @@
                     </port>
                 </virtual>
                 <innercode name="inner">
+                    <io>
+                        <input name="continue" wireid="4"/>
+                    </io>
                     <wires>
                         <wire wireid="0">
                             <end x="0" y="0" block="-2" port="virtual$forName$inner$0" />
