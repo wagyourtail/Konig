@@ -12,7 +12,7 @@ public class MethodHandleUtils {
         if (type.returnType() == void.class) {
             switch (type.parameterCount()) {
                 case 0:
-                    Runnable runnable = (Runnable) MethodHandleProxies.asInterfaceInstance(Runnable.class, handle);
+                    Runnable runnable = MethodHandleProxies.asInterfaceInstance(Runnable.class, handle);
                     return args -> {
                         runnable.run();
                         return null;

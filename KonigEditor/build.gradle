@@ -12,27 +12,27 @@ dependencies {
     implementation project(":KonigLang")
 
     var lwjgl_modules_no_natives = [
-         "lwjgl-jawt",
-         "lwjgl-egl",
-         "lwjgl-opencl",
+//         "lwjgl-jawt",
+//         "lwjgl-egl",
+//         "lwjgl-opencl",
     ]
 
     var lwjgl_modules = [
          "lwjgl",
-         "lwjgl-assimp",
+//         "lwjgl-assimp",
          "lwjgl-glfw",
-         "lwjgl-jemalloc",
-         "lwjgl-lmdb",
-         "lwjgl-nanovg",
-         "lwjgl-nfd",
-         "lwjgl-nuklear",
-         "lwjgl-openal",
+//         "lwjgl-jemalloc",
+//         "lwjgl-lmdb",
+//         "lwjgl-nanovg",
+//         "lwjgl-nfd",
+//         "lwjgl-nuklear",
+//         "lwjgl-openal",
          "lwjgl-opengl",
          "lwjgl-opengles",
-         "lwjgl-par",
-         "lwjgl-sse",
+//         "lwjgl-par",
+//         "lwjgl-sse",
          "lwjgl-stb",
-         "lwjgl-tinyfd",
+//         "lwjgl-tinyfd",
          "lwjgl-xxhash"
      ]
 
@@ -47,5 +47,5 @@ dependencies {
         implementation "org.lwjgl:${module}:${lwjgl_version}"
     }
 
-    implementation "org.lwjglx:lwjgl3-awt:0.1.8"
+//    implementation "org.lwjglx:lwjgl3-awt:0.1.8"
 }
